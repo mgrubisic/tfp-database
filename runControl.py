@@ -74,17 +74,11 @@ for index, row in enumerate(inputSet):
 	empty_directory('outputs')										# clear run histories
 
 	# write input files as csv columns
-	bearingIndex 	= pd.DataFrame(['Sm1', 'Sm1Ampli', 'T', 'zeta', 'mu1', 'R1', 'moatAmpli'], columns=['variable'])
-	bearingValue 	= pd.DataFrame([row[0], row[1], row[2], row[3], row[4], row[5], row[6]], columns=['value'])
+	bearingIndex 	= pd.DataFrame(['Sm1', 'Sm1Ampli', 'T', 'zeta', 'mu1', 'R1', 'moatAmpli', 'RI'], columns=['variable'])
+	bearingValue 	= pd.DataFrame([row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7]], columns=['value'])
 
 	bearingIndex 	= bearingIndex.join(bearingValue)
 	bearingIndex.to_csv('./inputs/bearingInput.csv', index=False)
-	
-	buildingIndex 	= pd.DataFrame(['Ws', 'W', 'R_I', 'nFrame', 'Tfb'], columns=['variable'])
-	buildingValue 	= pd.DataFrame([2227.5, 3037.5, row[7], 2, 0.735], columns=['value'])
-
-	buildingIndex 	= buildingIndex.join(buildingValue)
-	buildingIndex.to_csv('./inputs/buildingInput.csv', index=False)
 
 	# for each input file, run all GMs in the database
 	for ind in gmDatabase.index:

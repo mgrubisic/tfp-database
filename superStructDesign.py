@@ -71,14 +71,13 @@ def design():
 	mu1 		= bearingParams.value[4]		# initial guesses, friction
 	R1 			= bearingParams.value[5]*inch	# set radii, inches
 	moatAmpli 	= bearingParams.value[6]		# random variable for moat gap
+	RI 			= bearingParams.value[7]		# strength reduction factor R
 
-	buildingParams = pd.read_csv('./inputs/buildingInput.csv', index_col=None, header=0)
-
-	Ws 		= buildingParams.value[0]	# weight above ground level
-	W 		= buildingParams.value[1]	# total weight including ground slab
-	RI 		= buildingParams.value[2]	# strength reduction factor R
-	nFrames = buildingParams.value[3]	# number of lateral resisting frames
-	Tfb 	= buildingParams.value[4]	# fixed base period
+	# Building params, hardcoded
+	Ws 		= 2227.5*kip
+	W 		= 3037.5*kip
+	nFrames = 2
+	Tfb 	= 0.735*sec
 
 	# from ASCE Ch. 17
 	zetaRef = [0.02, 0.05, 0.10, 0.20, 0.30, 0.40, 0.50]
