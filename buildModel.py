@@ -81,36 +81,6 @@ def build():
 	(AgBeam, IzBeam, IyBeam, ZxBeam, SxBeam, dBeam, bfBeam, tfBeam, twBeam) = getProperties(selectedBeam)
 	(AgRoofBeam, IzRoofBeam, IyRoofBeam, ZxRoofBeam, SxRoofBeam, dRoofBeam, bfRoofBeam, tfRoofBeam, twRoofBeam) = getProperties(selectedRoofBeam)
 
-	# # Column parameters
-	# AgCol 	= params.values[0,1]*in2
-	# IzCol 	= params.values[1,1]*in4
-	# IyCol 	= params.values[2,1]*in4
-	# ZxCol 	= params.values[3,1]*inch*in2
-	# SxCol 	= params.values[4,1]*inch*in2
-	# dCol 	= params.values[5,1]*inch		# section depth
-	# bfCol 	= params.values[6,1]*inch		# flange width
-	# tfCol 	= params.values[7,1]*inch		# flange thickness
-	# twCol 	= params.values[8,1]*inch		# web thickness
-
-	# # Beam parameters
-	# AgBeam 	= params.values[9,1]*in2
-	# IzBeam 	= params.values[10,1]*in4
-	# IyBeam 	= params.values[11,1]*in4
-	# ZxBeam 	= params.values[12,1]*inch*in2
-	# SxBeam 	= params.values[13,1]*inch*in2
-	# dBeam 	= params.values[14,1]*inch		# section depth
-	# bfBeam 	= params.values[15,1]*inch		# flange width
-	# tfBeam 	= params.values[16,1]*inch		# flange thickness
-	# twBeam 	= params.values[17,1]*inch		# web thickness
-
-	# # Isolator parameters
-	# mu1 	= params.values[18,1]
-	# mu2 	= params.values[19,1]
-	# mu3 	= params.values[20,1]
-	# R1 		= params.values[21,1]*inch
-	# R2 		= params.values[22,1]*inch
-	# R3 		= params.values[23,1]*inch
-
 	############################################################################
 	#              Model construction
 	############################################################################

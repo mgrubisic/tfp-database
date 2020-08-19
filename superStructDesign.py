@@ -8,9 +8,10 @@
 
 # Description: 	Script designs TFP bearing given site parameters and desired stiffness and damping.
 # 				Script also designs superstructure following ASCE 7-16 Ch.12 & 17 provisions
+#				Inputs rely on dictionary calling
 
-# Open issues: 	(1) Let design() take inputs from somewhere else
-#				(2) Automatically read inputs and set variables
+# Open issues: 	
+
 ############################################################################
 
 # import libraries
@@ -65,15 +66,11 @@ def design():
 	# TFP Algorithm: Becker & Mahin
 	bearingParams = pd.read_csv('./inputs/bearingInput.csv', index_col=None, header=0)
 
-	S1 			= bearingParams.value[0]		# site spectrum value (either Sd1 or Sm1)
-	Tm 			= bearingParams.value[2]*sec	# target period
-	zetaM 		= bearingParams.value[3]		# target damping
-	mu1 		= bearingParams.value[4]		# initial guesses, friction
-	R1 			= bearingParams.value[5]*inch	# set radii, inches
-	moatAmpli 	= bearingParams.value[6]		# random variable for moat gap
-	RI 			= bearingParams.value[7]		# strength reduction factor R
+	# param is dictionary of all inputs. call with param['whatYouWant']
+	param 	= dict(zip(bearingParams.variable, bearingParams.value))
 
 	# Building params, hardcoded
+	# Mostly constant, so not varying
 	Ws 		= 2227.5*kip
 	W 		= 3037.5*kip
 	nFrames = 2
@@ -83,11 +80,11 @@ def design():
 	zetaRef = [0.02, 0.05, 0.10, 0.20, 0.30, 0.40, 0.50]
 	BmRef	= [0.8, 1.0, 1.2, 1.5, 1.7, 1.9, 2.0]
 
-	Bm 		= np.interp(zetaM, zetaRef, BmRef)
+	Bm 		= np.interp(param['zetaM'], zetaRef, BmRef)
 
 	RMult 	= 1.1
 
-	Dm 		= g*S1*Tm/(4*pi**2*Bm)
+	Dm 		= g*param['S1']*param['Tm']/(4*pi**2*Bm)
 
 	x 		= Dm
 
@@ -97,16 +94,15 @@ def design():
 	muBad 	= True
 
 	while muBad:
-		mu1 	= bearingParams.value[4]		# initial guesses, friction
 
 		if RMult > 10.0:
 			break
 
-		R2 		= RMult*R1
-		R3 		= RMult*R1
+		R2 		= RMult*param['R1']
+		R3 		= RMult*param['R1']
 
-		k0		= mu1/xy
-		a 		= 1/(2*R1)
+		k0		= param['mu1']/xy
+		a 		= 1/(2*param['R1'])
 		b  		= 1/(R2 + R3)
 		
 		# x1 		= 2*R1*(mu2 - mu1)
@@ -115,12 +111,12 @@ def design():
 		# zetaE 	= We/(2*pi*ke*x**2)
 		# Te 		= 2*pi/(math.sqrt(ke/(1/g)))
 
-		kM 		= (2*pi/Tm)**2 * (1/g)
-		Wm 		= zetaM*(2*pi*kM*x**2)
+		kM 		= (2*pi/param['Tm'])**2 * (1/g)
+		Wm 		= param['zetaM']*(2*pi*kM*x**2)
 		x1 		= (a-b)**(-1/2)*cmath.sqrt(-Wm/4 + (kM - b)*x**2 - (k0 - a)*xy**2)
 		mu2 	= kM*x - b*(x-x1)
 		mu3 	= mu2
-		mu1 	= -x1/(2*R1) + mu2
+		mu1 	= -x1/(2*param['R1']) + mu2
 
 		ke 		= (mu2.real + b*(x - x1.real))/x
 		We 		= 4*(mu2.real - b*x1.real)*x - 4*(a-b)*x1.real**2 - 4*(k0 -a)*xy**2
@@ -133,11 +129,12 @@ def design():
 
 		RMult 	+= 0.1
 
+	# Abort if there are nonsensical results
 	if(any(coeff < 0 for coeff in muList) or any(np.iscomplex(muList))):
 		sys.exit('Bearing solver incorrectly output friction coefficients...')
 	else:
 		muList 		= [coeff.real for coeff in muList]
-		RList		= [R1, R2, R3]
+		RList		= [param['R1'], R2, R3]
 		mu1 		= mu1.real
 		mu2 		= mu2.real
 		mu3 		= mu3.real
@@ -169,10 +166,10 @@ def design():
 	Dtm 		= torsionFactor*Dm
 
 	# from ASCE 7-16 Ch. 17.6.4.1
-	DmTrial 	= (Dm)/math.sqrt(1 + (Tfb/Tm)**2)
+	DmTrial 	= (Dm)/math.sqrt(1 + (Tfb/param['Tm'])**2)
 	DmPrime 	= max(0.8*Dtm, DmTrial)
 
-	moatGap 	= math.ceil(moatAmpli*DmPrime)
+	moatGap 	= math.ceil(param['moatAmpli']*DmPrime)
 
 	############################################################################
 	#              ASCE 7-16: Story forces
@@ -186,8 +183,8 @@ def design():
 
 	Vb 		= (Dm * ke * Ws)/nFrames
 	Vst 	= (Vb*(Ws/W)**(1 - 2.5*zetaE))
-	Vs 		= (Vst/RI)
-	F1 		= (Vb - Vst)/RI
+	Vs 		= (Vst/param['RI'])
+	F1 		= (Vb - Vst)/param['RI']
 
 	k 		= 14*zetaE*Tfb
 
@@ -207,7 +204,7 @@ def design():
 	nFloor  	= len(wx)
 	nBay 		= 3
 	LBay 		= 30*ft
-	Cd 			= RI
+	Cd 			= param['RI']
 
 	thetaMax 	= 0.015			# ASCE Table 12.12-1 drift limits
 	delx 		= thetaMax*hsx
@@ -462,7 +459,7 @@ def design():
 		
 		colShearFail 	= colVn < colVpr
 
-	return(mu1, mu2, mu3, R1, R2, R3, moatGap, selectedBeam, selectedRoofBeam, selectedCol)
+	return(mu1, mu2, mu3, param['R1'], R2, R3, moatGap, selectedBeam, selectedRoofBeam, selectedCol)
 
 # if ran as standalone, display designs
 if __name__ == '__main__':

@@ -8,53 +8,61 @@
 
 # Description: 	Script reads /outputs/ values and extract relevant maxima
 #				Results are returned in a DataFrame row
+#				Results are created and called using dictionaries
 
-# Open issues: 	(1) Header name inconsistencies to be automatically handled
-#				(2) automatically generate variables based on output.csv files
-#				(3) intake scale from elsewhere
-# 				(4) avoid rerunning design script
+# Open issues: 	(1) avoid rerunning design script
 
 ############################################################################
 
 import pandas as pd
 import numpy as np
 import math
+import LHS
 
 # functions to standardize csv output
 def getShape(shape):
 	shapeName 		= shape.iloc[0]['AISC_Manual_Label']
 	return(shapeName)
 
-def getHeader():
-	resultsHeader  	= ['S1', 'S1Ampli', 'Tm', 'zetaM', 'RI', 'mu1', 'mu2', 'mu3', 'beam', 'roofBeam', 'column', 'R1', 'R2', 'R3', 'moatAmplification', 'moatGap', 'GMFile', 'GMScale', 'maximumIsolDispl', 'driftMax1', 'driftMax2', 'driftMax3', 'drift1', 'drift2', 'drift3', 'impacted', 'uplifted', 'runFailed']
-	return(resultsHeader)
-
+# main function
 def failurePostprocess(filename, defFactor, runStatus):
 
 	# take input as the run 'ok' variable from eqAnly, passes that as one of the results csv columns
 
 	# gather inputs
-	bearingParams = pd.read_csv('./inputs/bearingInput.csv', index_col=None, header=0)
-	S1 			= bearingParams.value[0]		# site spectrum value (either Sd1 or Sm1)
-	S1Ampli 	= bearingParams.value[1]		# site amplification
-	Tm 			= bearingParams.value[2]		# target period
-	zetaM 		= bearingParams.value[3]		# target damping
-	moatAmpli 	= bearingParams.value[6] 		# moat gap amplification
+	bearingParams 			= pd.read_csv('./inputs/bearingInput.csv', index_col=None, header=0)
 
-	buildingParams = pd.read_csv('./inputs/buildingInput.csv', index_col=None, header=0)
-	RI 		= buildingParams.value[2]		# strength reduction factor R
+	# param is dictionary of all inputs. call with param['whatYouWant']
+	param 					= dict(zip(bearingParams.variable, bearingParams.value))
+
+	# create new dictionary for non-inputs. Put all tabulated results here.
+	afterRun 				= dict()
+
+	afterRun['GMFile'] 		= filename
 
 	# redo scaling
-	S1Actual 		= S1*S1Ampli
-	S1Default 		= 1.017
-	GMFactor 		= S1Actual/S1Default*defFactor
+	S1Actual 				= param['S1']*param['S1Ampli']
+	S1Default 				= 1.017
+	afterRun['GMScale'] 	= S1Actual/S1Default*defFactor
 
+	# get selections and append to non-input dictionary
 	import superStructDesign as sd
 	(mu1, mu2, mu3, R1, R2, R3, moatGap, selectedBeam, selectedRoofBeam, selectedCol) = sd.design()
 
-	beamName 		= getShape(selectedBeam)
-	roofBeamName 	= getShape(selectedRoofBeam)
-	colName 		= getShape(selectedCol)
+	fromDesign 		= {
+		'mu1'		: mu1,
+		'mu2'		: mu2,
+		'mu3'		: mu3,
+		'R1'		: R1,
+		'R2'		: R2,
+		'R3'		: R3,
+		'beam'		: getShape(selectedBeam),
+		'roofBeam'	: getShape(selectedRoofBeam),
+		'col'		: getShape(selectedCol),
+		'moatGap'	: float(moatGap),
+	}
+
+	afterRun.update(fromDesign)
 
 	# gather outputs
 	dispColumns = ['time', 'isol1', 'isol2', 'isol3', 'isol4', 'isolLC']
@@ -81,6 +89,8 @@ def failurePostprocess(filename, defFactor, runStatus):
 	isol4Disp 		= abs(isolDisp['isol4'])
 	isolMaxDisp 	= np.maximum.reduce([isol1Disp, isol2Disp, isol3Disp, isol4Disp])
 
+	afterRun['maxDisplacement'] 	= max(isolMaxDisp) 					# max recorded displacement over time
+
 	# normalized shear in isolators
 	force1Normalize = -isol1Force['iShearX']/isol1Force['iAxial']
 	force2Normalize = -isol2Force['iShearX']/isol2Force['iAxial']
@@ -88,47 +98,46 @@ def failurePostprocess(filename, defFactor, runStatus):
 	force4Normalize = -isol4Force['iShearX']/isol4Force['iAxial']
 
 	# drift ratios recorded
-	story1DriftOuter 	= (story1Disp['isol1'] - isolDisp['isol1'])/(13*12)
-	story1DriftInner 	= (story1Disp['isol2'] - isolDisp['isol2'])/(13*12)
+	ft 				= 12
+	story1DriftOuter 	= (story1Disp['isol1'] - isolDisp['isol1'])/(13*ft)
+	story1DriftInner 	= (story1Disp['isol2'] - isolDisp['isol2'])/(13*ft)
 
-	story2DriftOuter 	= (story2Disp['isol1'] - story1Disp['isol1'])/(13*12)
-	story2DriftInner 	= (story2Disp['isol2'] - story1Disp['isol2'])/(13*12)
+	story2DriftOuter 	= (story2Disp['isol1'] - story1Disp['isol1'])/(13*ft)
+	story2DriftInner 	= (story2Disp['isol2'] - story1Disp['isol2'])/(13*ft)
 
-	story3DriftOuter 	= (story3Disp['isol1'] - story2Disp['isol1'])/(13*12)
-	story3DriftInner 	= (story3Disp['isol2'] - story2Disp['isol2'])/(13*12)
+	story3DriftOuter 	= (story3Disp['isol1'] - story2Disp['isol1'])/(13*ft)
+	story3DriftInner 	= (story3Disp['isol2'] - story2Disp['isol2'])/(13*ft)
 
 	# drift failure check
 	driftLimit 			= 0.05
 
-	driftMax1 			= max(np.maximum(story1DriftOuter, story1DriftInner))
-	driftMax2 			= max(np.maximum(story2DriftOuter, story2DriftInner))
-	driftMax3 			= max(np.maximum(story3DriftOuter, story3DriftInner))
+	afterRun['driftMax1']	= max(np.maximum(story1DriftOuter, story1DriftInner))
+	afterRun['driftMax2']	= max(np.maximum(story2DriftOuter, story2DriftInner))
+	afterRun['driftMax3']	= max(np.maximum(story3DriftOuter, story3DriftInner))
 
-	drift1				= 0
-	drift2 				= 0
-	drift3 				= 0
+	afterRun['drift1']	= 0
+	afterRun['drift2'] 	= 0
+	afterRun['drift3'] 	= 0
 
 	if(any(abs(driftRatio) > driftLimit for driftRatio in story1DriftOuter) or any(abs(driftRatio) > driftLimit for driftRatio in story1DriftInner)):
-		drift1 	= 1
+		afterRun['drift1'] 	= 1
 
 	if(any(abs(driftRatio) > driftLimit for driftRatio in story2DriftOuter) or any(abs(driftRatio) > driftLimit for driftRatio in story2DriftInner)):
-		drift2 	= 1
+		afterRun['drift2'] 	= 1
 
 	if(any(abs(driftRatio) > driftLimit for driftRatio in story3DriftOuter) or any(abs(driftRatio) > driftLimit for driftRatio in story3DriftInner)):
-		drift3 	= 1
+		afterRun['drift3'] 	= 1
 
 	# impact check
-	moatGap 			= float(moatGap)
-	# moatGap 			= 20
-	impacted 			= 0
-	maxDisplacement 	= max(isolMaxDisp) 					# max recorded displacement over time
+	moatGap 				= float(moatGap)
+	afterRun['impacted'] 	= 0
 
 	if(any(displacement >= moatGap for displacement in isolMaxDisp)):
-		impacted 		= 1
+		afterRun['impacted'] 	= 1
 
 	# uplift check
-	minFv 				= 5.0			# kips
-	uplifted 			= 0
+	minFv 					= 5.0			# kips
+	afterRun['uplifted'] 	= 0
 
 	# isolator axial forces
 	isol1Axial 		= abs(isol1Force['iAxial'])
@@ -139,13 +148,18 @@ def failurePostprocess(filename, defFactor, runStatus):
 	isolMinAxial 	= np.minimum.reduce([isol1Axial, isol2Axial, isol3Axial, isol4Axial])
 
 	if(any(axialForce <= minFv for axialForce in isolMinAxial)):
-		uplifted 	= 1
+		afterRun['uplifted'] 	= 1
 
-	outHeader  		= getHeader()
-	runRecord 		= pd.DataFrame([[S1, S1Ampli, Tm, zetaM, RI, mu1, mu2, mu3, beamName, roofBeamName, colName, R1, R2, R3, moatAmpli, moatGap, filename, GMFactor, maxDisplacement, driftMax1, driftMax2, driftMax3, drift1, drift2, drift3, impacted, uplifted, runStatus]], columns=outHeader)
+	# use run status passed in
+	afterRun['runFailed'] 	= runStatus
 
-	return(runRecord)
+	# merge input and output dictionaries, then output as dataframe
+	runDict 		= {**param, **afterRun}
+	runRecord 		= pd.DataFrame.from_dict(runDict, 'index').transpose()			# 'index' puts keys as index column. transpose so results are in a row.
+	runHeader 		= list(runRecord.columns)										# pass column names to runControl
+	
+	return(runHeader, runRecord)
 
 if __name__ == '__main__':
-	thisRun 		= failurePostprocess(0)
+	thisHeader, thisRun 		= failurePostprocess('testfilename', 3.0, 0)
 	print(thisRun)

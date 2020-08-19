@@ -11,10 +11,7 @@
 # 				Calls LHS -> design -> buildModel -> eqAnly -> postprocessing
 # 				Writes results in final csv file
 
-# Open issues: 	(1) Fix workflow
-# 					-avoid repeating modeling building for each GM run
-# 				(2) Cleanly pass inputs around rather than rereading
-#				(3) Inputs currently hardcoded
+# Open issues: 	
 
 ############################################################################
 
@@ -53,13 +50,12 @@ import LHS
 import postprocessing
 import eqAnly as eq
 
-# create dataframe to hold results
-resultsHeader  	= postprocessing.getHeader()
-resultsDf 		= pd.DataFrame(columns=resultsHeader)
+# initialize dataframe as an empty object
+resultsDf 			= None
 
 # generate LHS input sets
-numRuns 		= 1
-inputSet 		= LHS.generateInputs(numRuns)
+numRuns 						= 3
+inputVariables, inputValues 	= LHS.generateInputs(numRuns)
 
 # get ground motion database list
 gmPath 			= "X:/Documents/bezerkeley/research/fpsScripts/frameOps/opsPython/groundMotions/"
@@ -67,15 +63,15 @@ databaseFile 	= 'gmList.csv'
 gmDatabase 		= pd.read_csv(gmPath+databaseFile, index_col=None, header=0)
 
 # for each input sets, write input files
-for index, row in enumerate(inputSet):
+for index, row in enumerate(inputValues):
 
-	print('The run index is ' + str(index) + '.')
+	print('The run index is ' + str(index) + '.')					# run counter
 
 	empty_directory('outputs')										# clear run histories
 
 	# write input files as csv columns
-	bearingIndex 	= pd.DataFrame(['Sm1', 'Sm1Ampli', 'T', 'zeta', 'mu1', 'R1', 'moatAmpli', 'RI'], columns=['variable'])
-	bearingValue 	= pd.DataFrame([row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7]], columns=['value'])
+	bearingIndex 	= pd.DataFrame(inputVariables, columns=['variable'])		# relies on ordering from LHS.py
+	bearingValue 	= pd.DataFrame(row, columns=['value'])
 
 	bearingIndex 	= bearingIndex.join(bearingValue)
 	bearingIndex.to_csv('./inputs/bearingInput.csv', index=False)
@@ -83,13 +79,19 @@ for index, row in enumerate(inputSet):
 	# for each input file, run all GMs in the database
 	for ind in gmDatabase.index:
 
-		filename 	= str(gmDatabase['filename'][ind])
-		filename 	= filename.replace('.AT2', '')						# remove extension from file name
-		defFactor 	= float(gmDatabase['scaleFactor'][ind])
-	 												
-		runStatus 	= eq.runGM(filename, defFactor)						# perform analysis (superStructDesign and buildModel imported within)
+		filename 				= str(gmDatabase['filename'][ind])
+		filename 				= filename.replace('.AT2', '')						# remove extension from file name
+		defFactor 				= float(gmDatabase['scaleFactor'][ind])
+	 															
+		runStatus 				= eq.runGM(filename, defFactor)											# perform analysis (superStructDesign and buildModel imported within)
 
-		thisRun 	= postprocessing.failurePostprocess(filename, defFactor, runStatus)		# add run results to holder df
-		resultsDf 	= pd.concat([thisRun,resultsDf], sort=False)
+		resultsHeader, thisRun 	= postprocessing.failurePostprocess(filename, defFactor, runStatus)		# add run results to holder df
 
-		resultsDf.to_csv('./sessionOut/sessionSummary.csv', index=False) 	# for now, write every iteration to prevent data loss
+		# if initial run, start the dataframe with headers from postprocessing.py
+		if resultsDf is None:
+			resultsDf 			= pd.DataFrame(columns=resultsHeader)
+			
+		# add results onto the dataframe
+		resultsDf 				= pd.concat([thisRun,resultsDf], sort=False)
+
+resultsDf.to_csv('./sessionOut/sessionSummary.csv', index=False) 	# for now, write every iteration to prevent data loss

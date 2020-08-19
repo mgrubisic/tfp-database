@@ -8,9 +8,7 @@
 
 # Description: 	Script performs dynamic analysis on OpenSeesPy model
 
-# Open issues: 	(1) Move damping to buildModel
-# 				(2) Algorithm robustness to be checked
-#				(3) Build model externally
+# Open issues: 	(1) Algorithm robustness to be checked
 
 ############################################################################
 
@@ -183,9 +181,11 @@ def runGM(gmFilename, gmDefScale):
 	# Uniform Earthquake ground motion (uniform acceleration input at all support nodes)
 
 	bearingParams 	= pd.read_csv('./inputs/bearingInput.csv', index_col=None, header=0)
-	S1 				= bearingParams.value[0]		# site spectrum value (either Sd1 or Sm1)
-	S1Ampli 		= bearingParams.value[1]		# random variable for site amplification
-	S1Actual 		= S1*S1Ampli
+
+	# param is dictionary of all inputs. call with param['whatYouWant']
+	param 			= dict(zip(bearingParams.variable, bearingParams.value))
+
+	S1Actual 		= param['S1']*param['S1Ampli']
 
 
 	GMDir 			= "X:/Documents/bezerkeley/research/fpsScripts/frameOps/opsPython/groundMotions/"
