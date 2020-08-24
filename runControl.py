@@ -11,7 +11,7 @@
 # 				Calls LHS -> design -> buildModel -> eqAnly -> postprocessing
 # 				Writes results in final csv file
 
-# Open issues: 	
+# Open issues: 	(1) Try-except case currently catches all, not just bad mu case
 
 ############################################################################
 
@@ -54,7 +54,7 @@ import eqAnly as eq
 resultsDf 			= None
 
 # generate LHS input sets
-numRuns 						= 3
+numRuns 						= 2
 inputVariables, inputValues 	= LHS.generateInputs(numRuns)
 
 # get ground motion database list
@@ -82,8 +82,12 @@ for index, row in enumerate(inputValues):
 		filename 				= str(gmDatabase['filename'][ind])
 		filename 				= filename.replace('.AT2', '')						# remove extension from file name
 		defFactor 				= float(gmDatabase['scaleFactor'][ind])
-	 															
-		runStatus 				= eq.runGM(filename, defFactor)											# perform analysis (superStructDesign and buildModel imported within)
+	 		
+	 	# move on to next set if bad friction coeffs encountered (handled in superStructDesign)
+		try:
+			runStatus 				= eq.runGM(filename, defFactor)					# perform analysis (superStructDesign and buildModel imported within)
+		except:
+			continue
 
 		resultsHeader, thisRun 	= postprocessing.failurePostprocess(filename, defFactor, runStatus)		# add run results to holder df
 
