@@ -109,24 +109,41 @@ def failurePostprocess(filename, defFactor, runStatus):
 	story3DriftInner 	= (story3Disp['isol2'] - story2Disp['isol2'])/(13*ft)
 
 	# drift failure check
-	driftLimit 			= 0.05
+	# collapse limit state
+	collapseDriftLimit 			= 0.05
 
-	afterRun['driftMax1']	= max(np.maximum(story1DriftOuter, story1DriftInner))
-	afterRun['driftMax2']	= max(np.maximum(story2DriftOuter, story2DriftInner))
-	afterRun['driftMax3']	= max(np.maximum(story3DriftOuter, story3DriftInner))
+	afterRun['driftMax1']	= max(np.maximum(abs(story1DriftOuter), abs(story1DriftInner)))
+	afterRun['driftMax2']	= max(np.maximum(abs(story2DriftOuter), abs(story2DriftInner)))
+	afterRun['driftMax3']	= max(np.maximum(abs(story3DriftOuter), abs(story3DriftInner)))
 
-	afterRun['drift1']	= 0
-	afterRun['drift2'] 	= 0
-	afterRun['drift3'] 	= 0
+	afterRun['collapseDrift1']	= 0
+	afterRun['collapseDrift2'] 	= 0
+	afterRun['collapseDrift3'] 	= 0
 
-	if(any(abs(driftRatio) > driftLimit for driftRatio in story1DriftOuter) or any(abs(driftRatio) > driftLimit for driftRatio in story1DriftInner)):
-		afterRun['drift1'] 	= 1
+	if(any(abs(driftRatio) > collapseDriftLimit for driftRatio in story1DriftOuter) or any(abs(driftRatio) > collapseDriftLimit for driftRatio in story1DriftInner)):
+		afterRun['collapseDrift1'] 	= 1
 
-	if(any(abs(driftRatio) > driftLimit for driftRatio in story2DriftOuter) or any(abs(driftRatio) > driftLimit for driftRatio in story2DriftInner)):
-		afterRun['drift2'] 	= 1
+	if(any(abs(driftRatio) > collapseDriftLimit for driftRatio in story2DriftOuter) or any(abs(driftRatio) > collapseDriftLimit for driftRatio in story2DriftInner)):
+		afterRun['collapseDrift2'] 	= 1
 
-	if(any(abs(driftRatio) > driftLimit for driftRatio in story3DriftOuter) or any(abs(driftRatio) > driftLimit for driftRatio in story3DriftInner)):
-		afterRun['drift3'] 	= 1
+	if(any(abs(driftRatio) > collapseDriftLimit for driftRatio in story3DriftOuter) or any(abs(driftRatio) > collapseDriftLimit for driftRatio in story3DriftInner)):
+		afterRun['collapseDrift3'] 	= 1
+
+
+	serviceDriftLimit 			= 0.015 	# need to find ASCE 41 basis
+
+	afterRun['serviceDrift1']	= 0
+	afterRun['serviceDrift2'] 	= 0
+	afterRun['serviceDrift3'] 	= 0
+
+	if(any(abs(driftRatio) > serviceDriftLimit for driftRatio in story1DriftOuter) or any(abs(driftRatio) > serviceDriftLimit for driftRatio in story1DriftInner)):
+		afterRun['serviceDrift1'] 	= 1
+
+	if(any(abs(driftRatio) > serviceDriftLimit for driftRatio in story2DriftOuter) or any(abs(driftRatio) > serviceDriftLimit for driftRatio in story2DriftInner)):
+		afterRun['serviceDrift2'] 	= 1
+
+	if(any(abs(driftRatio) > serviceDriftLimit for driftRatio in story3DriftOuter) or any(abs(driftRatio) > serviceDriftLimit for driftRatio in story3DriftInner)):
+		afterRun['serviceDrift3'] 	= 1
 
 	# impact check
 	moatGap 				= float(moatGap)
