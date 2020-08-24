@@ -165,11 +165,12 @@ def design():
 
 	Dtm 		= torsionFactor*Dm
 
-	# from ASCE 7-16 Ch. 17.6.4.1
-	DmTrial 	= (Dm)/math.sqrt(1 + (Tfb/param['Tm'])**2)
-	DmPrime 	= max(0.8*Dtm, DmTrial)
+	# # from ASCE 7-16 Ch. 17.6.4.1
+	# DmTrial 	= (Dm)/math.sqrt(1 + (Tfb/param['Tm'])**2)
+	# DmPrime 	= max(0.8*Dtm, DmTrial)
 
-	moatGap 	= math.ceil(param['moatAmpli']*DmPrime)
+	# moatGap 	= math.ceil(param['moatAmpli']*DmPrime)
+	moatGap 	= math.ceil(param['moatAmpli']*Dtm)
 
 	############################################################################
 	#              ASCE 7-16: Story forces

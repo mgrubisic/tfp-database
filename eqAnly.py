@@ -122,7 +122,7 @@ def runGM(gmFilename, gmDefScale):
 	# plot_modeshape(1)
 	# plot_modeshape(2)
 
-	# # Rayleigh damping to the superstructure only
+	# Rayleigh damping to the superstructure only
 	regTag 		= 80
 	zetaTarget 	= 0.05
 	bm.provideSuperDamping(regTag, omega1, zetaTarget)
