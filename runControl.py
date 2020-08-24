@@ -79,13 +79,14 @@ for index, row in enumerate(inputValues):
 	# for each input file, run all GMs in the database
 	for ind in gmDatabase.index:
 
-		filename 				= str(gmDatabase['filename'][ind])
+		filename 				= str(gmDatabase['filename'][ind])					# ground motion name
 		filename 				= filename.replace('.AT2', '')						# remove extension from file name
-		defFactor 				= float(gmDatabase['scaleFactor'][ind])
+		defFactor 				= float(gmDatabase['scaleFactor'][ind])				# scale factor used
+		defS1 					= float(gmDatabase['gmS1'][ind])					# scaled pSa at T = 1s
 	 		
 	 	# move on to next set if bad friction coeffs encountered (handled in superStructDesign)
 		try:
-			runStatus 				= eq.runGM(filename, defFactor)					# perform analysis (superStructDesign and buildModel imported within)
+			runStatus 				= eq.runGM(filename, defFactor, defS1)			# perform analysis (superStructDesign and buildModel imported within)
 		except:
 			continue
 

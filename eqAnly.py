@@ -24,7 +24,7 @@ import math
 import buildModel as bm
 import pandas as pd
 
-def runGM(gmFilename, gmDefScale):
+def runGM(gmFilename, gmDefScale, gmDefS1):
 
 	# build model
 	bm.build()
@@ -185,17 +185,17 @@ def runGM(gmFilename, gmDefScale):
 	# param is dictionary of all inputs. call with param['whatYouWant']
 	param 			= dict(zip(bearingParams.variable, bearingParams.value))
 
-	S1Actual 		= param['S1']*param['S1Ampli']
+	actualS1 		= param['S1']*param['S1Ampli']
 
 
 	GMDir 			= "X:/Documents/bezerkeley/research/fpsScripts/frameOps/opsPython/groundMotions/"
 	GMDirection 	= 1								# ground-motion direction
 	GMFile 			= gmFilename 					# ground motion file name passed in
 
-	# Search result is scaled to Sm1 = 1.017s, so scale appropriately
+	# Search result is scaled to Sm1 = gmDefS1, so scale appropriately
 	defaultScale 	= gmDefScale 					# default scale is passed in
-	S1Default 		= 1.017
-	GMFactor 		= S1Actual/S1Default*defaultScale
+	defaultS1 		= gmDefS1
+	GMFactor 		= actualS1/defaultS1*defaultScale
 
 	print('Current ground motion: ', gmFilename)
 
