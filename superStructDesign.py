@@ -130,8 +130,10 @@ def design():
 		RMult 	+= 0.1
 
 	# Abort if there are nonsensical results
-	if(any(coeff < 0 for coeff in muList) or any(np.iscomplex(muList))):
-		sys.exit('Bearing solver incorrectly output friction coefficients...')
+	if(any(coeff.real < 0 for coeff in muList) or any(np.iscomplex(muList))):
+		# sys.exit('Bearing solver incorrectly output friction coefficients...')
+		muList 	= [math.sqrt(coeff) for coeff in muList]	# invoke the ValueError or TypeError
+
 	else:
 		muList 		= [coeff.real for coeff in muList]
 		RList		= [param['R1'], R2, R3]

@@ -87,7 +87,11 @@ for index, row in enumerate(inputValues):
 	 	# move on to next set if bad friction coeffs encountered (handled in superStructDesign)
 		try:
 			runStatus 				= eq.runGM(filename, defFactor, defS1)			# perform analysis (superStructDesign and buildModel imported within)
-		except:
+		except ValueError:
+			print('Bearing solver returned negative friction coefficients. Skipping...')
+			continue
+		except TypeError:
+			print('Bearing solver returned complex friction coefficients. Skipping...')
 			continue
 
 		resultsHeader, thisRun 	= postprocessing.failurePostprocess(filename, defFactor, runStatus)		# add run results to holder df
