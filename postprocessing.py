@@ -25,7 +25,7 @@ def getShape(shape):
 	return(shapeName)
 
 # main function
-def failurePostprocess(filename, defFactor, runStatus):
+def failurePostprocess(filename, scaleFactor, runStatus):
 
 	# take input as the run 'ok' variable from eqAnly, passes that as one of the results csv columns
 
@@ -38,12 +38,9 @@ def failurePostprocess(filename, defFactor, runStatus):
 	# create new dictionary for non-inputs. Put all tabulated results here.
 	afterRun 				= dict()
 
+	# scaling and filename are read
 	afterRun['GMFile'] 		= filename
-
-	# redo scaling
-	S1Actual 				= param['S1']*param['S1Ampli']
-	S1Default 				= 1.017
-	afterRun['GMScale'] 	= S1Actual/S1Default*defFactor
+	afterRun['GMScale'] 	= scaleFactor
 
 	# get selections and append to non-input dictionary
 	import superStructDesign as sd

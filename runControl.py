@@ -11,7 +11,7 @@
 # 				Calls LHS -> design -> buildModel -> eqAnly -> postprocessing
 # 				Writes results in final csv file
 
-# Open issues: 	(1) Try-except case currently catches all, not just bad mu case
+# Open issues: 	(1) 
 
 ############################################################################
 
@@ -86,7 +86,7 @@ for index, row in enumerate(inputValues):
 	 		
 	 	# move on to next set if bad friction coeffs encountered (handled in superStructDesign)
 		try:
-			runStatus 				= eq.runGM(filename, defFactor, defS1)			# perform analysis (superStructDesign and buildModel imported within)
+			runStatus, scaleFactor 		= eq.runGM(filename, defFactor, defS1)				# perform analysis (superStructDesign and buildModel imported within)
 		except ValueError:
 			print('Bearing solver returned negative friction coefficients. Skipping...')
 			continue
@@ -94,7 +94,7 @@ for index, row in enumerate(inputValues):
 			print('Bearing solver returned complex friction coefficients. Skipping...')
 			continue
 
-		resultsHeader, thisRun 	= postprocessing.failurePostprocess(filename, defFactor, runStatus)		# add run results to holder df
+		resultsHeader, thisRun 	= postprocessing.failurePostprocess(filename, scaleFactor, runStatus)		# add run results to holder df
 
 		# if initial run, start the dataframe with headers from postprocessing.py
 		if resultsDf is None:

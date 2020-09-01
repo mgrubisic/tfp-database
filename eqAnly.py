@@ -367,4 +367,4 @@ def runGM(gmFilename, gmDefScale, gmDefS1):
 
 	wipe()
 
-	return(ok)
+	return(ok, GMFactor)

@@ -12,6 +12,7 @@
 # Open issues: 	(1) Nonlinear beamWithHinges needs verification for HingeRadau
 #				(2) Bearing kv is arbitrary
 #				(3) Moat wall parameters arbitrary
+# 				(4) Impact element not stopping movement
 
 # following example on http://opensees.berkeley.edu/wiki/index.php/Elastic_Frame_Example
 # nonlinear model example from https://opensees.berkeley.edu/wiki/index.php/OpenSees_Example_5._2D_Frame,_3-story_3-bay,_Reinforced-Concrete_Section_%26_Steel_W-Section#Elastic_Element
