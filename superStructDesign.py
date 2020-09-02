@@ -89,7 +89,6 @@ def design():
 	x 		= Dm
 
 	xy		= 0.01*inch
-	g		= 386.4*inch/(sec**2)
 
 	muBad 	= True
 
