@@ -54,7 +54,7 @@ import eqAnly as eq
 resultsDf 			= None
 
 # generate LHS input sets
-numRuns 						= 3
+numRuns 						= 1
 inputVariables, inputValues 	= LHS.generateInputs(numRuns)
 
 # get ground motion database list
@@ -103,4 +103,13 @@ for index, row in enumerate(inputValues):
 		# add results onto the dataframe
 		resultsDf 				= pd.concat([thisRun,resultsDf], sort=False)
 
+resultsDf['Pi1'] 		= resultsDf['mu1']/resultsDf['S1']
+resultsDf['Pi2'] 		= resultsDf['Tm']**2/(386.4/resultsDf['R1'])
+
+# move columns for readability
+cols 		= list(resultsDf)
+cols.insert(0, cols.pop(cols.index('Pi2')))
+cols.insert(0, cols.pop(cols.index('Pi1')))
+
+resultsDf 	= resultsDf.loc[:,cols]
 resultsDf.to_csv('./sessionOut/sessionSummary.csv', index=False)
