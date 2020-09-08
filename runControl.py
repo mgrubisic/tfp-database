@@ -86,7 +86,7 @@ for index, row in enumerate(inputValues):
 
 		filename 				= str(gmDatabase['filename'][ind])					# ground motion name
 		filename 				= filename.replace('.AT2', '')						# remove extension from file name
-		defFactor 				= float(gmDatabase['scaleFactorS1'][ind])			# scale factor used, either scaleFactorS1 or scaleFactorSpecAvg
+		defFactor 				= float(gmDatabase['scaleFactorSpecAvg'][ind])		# scale factor used, either scaleFactorS1 or scaleFactorSpecAvg
 		defS1 					= float(gmDatabase['scaledSa1'][ind])				# scaled pSa at T = 1s
 	 		
 	 	# move on to next set if bad friction coeffs encountered (handled in superStructDesign)
@@ -108,13 +108,4 @@ for index, row in enumerate(inputValues):
 		# add results onto the dataframe
 		resultsDf 				= pd.concat([thisRun,resultsDf], sort=False)
 
-resultsDf['Pi1'] 		= resultsDf['mu1']/resultsDf['S1']
-resultsDf['Pi2'] 		= resultsDf['Tm']**2/(386.4/resultsDf['R1'])
-
-# move columns for readability
-cols 		= list(resultsDf)
-cols.insert(0, cols.pop(cols.index('Pi2')))
-cols.insert(0, cols.pop(cols.index('Pi1')))
-
-resultsDf 	= resultsDf.loc[:,cols]
 resultsDf.to_csv('./sessionOut/sessionSummary.csv', index=False)
