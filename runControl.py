@@ -58,7 +58,7 @@ numRuns 						= 1
 inputVariables, inputValues 	= LHS.generateInputs(numRuns)
 
 # get ground motion database list
-gmPath 			= "X:/Documents/bezerkeley/research/fpsScripts/frameOps/opsPython/groundMotions/"
+gmPath 			= "./groundMotions/"
 databaseFile 	= 'gmList.csv'
 gmDatabase 		= pd.read_csv(gmPath+databaseFile, index_col=None, header=0)
 
