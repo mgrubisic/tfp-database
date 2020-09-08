@@ -188,14 +188,12 @@ def runGM(gmFilename, gmDefScale, gmDefS1):
 	actualS1 		= param['S1']*param['S1Ampli']
 
 
-	GMDir 			= "X:/Documents/bezerkeley/research/fpsScripts/frameOps/opsPython/groundMotions/"
+	GMDir 			= "./groundMotions/PEERNGARecords_Unscaled/"
 	GMDirection 	= 1								# ground-motion direction
 	GMFile 			= gmFilename 					# ground motion file name passed in
 
 	# Search result is scaled to Sm1 = gmDefS1, so scale appropriately
-	defaultScale 	= gmDefScale 					# default scale is passed in
-	defaultS1 		= gmDefS1
-	GMFactor 		= actualS1/defaultS1*defaultScale
+	GMFactor 		= actualS1/gmDefS1*gmDefScale
 
 	print('Current ground motion: ', gmFilename)
 

@@ -49,6 +49,7 @@ import pandas as pd
 import LHS
 import postprocessing
 import eqAnly as eq
+import gmSelector
 
 # initialize dataframe as an empty object
 resultsDf 			= None
@@ -57,10 +58,14 @@ resultsDf 			= None
 numRuns 						= 1
 inputVariables, inputValues 	= LHS.generateInputs(numRuns)
 
-# get ground motion database list
-gmPath 			= "./groundMotions/"
+# filger GMs, then get ground motion database list
+gmPath 			= './groundMotions/PEERNGARecords_Unscaled/'
+PEERSummary 	= '_SearchResults.csv'
 databaseFile 	= 'gmList.csv'
-gmDatabase 		= pd.read_csv(gmPath+databaseFile, index_col=None, header=0)
+
+# save GM list used
+gmDatabase 		= gmSelector.cleanGMs(gmPath, PEERSummary)
+gmDatabase.to_csv(gmPath+databaseFile, index=False)
 
 # for each input sets, write input files
 for index, row in enumerate(inputValues):
@@ -81,8 +86,8 @@ for index, row in enumerate(inputValues):
 
 		filename 				= str(gmDatabase['filename'][ind])					# ground motion name
 		filename 				= filename.replace('.AT2', '')						# remove extension from file name
-		defFactor 				= float(gmDatabase['scaleFactor'][ind])				# scale factor used
-		defS1 					= float(gmDatabase['gmS1'][ind])					# scaled pSa at T = 1s
+		defFactor 				= float(gmDatabase['scaleFactorS1'][ind])			# scale factor used, either scaleFactorS1 or scaleFactorSpecAvg
+		defS1 					= float(gmDatabase['scaledSa1'][ind])				# scaled pSa at T = 1s
 	 		
 	 	# move on to next set if bad friction coeffs encountered (handled in superStructDesign)
 		try:
