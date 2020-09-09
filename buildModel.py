@@ -501,9 +501,10 @@ def build():
 	element('Truss', 41, 4, 22, ARigid, frameLinkTag)
 
 	# define impact moat as ZeroLengthImpact3D elements
-	khWall 		= 25000*kip/inch 										# impact stiffness parameter from Muthukumar, 2006
-	e 			= 0.6													# coeff of restitution (1.0 = perfectly elastic collision)
-	delM 		= 0.5*inch 												# maximum penetration during pounding event, from Muthukumar dissertation
+	# https://opensees.berkeley.edu/wiki/index.php/Impact_Material
+	khWall 		= 25000*kip*inch 										# impact stiffness parameter from Muthukumar, 2006
+	e 			= 0.7													# coeff of restitution (1.0 = perfectly elastic collision)
+	delM 		= 0.025*inch 											# maximum penetration during pounding event, from Hughes paper
 	kEffWall	= khWall*math.sqrt(delM)								# effective stiffness
 	a 			= 0.1													# yield coefficient
 	delY 		= a*delM												# yield displacement
@@ -520,6 +521,7 @@ def build():
 	cohesionTag = 0								# 0 for no cohesion
 
 	# tie up 3DOF and 6DOF nodes
+	# command: equalDOF(rNodeTag, cNodeTag, *dofs)
 	equalDOF(1, 312, 1, 2, 3)
 	equalDOF(4, 321, 1, 2, 3)
 	equalDOF(31, 311, 1, 2, 3)
@@ -527,8 +529,10 @@ def build():
 
 	# impact elements
 	# command: element zeroLengthImpact3D $tag $cNode $rNode $direction $initGap $frictionRatio $Kt $Kn $Kn2 $Delta_y $cohesion
-	element('zeroLengthImpact3D', 51, 311, 312, dirWall, moatGap, muWall, KtWall, K1, K2, delY, cohesionTag)
-	element('zeroLengthImpact3D', 52, 322, 321, dirWall, moatGap, muWall, KtWall, K1, K2, delY, cohesionTag)
+	# element('zeroLengthImpact3D', 51, 311, 312, dirWall, moatGap, muWall, KtWall, K1, K2, delY, cohesionTag)
+	# element('zeroLengthImpact3D', 52, 322, 321, dirWall, moatGap, muWall, KtWall, K1, K2, delY, cohesionTag)
+	element('zeroLengthImpact3D', 51, 312, 311, dirWall, moatGap, muWall, KtWall, K1, K2, delY, cohesionTag)
+	element('zeroLengthImpact3D', 52, 321, 322, dirWall, moatGap, muWall, KtWall, K1, K2, delY, cohesionTag)
 
 	# print("Model built!")
 	# plot_model()

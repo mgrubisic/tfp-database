@@ -58,14 +58,17 @@ resultsDf 			= None
 numRuns 						= 1
 inputVariables, inputValues 	= LHS.generateInputs(numRuns)
 
-# filger GMs, then get ground motion database list
-gmPath 			= './groundMotions/PEERNGARecords_Unscaled/'
-PEERSummary 	= '_SearchResults.csv'
-databaseFile 	= 'gmList.csv'
+# # filter GMs, then get ground motion database list
+# gmPath 			= './groundMotions/PEERNGARecords_Unscaled/'
+# PEERSummary 	= '_SearchResults.csv'
+# databaseFile 	= 'gmList.csv'
 
-# save GM list used
-gmDatabase 		= gmSelector.cleanGMs(gmPath, PEERSummary)
-gmDatabase.to_csv(gmPath+databaseFile, index=False)
+# # save GM list used
+# gmDatabase 		= gmSelector.cleanGMs(gmPath, PEERSummary)
+# gmDatabase.to_csv(gmPath+databaseFile, index=False)
+
+# troubleshooting with list of impact GMs
+gmDatabase 		= pd.read_csv('./groundMotions/gmList.csv')
 
 # for each input sets, write input files
 for index, row in enumerate(inputValues):
@@ -86,7 +89,7 @@ for index, row in enumerate(inputValues):
 
 		filename 				= str(gmDatabase['filename'][ind])					# ground motion name
 		filename 				= filename.replace('.AT2', '')						# remove extension from file name
-		defFactor 				= float(gmDatabase['scaleFactorSpecAvg'][ind])		# scale factor used, either scaleFactorS1 or scaleFactorSpecAvg
+		defFactor 				= float(gmDatabase['scaleFactorS1'][ind])			# scale factor used, either scaleFactorS1 or scaleFactorSpecAvg
 		defS1 					= float(gmDatabase['scaledSa1'][ind])				# scaled pSa at T = 1s
 	 		
 	 	# move on to next set if bad friction coeffs encountered (handled in superStructDesign)

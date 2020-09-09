@@ -62,8 +62,8 @@ def failurePostprocess(filename, scaleFactor, runStatus):
 	afterRun.update(fromDesign)
 
 	# calculate nondimensionalized parameters
-	afterRun['T1']			= 2*math.pi/(sqrt(afterRun['mu2']*386.4/(2*afterRun['R1']*(afterRun['mu2'] - afterRun['mu1']))))
-	afterRun['T2'] 			= 2*math.pi/(sqrt(386.4/(2*afterRun['R2'])))
+	afterRun['T1']			= 2*math.pi/(math.sqrt(afterRun['mu2']*386.4/(2*afterRun['R1']*(afterRun['mu2'] - afterRun['mu1']))))
+	afterRun['T2'] 			= 2*math.pi/(math.sqrt(386.4/(2*afterRun['R2'])))
 	afterRun['S2'] 			= param['S1']/afterRun['T2']
 	afterRun['Pi1'] 		= afterRun['mu1']/param['S1']
 	afterRun['Pi2'] 		= param['Tm']**2/(386.4/afterRun['R1'])
