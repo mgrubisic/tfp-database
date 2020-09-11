@@ -72,7 +72,7 @@ def cleanGMs(gmDir, resultsCSV):
 	pSaOneSec 				= pSaOneSec.astype({' Record Sequence Number': int})
 	finalGM 		    	= pd.merge(finalGM, pSaOneSec, on=' Record Sequence Number').drop(columns=['fullRSN', 'scaleDifference'])
 
-	# calculate desired target spectrum average (0.2*T1, 3*T1)
+	# calculate desired target spectrum average (0.2*T1, 2.0*T1) 
 	tLower 					= 0.6
 	tUpper					= 4.5
 

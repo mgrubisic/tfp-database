@@ -57,12 +57,12 @@ story3DriftInner 	= (story3Disp['isol2'] - story2Disp['isol2'])/(13*12)
 
 sumAxial 		= isol1Force['iAxial'] + isol2Force['iAxial'] + isol3Force['iAxial'] + isol4Force['iAxial']
 
-# fig = plt.figure()
-# plt.plot(diaphragmForce1['time'], diaphragmForce1['iAxial'])
-# plt.title('Diaphragm 1 axial')
-# plt.xlabel('Time (s)')
-# plt.ylabel('Axial force (kip)')
-# plt.grid(True)
+fig = plt.figure()
+plt.plot(diaphragmForce1['time'], diaphragmForce1['iAxial'])
+plt.title('Diaphragm 1 axial')
+plt.xlabel('Time (s)')
+plt.ylabel('Axial force (kip)')
+plt.grid(True)
 
 # fig = plt.figure()
 # plt.plot(diaphragmForce1['time'], diaphragmForce1['iMomentZ'])
