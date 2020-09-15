@@ -57,12 +57,16 @@ story3DriftInner 	= (story3Disp['isol2'] - story2Disp['isol2'])/(13*12)
 
 sumAxial 		= isol1Force['iAxial'] + isol2Force['iAxial'] + isol3Force['iAxial'] + isol4Force['iAxial']
 
+<<<<<<< HEAD
 fig = plt.figure()
 plt.plot(diaphragmForce1['time'], diaphragmForce1['iAxial'])
 plt.title('Diaphragm 1 axial')
 plt.xlabel('Time (s)')
 plt.ylabel('Axial force (kip)')
 plt.grid(True)
+=======
+
+>>>>>>> moatTroubleshoot
 
 # fig = plt.figure()
 # plt.plot(diaphragmForce1['time'], diaphragmForce1['iMomentZ'])
@@ -158,6 +162,14 @@ plt.xlabel('Time (s)')
 plt.ylabel('Drift ratio')
 plt.grid(True)
 
+# Axial force
+fig = plt.figure()
+plt.plot(diaphragmForce1['time'], diaphragmForce1['iAxial'])
+plt.title('Diaphragm 1 axial')
+plt.xlabel('Time (s)')
+plt.ylabel('Axial force (kip)')
+plt.grid(True)
+
 
 # Rotation history
 # fig = plt.figure()
@@ -184,40 +196,32 @@ plt.grid(True)
 # plt.ylabel('Rotation (in/in)')
 # plt.grid(True)
 
-# # Axial force history
-# fig = plt.figure()
-# plt.plot(isolDisp['time'], isol1Force['iAxial'])
-# plt.title('Bearing 1 axial force')
-# plt.xlabel('Time (s)')
-# plt.ylabel('Axial force (k)')
-# plt.grid(True)
-# plt.ylim([0,300])
+# Axial force history
 
-# fig = plt.figure()
-# plt.plot(isolDisp['time'], isol2Force['iAxial'])
-# plt.title('Bearing 2 axial force')
-# plt.xlabel('Time (s)')
-# plt.ylabel('Axial force (k)')
-# plt.grid(True)
-# plt.ylim([0,300])
+fig = plt.figure()
+plt.plot(isolDisp['time'], isol1Force['iAxial'])
+plt.title('Bearing outer axial force')
+plt.xlabel('Time (s)')
+plt.ylabel('Axial force (k)')
+plt.grid(True)
 
-# fig = plt.figure()
-# plt.plot(isolDisp['time'], isol3Force['iAxial'])
-# plt.title('Bearing 3 axial force')
-# plt.xlabel('Time (s)')
-# plt.ylabel('Axial force (k)')
-# plt.grid(True)
-# plt.ylim([0,300])
+plt.plot(isolDisp['time'], isol4Force['iAxial'])
+plt.xlabel('Time (s)')
+plt.ylabel('Axial force (k)')
+plt.grid(True)
 
-# fig = plt.figure()
-# plt.plot(isolDisp['time'], isol4Force['iAxial'])
-# plt.title('Bearing 4 axial force')
-# plt.xlabel('Time (s)')
-# plt.ylabel('Axial force (k)')
-# plt.grid(True)
-# plt.ylim([0,300])
+fig = plt.figure()
+plt.plot(isolDisp['time'], isol2Force['iAxial'])
+plt.title('Bearing inner axial force')
+plt.xlabel('Time (s)')
+plt.ylabel('Axial force (k)')
+plt.grid(True)
 
-# fig = plt.figure()
+plt.plot(isolDisp['time'], isol3Force['iAxial'])
+plt.xlabel('Time (s)')
+plt.ylabel('Axial force (k)')
+plt.grid(True)
+
 # plt.plot(isolDisp['time'], isolLCForce['iAxial'])
 # plt.title('Bearing LC axial force')
 # plt.xlabel('Time (s)')

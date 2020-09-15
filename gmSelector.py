@@ -68,7 +68,7 @@ def cleanGMs(gmDir, resultsCSV):
 	pSaOneSec.columns 		= ['fullRSN', 'scaledSa1']
 
 	# rename back to old convention and merge with previous dataframe
-	pSaOneSec[' Record Sequence Number'] 		= pSaOneSec['fullRSN'].str.extract('(\d+)')
+	pSaOneSec[' Record Sequence Number'] 		= pSaOneSec['fullRSN'].str.extract('(\d+)')		# extract digits
 	pSaOneSec 				= pSaOneSec.astype({' Record Sequence Number': int})
 	finalGM 		    	= pd.merge(finalGM, pSaOneSec, on=' Record Sequence Number').drop(columns=['fullRSN', 'scaleDifference'])
 
