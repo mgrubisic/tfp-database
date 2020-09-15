@@ -532,7 +532,8 @@ def build():
 	# element('zeroLengthImpact3D', 51, 311, 312, dirWall, moatGap, muWall, KtWall, K1, K2, delY, cohesionTag)
 	# element('zeroLengthImpact3D', 52, 322, 321, dirWall, moatGap, muWall, KtWall, K1, K2, delY, cohesionTag)
 	element('zeroLengthImpact3D', 51, 312, 311, dirWall, moatGap, muWall, KtWall, K1, K2, delY, cohesionTag)
-	element('zeroLengthImpact3D', 52, 321, 322, dirWall, moatGap, muWall, KtWall, K1, K2, delY, cohesionTag)
+	# element('zeroLengthImpact3D', 52, 321, 322, dirWall, moatGap, muWall, KtWall, K1, K2, delY, cohesionTag)
+	element('zeroLengthImpact3D', 52, 322, 321, dirWall, moatGap, muWall, KtWall, K1, K2, delY, cohesionTag)
 
 	# print("Model built!")
 	# plot_model()
