@@ -180,6 +180,11 @@ def runGM(gmFilename, gmDefScale, gmDefS1):
 
 	# Uniform Earthquake ground motion (uniform acceleration input at all support nodes)
 
+	GMDir 			= "./groundMotions/PEERNGARecords_Unscaled/"
+	GMDirection 	= 1								# ground-motion direction
+	GMFile 			= gmFilename 					# ground motion file name passed in
+
+	'''
 	bearingParams 	= pd.read_csv('./inputs/bearingInput.csv', index_col=None, header=0)
 
 	# param is dictionary of all inputs. call with param['whatYouWant']
@@ -188,13 +193,15 @@ def runGM(gmFilename, gmDefScale, gmDefS1):
 	actualS1 		= param['S1']*param['S1Ampli']
 
 
-	GMDir 			= "./groundMotions/PEERNGARecords_Unscaled/"
-	GMDirection 	= 1								# ground-motion direction
-	GMFile 			= gmFilename 					# ground motion file name passed in
+	
 
 	# Search result is scaled to Sm1 = gmDefS1, so scale appropriately
 	GMFactor 		= actualS1/gmDefS1*gmDefScale
+	'''
 
+	# Search result is scaled to spectrum average
+	GMFactor 		= gmDefScale
+	
 	print('Current ground motion: ', gmFilename)
 
 	# Set up Analysis Parameters ---------------------------------------------

@@ -13,10 +13,11 @@
 ############################################################################
 import pandas as pd
 import os
+import numpy as np
 
 pd.options.mode.chained_assignment = None  # default='warn', ignore SettingWithCopyWarning
 
-def cleanGMs(gmDir, resultsCSV):
+def cleanGMs(gmDir, resultsCSV, actualS1):
 
 	# remove all DT2 VT2 files
 	folder 				= os.listdir(gmDir)
@@ -30,8 +31,39 @@ def cleanGMs(gmDir, resultsCSV):
 	scaledSpectra 		= pd.read_csv(gmDir+resultsCSV, skiprows=144, nrows=111)
 	unscaledSpectra 	= pd.read_csv(gmDir+resultsCSV, skiprows=258, nrows=111)
 
+	# Keep Ss as 2.2815 (Berkeley)
+	Ss 									= 2.2815
+	Tshort								= actualS1/Ss
+	targetSpectrum 						= scaledSpectra[['Period (sec)']]
+	targetSpectrum['Target pSa (g)'] 	= np.where(targetSpectrum['Period (sec)'] < Tshort, Ss, actualS1/targetSpectrum['Period (sec)'])
+	# selectionScaledSpectra				= scaledSpectra[selectionGMs]
+
+	# calculate desired target spectrum average (0.2*T1, 3*T1)
+	tLower 					= 0.6
+	tUpper					= 4.5
+
+	# geometric mean from Eads et al. (2015)
+	targetRange 			= targetSpectrum[targetSpectrum['Period (sec)'].between(tLower, tUpper)]['Target pSa (g)']
+	targetAverage 			= targetRange.prod()**(1/targetRange.size)
+
+	# get the spectrum average for the unscaled GM spectra
+	unscaledH1s 			= unscaledSpectra.filter(regex=("-1 pSa \(g\)$"))		# only concerned about H1 spectra
+	unscaledSpectraRange 	= unscaledH1s[targetSpectrum['Period (sec)'].between(tLower, tUpper)]
+	unscaledAverages 		= unscaledSpectraRange.prod()**(1/len(unscaledSpectraRange.index))
+
+	# determine scale factor to get unscaled to target
+	scaleFactorAverage 			= targetAverage/unscaledAverages
+	scaleFactorAverage 			= scaleFactorAverage.reset_index()
+	scaleFactorAverage.columns 	= ['fullRSN', 'avgSpectrumScaleFactor']
+
+	# rename back to old convention and merge with previous dataframe
+	scaleFactorAverage[' Record Sequence Number'] 		= scaleFactorAverage['fullRSN'].str.extract('(\d+)')
+	scaleFactorAverage 			= scaleFactorAverage.astype({' Record Sequence Number': int})
+	summary 					= pd.merge(summary, scaleFactorAverage, on=' Record Sequence Number').drop(columns=['fullRSN'])
+	
+
 	# grab only relevant columns
-	summaryNames 		= [' Record Sequence Number', ' Scale Factor', ' Earthquake Name', ' Lowest Useable Frequency (Hz)', ' Horizontal-1 Acc. Filename']
+	summaryNames 		= [' Record Sequence Number', 'avgSpectrumScaleFactor', ' Earthquake Name', ' Lowest Useable Frequency (Hz)', ' Horizontal-1 Acc. Filename']
 	summarySmol 		= summary[summaryNames]
 
 	# Filter by lowest usable frequency
@@ -46,7 +78,7 @@ def cleanGMs(gmDir, resultsCSV):
 	# Select earthquakes that are least severely scaled
 	for earthquake in uniqEqs:
 		matchingEqs 						= eligFreq[eligFreq[' Earthquake Name'] == earthquake]
-		matchingEqs['scaleDifference'] 		= abs(matchingEqs[' Scale Factor'] - 1.0)
+		matchingEqs['scaleDifference'] 		= abs(matchingEqs['avgSpectrumScaleFactor'] - 1.0)
 		leastScaled 						= matchingEqs[matchingEqs['scaleDifference'] == min(matchingEqs['scaleDifference'])]
 
 		if finalGM is None:
@@ -57,51 +89,29 @@ def cleanGMs(gmDir, resultsCSV):
 		finalGM[' Horizontal-1 Acc. Filename'] 	= finalGM[' Horizontal-1 Acc. Filename'].str.strip()
 
 	# match new list with headers from spectra section
-	selectionGMs 			= [('RSN-' + str(rsn) + ' H1 pSa (g)') for rsn in finalGM[' Record Sequence Number']]
+	# selectionGMs 			= [('RSN-' + str(rsn) + ' H1 pSa (g)') for rsn in finalGM[' Record Sequence Number']]
 	selectionUnscaledGMs 	= [('RSN-' + str(rsn) + ' Horizontal-1 pSa (g)') for rsn in finalGM[' Record Sequence Number']]
 
-	targetSpectrum 			= scaledSpectra[['Period (sec)', 'Target pSa (g)']]
-	selectionScaledSpectra	= scaledSpectra[selectionGMs]
-
 	# find row where spectra is at T = 1s, return as column dataframe
-	pSaOneSec 				= selectionScaledSpectra.loc[targetSpectrum['Period (sec)'] == 1].transpose().reset_index()
-	pSaOneSec.columns 		= ['fullRSN', 'scaledSa1']
+	pSaOneSec 				= unscaledSpectra[selectionUnscaledGMs].loc[targetSpectrum['Period (sec)'] == 1].transpose().reset_index()
+	pSaOneSec.columns 		= ['fullRSN', 'unscaledSa1']
 
 	# rename back to old convention and merge with previous dataframe
 	pSaOneSec[' Record Sequence Number'] 		= pSaOneSec['fullRSN'].str.extract('(\d+)')		# extract digits
 	pSaOneSec 				= pSaOneSec.astype({' Record Sequence Number': int})
 	finalGM 		    	= pd.merge(finalGM, pSaOneSec, on=' Record Sequence Number').drop(columns=['fullRSN', 'scaleDifference'])
+	finalGM['scaledSa1'] 	= finalGM['avgSpectrumScaleFactor']*finalGM['unscaledSa1']
 
-	# calculate desired target spectrum average (0.2*T1, 2.0*T1) 
-	tLower 					= 0.6
-	tUpper					= 4.5
+	finalGM.columns 			= ['RSN', 'scaleFactorSpecAvg', 'EQName', 'lowestFreq', 'filename', 'unscaledSa1', 'scaledSa1']
 
-	# geometric mean from Eads et al. (2015)
-	targetRange 			= targetSpectrum[targetSpectrum['Period (sec)'].between(tLower, tUpper)]['Target pSa (g)']
-	targetAverage 			= targetRange.prod()**(1/targetRange.size)
-
-	# get the spectrum average for the unscaled GM spectra
-	unscaledSpectraRange 	= unscaledSpectra[selectionUnscaledGMs][targetSpectrum['Period (sec)'].between(tLower, tUpper)]
-	unscaledAverages 		= unscaledSpectraRange.prod()**(1/len(unscaledSpectraRange.index))
-
-	# determine scale factor to get unscaled to target
-	scaleFactorAverage 			= targetAverage/unscaledAverages
-	scaleFactorAverage 			= scaleFactorAverage.reset_index()
-	scaleFactorAverage.columns 	= ['fullRSN', 'avgSpectrumScaleFactor']
-
-	# rename back to old convention and merge with previous dataframe
-	scaleFactorAverage[' Record Sequence Number'] 		= scaleFactorAverage['fullRSN'].str.extract('(\d+)')
-	scaleFactorAverage 			= scaleFactorAverage.astype({' Record Sequence Number': int})
-	finalGM 		    		= pd.merge(finalGM, scaleFactorAverage, on=' Record Sequence Number').drop(columns=['fullRSN'])
-	finalGM.columns 			= ['RSN', 'scaleFactorS1', 'EQName', 'lowestFreq', 'filename', 'scaledSa1', 'scaleFactorSpecAvg']
-
-	return(finalGM)
+	return(finalGM, targetAverage)
 
 # Specify locations
 if __name__ == '__main__':
 	gmFolder 	= './groundMotions/PEERNGARecords_Unscaled/'
 	PEERSummary = '_SearchResults.csv'
 	gmDatabase 	= 'gmList.csv'
+	testerS1 	= 1.15
 
-	gmDf 		= cleanGMs(gmFolder, PEERSummary)
+	gmDf, specAvg 		= cleanGMs(gmFolder, PEERSummary, testerS1)
 	gmDf.to_csv(gmFolder+gmDatabase, index=False)

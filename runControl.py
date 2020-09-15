@@ -50,25 +50,26 @@ import LHS
 import postprocessing
 import eqAnly as eq
 import gmSelector
+import random
 
 # initialize dataframe as an empty object
 resultsDf 			= None
 
 # generate LHS input sets
-numRuns 						= 1
+numRuns 						= 3
 inputVariables, inputValues 	= LHS.generateInputs(numRuns)
 
-# # filter GMs, then get ground motion database list
-# gmPath 			= './groundMotions/PEERNGARecords_Unscaled/'
-# PEERSummary 	= '_SearchResults.csv'
-# databaseFile 	= 'gmList.csv'
+# filter GMs, then get ground motion database list
+gmPath 			= './groundMotions/PEERNGARecords_Unscaled/'
+PEERSummary 	= '_SearchResults.csv'
+databaseFile 	= 'gmList.csv'
 
 # # save GM list used
 # gmDatabase 		= gmSelector.cleanGMs(gmPath, PEERSummary)
 # gmDatabase.to_csv(gmPath+databaseFile, index=False)
 
-# troubleshooting with list of impact GMs
-gmDatabase 		= pd.read_csv('./groundMotions/gmList.csv')
+# # troubleshooting with list of impact GMs
+# gmDatabase 		= pd.read_csv('./groundMotions/gmList.csv')
 
 # for each input sets, write input files
 for index, row in enumerate(inputValues):
@@ -82,33 +83,40 @@ for index, row in enumerate(inputValues):
 	bearingValue 	= pd.DataFrame(row, columns=['value'])
 
 	bearingIndex 	= bearingIndex.join(bearingValue)
+	param 			= dict(zip(bearingIndex.variable, bearingIndex.value))
 	bearingIndex.to_csv('./inputs/bearingInput.csv', index=False)
 
-	# for each input file, run all GMs in the database
-	for ind in gmDatabase.index:
+	# scaler for GM needs to go here
+	actualS1 		= param['S1']*param['S1Ampli']
+	gmDatabase, specAvg 	= gmSelector.cleanGMs(gmPath, PEERSummary, actualS1)
 
-		filename 				= str(gmDatabase['filename'][ind])					# ground motion name
-		filename 				= filename.replace('.AT2', '')						# remove extension from file name
-		defFactor 				= float(gmDatabase['scaleFactorS1'][ind])			# scale factor used, either scaleFactorS1 or scaleFactorSpecAvg
-		defS1 					= float(gmDatabase['scaledSa1'][ind])				# scaled pSa at T = 1s
-	 		
-	 	# move on to next set if bad friction coeffs encountered (handled in superStructDesign)
-		try:
-			runStatus, scaleFactor 		= eq.runGM(filename, defFactor, defS1)				# perform analysis (superStructDesign and buildModel imported within)
-		except ValueError:
-			print('Bearing solver returned negative friction coefficients. Skipping...')
-			continue
-		except TypeError:
-			print('Bearing solver returned complex friction coefficients. Skipping...')
-			continue
+	# for each input file, run a random GM in the database
+	# with random.randrange(len(gmDatabase.index)) as ind:
+	ind 			= random.randrange(len(gmDatabase.index))
 
-		resultsHeader, thisRun 	= postprocessing.failurePostprocess(filename, scaleFactor, runStatus)		# add run results to holder df
+	filename 				= str(gmDatabase['filename'][ind])					# ground motion name
+	filename 				= filename.replace('.AT2', '')						# remove extension from file name
+	defFactor 				= float(gmDatabase['scaleFactorSpecAvg'][ind])		# scale factor used, either scaleFactorS1 or scaleFactorSpecAvg
+	gmS1 					= float(gmDatabase['scaledSa1'][ind])				# scaled pSa at T = 1s, w.r.t. method above
+ 		
+ 	# move on to next set if bad friction coeffs encountered (handled in superStructDesign)
+	try:
+		runStatus, scaleFactor 		= eq.runGM(filename, defFactor, gmS1)				# perform analysis (superStructDesign and buildModel imported within)
+	except ValueError:
+		print('Bearing solver returned negative friction coefficients. Skipping...')
+		continue
+	except TypeError:
+		print('Bearing solver returned complex friction coefficients. Skipping...')
+		continue
 
-		# if initial run, start the dataframe with headers from postprocessing.py
-		if resultsDf is None:
-			resultsDf 			= pd.DataFrame(columns=resultsHeader)
-			
-		# add results onto the dataframe
-		resultsDf 				= pd.concat([thisRun,resultsDf], sort=False)
+	resultsHeader, thisRun 	= postprocessing.failurePostprocess(filename, scaleFactor, specAvg, gmS1, runStatus)		# add run results to holder df
 
+	# if initial run, start the dataframe with headers from postprocessing.py
+	if resultsDf is None:
+		resultsDf 			= pd.DataFrame(columns=resultsHeader)
+		
+	# add results onto the dataframe
+	resultsDf 				= pd.concat([thisRun,resultsDf], sort=False)
+
+gmDatabase.to_csv(gmPath+databaseFile, index=False)
 resultsDf.to_csv('./sessionOut/sessionSummary.csv', index=False)
