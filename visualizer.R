@@ -18,7 +18,12 @@ intensityMeasures <- ggplot(isolDat, aes(GMSavg, GMS1, colour = S1, size = moatG
 
 intensityMeasures
 
-nonDimPlot <- ggplot(isolDat, aes(Pi3, maxDisplacement, colour = Pi4, size = maxDrift)) +
+nonDimPlot <- ggplot(isolDat, aes(Pi3, Pi4, colour = maxDrift, size = maxDisplacement)) +
   geom_point()
 
 nonDimPlot
+
+gapPlot <- ggplot(isolDat, aes(moatAmpli, maxDrift, colour = moatGap, size = maxDisplacement)) +
+  geom_point()
+
+gapPlot

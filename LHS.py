@@ -23,7 +23,7 @@ def generateInputs(num):
 	# currently, this is approx'd to match MCER level (no site mod)
 	inputDict 	= {
 		'S1' 			: [0.8, 1.3],
-		'S1Ampli'		: [0.75, 1.25],
+		'S1Ampli'		: [1.0, 2.25],
 		'Tm' 			: [2.5, 4.0],
 		'zetaM' 		: [0.10, 0.20],
 		'mu1' 			: [0.01, 0.05],

@@ -106,6 +106,25 @@ def cleanGMs(gmDir, resultsCSV, actualS1):
 
 	return(finalGM, targetAverage)
 
+def getST(gmDir, resultsCSV, GMFile, scaleFactor, Tquery):
+
+	import re
+
+	# load in sections of the sheet
+	summary 			= pd.read_csv(gmDir+resultsCSV, skiprows=33, nrows=100)
+	unscaledSpectra 	= pd.read_csv(gmDir+resultsCSV, skiprows=258, nrows=111)
+
+	rsn 				= re.search('(\d+)', GMFile).group(1)
+	gmUnscaledName		= 'RSN-' + str(rsn) + ' Horizontal-1 pSa (g)'
+	gmSpectrum			= unscaledSpectra[['Period (sec)', gmUnscaledName]]
+	gmSpectrum.columns	= ['Period', 'Sa']
+
+	SaQueryUnscaled 	= np.interp(Tquery, gmSpectrum.Period, gmSpectrum.Sa)
+	SaQuery 			= scaleFactor*SaQueryUnscaled
+	return(SaQuery)
+
+
+
 # Specify locations
 if __name__ == '__main__':
 	gmFolder 	= './groundMotions/PEERNGARecords_Unscaled/'

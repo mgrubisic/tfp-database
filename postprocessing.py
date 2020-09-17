@@ -11,13 +11,14 @@
 #				Results are created and called using dictionaries
 
 # Open issues: 	(1) avoid rerunning design script
+#				(2) GMDir currently hardcoded here
 
 ############################################################################
 
 import pandas as pd
 import numpy as np
 import math
-import LHS
+import gmSelector
 
 # functions to standardize csv output
 def getShape(shape):
@@ -41,8 +42,7 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, gmS1, runStatus):
 	# scaling and filename are read
 	afterRun['GMFile'] 		= filename
 	afterRun['GMScale'] 	= scaleFactor
-	afterRun['GMSavg'] 		= spectrumAverage
-	afterRun['GMS1'] 		= gmS1
+	
 
 	# get selections and append to non-input dictionary
 	import superStructDesign as sd
@@ -63,21 +63,33 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, gmS1, runStatus):
 
 	afterRun.update(fromDesign)
 
-	# calculate nondimensionalized parameters
+	gmDir 					= './groundMotions/PEERNGARecords_Unscaled/'
+	resultsCSV				= '_SearchResults.csv'
+
+	# calculate system periods
 	afterRun['T1']			= 2*math.pi/(math.sqrt(afterRun['mu2']*386.4/(2*afterRun['R1']*(afterRun['mu2'] - afterRun['mu1']))))
 	afterRun['T2'] 			= 2*math.pi/(math.sqrt(386.4/(2*afterRun['R2'])))
-	afterRun['S2'] 			= param['S1']/afterRun['T2']
+
+	# spectral accels of target spectrum
+	afterRun['ST1']			= param['S1']/afterRun['T1']
+	afterRun['ST2'] 		= param['S1']/afterRun['T2']
+
+	# spectral accels of GM
+	afterRun['GMSavg'] 		= spectrumAverage
+	afterRun['GMS1'] 		= gmS1
+	afterRun['GMST1']		= gmSelector.getST(gmDir, resultsCSV, filename, scaleFactor, afterRun['T1'])
+	afterRun['GMST2']		= gmSelector.getST(gmDir, resultsCSV, filename, scaleFactor, afterRun['T2'])
+
+	# calculate nondimensionalized parameters
 	afterRun['Pi1'] 		= afterRun['mu1']/param['S1']
 	afterRun['Pi2'] 		= param['Tm']**2/(386.4/afterRun['R1'])
 	afterRun['Pi3']			= afterRun['T2']/afterRun['T1']
-	afterRun['Pi4']			= afterRun['mu2']/afterRun['S2']
+	afterRun['Pi4']			= afterRun['mu2']/afterRun['ST2']
 
 	# gather outputs
 	dispColumns = ['time', 'isol1', 'isol2', 'isol3', 'isol4', 'isolLC']
 
 	isolDisp = pd.read_csv('./outputs/isolDisp.csv', sep=' ', header=None, names=dispColumns)
-	isolVert = pd.read_csv('./outputs/isolVert.csv', sep=' ', header=None, names=dispColumns)
-	isolRot  = pd.read_csv('./outputs/isolRot.csv', sep=' ', header=None, names=dispColumns)
 
 	story1Disp = pd.read_csv('./outputs/story1Disp.csv', sep=' ', header=None, names=dispColumns)
 	story2Disp = pd.read_csv('./outputs/story2Disp.csv', sep=' ', header=None, names=dispColumns)
@@ -98,12 +110,6 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, gmS1, runStatus):
 	isolMaxDisp 	= np.maximum.reduce([isol1Disp, isol2Disp, isol3Disp, isol4Disp])
 
 	afterRun['maxDisplacement'] 	= max(isolMaxDisp) 					# max recorded displacement over time
-
-	# normalized shear in isolators
-	force1Normalize = -isol1Force['iShearX']/isol1Force['iAxial']
-	force2Normalize = -isol2Force['iShearX']/isol2Force['iAxial']
-	force3Normalize = -isol3Force['iShearX']/isol3Force['iAxial']
-	force4Normalize = -isol4Force['iShearX']/isol4Force['iAxial']
 
 	# drift ratios recorded
 	ft 				= 12
@@ -186,5 +192,5 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, gmS1, runStatus):
 	return(runHeader, runRecord)
 
 if __name__ == '__main__':
-	thisHeader, thisRun 		= failurePostprocess('testfilename', 3.0, 0)
+	thisHeader, thisRun 		= failurePostprocess('RSN3964_TOTTORI_TTR007NS', 3.0, 0.6, 1.21, 0)
 	print(thisRun)
