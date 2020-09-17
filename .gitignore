@@ -1,0 +1,13 @@
+# Ground acceleration files
+*.g3
+*.AT2
+
+# Excel sheets
+*.xlsx
+
+# R history
+*.Rhistory
+
+# outputs
+./outputs/*
+./sessionOut/*
