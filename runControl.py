@@ -56,7 +56,7 @@ import random
 resultsDf 			= None
 
 # generate LHS input sets
-numRuns 						= 20
+numRuns 						= 100
 inputVariables, inputValues 	= LHS.generateInputs(numRuns)
 
 # filter GMs, then get ground motion database list
