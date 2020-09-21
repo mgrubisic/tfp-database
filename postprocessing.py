@@ -64,7 +64,7 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, gmS1, runStatus):
 	afterRun.update(fromDesign)
 
 	gmDir 					= './groundMotions/PEERNGARecords_Unscaled/'
-	resultsCSV				= '_SearchResults.csv'
+	resultsCSV				= 'combinedSearch.csv'
 
 	# calculate system periods
 	afterRun['T1']			= 2*math.pi/(math.sqrt(afterRun['mu2']*386.4/(2*afterRun['R1']*(afterRun['mu2'] - afterRun['mu1']))))
@@ -77,8 +77,8 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, gmS1, runStatus):
 	# spectral accels of GM
 	afterRun['GMSavg'] 		= spectrumAverage
 	afterRun['GMS1'] 		= gmS1
-	afterRun['GMST1']		= gmSelector.getST(gmDir, resultsCSV, filename, scaleFactor, afterRun['T1'])
-	afterRun['GMST2']		= gmSelector.getST(gmDir, resultsCSV, filename, scaleFactor, afterRun['T2'])
+	afterRun['GMST1']		= gmSelector.getST(gmDir, resultsCSV, filename, scaleFactor, afterRun['T1'], 32, 133, 290, 111)
+	afterRun['GMST2']		= gmSelector.getST(gmDir, resultsCSV, filename, scaleFactor, afterRun['T2'], 32, 133, 290, 111)
 
 	# calculate nondimensionalized parameters
 	afterRun['Pi1'] 		= afterRun['mu1']/param['S1']

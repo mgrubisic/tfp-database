@@ -56,12 +56,12 @@ import random
 resultsDf 			= None
 
 # generate LHS input sets
-numRuns 						= 100
+numRuns 						= 3
 inputVariables, inputValues 	= LHS.generateInputs(numRuns)
 
 # filter GMs, then get ground motion database list
 gmPath 			= './groundMotions/PEERNGARecords_Unscaled/'
-PEERSummary 	= '_SearchResults.csv'
+PEERSummary 	= 'combinedSearch.csv'
 databaseFile 	= 'gmList.csv'
 
 # # save GM list used
@@ -88,7 +88,7 @@ for index, row in enumerate(inputValues):
 
 	# scaler for GM needs to go here
 	actualS1 		= param['S1']*param['S1Ampli']
-	gmDatabase, specAvg 	= gmSelector.cleanGMs(gmPath, PEERSummary, actualS1)
+	gmDatabase, specAvg 	= gmSelector.cleanGMs(gmPath, PEERSummary, actualS1, 32, 133, 176, 111, 290, 111)
 
 	# for each input file, run a random GM in the database
 	# with random.randrange(len(gmDatabase.index)) as ind:

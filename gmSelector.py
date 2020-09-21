@@ -8,7 +8,7 @@
 
 # Description: 	Script creates list of viable ground motions and scales from PEER search
 
-# Open issues: 	(1) Requires for PEER query to include Minimize MSE Scaling
+# Open issues: 	(1) Lengths of sections require specifications
 
 ############################################################################
 import pandas as pd
@@ -17,7 +17,15 @@ import numpy as np
 
 pd.options.mode.chained_assignment = None  # default='warn', ignore SettingWithCopyWarning
 
-def cleanGMs(gmDir, resultsCSV, actualS1):
+############################################################################
+#             	Section specifiers
+
+# Start: the row with the title of the section (before the headers)
+# Length: the number of rows of content, without the headers
+
+############################################################################
+
+def cleanGMs(gmDir, resultsCSV, actualS1, summaryStart=33, nSummary=100, scaledStart=144, nScaled=111, unscaledStart=258, nUnscaled=111):
 
 	# remove all DT2 VT2 files
 	folder 				= os.listdir(gmDir)
@@ -27,9 +35,9 @@ def cleanGMs(gmDir, resultsCSV, actualS1):
 			os.remove(os.path.join(gmDir,item))
 
 	# load in sections of the sheet
-	summary 			= pd.read_csv(gmDir+resultsCSV, skiprows=33, nrows=100)
-	scaledSpectra 		= pd.read_csv(gmDir+resultsCSV, skiprows=144, nrows=111)
-	unscaledSpectra 	= pd.read_csv(gmDir+resultsCSV, skiprows=258, nrows=111)
+	summary 			= pd.read_csv(gmDir+resultsCSV, skiprows=summaryStart, nrows=nSummary)
+	scaledSpectra 		= pd.read_csv(gmDir+resultsCSV, skiprows=scaledStart, nrows=nScaled)
+	unscaledSpectra 	= pd.read_csv(gmDir+resultsCSV, skiprows=unscaledStart, nrows=nUnscaled)
 
 	# Keep Ss as 2.2815 (Berkeley)
 	Ss 									= 2.2815
@@ -79,7 +87,8 @@ def cleanGMs(gmDir, resultsCSV, actualS1):
 	for earthquake in uniqEqs:
 		matchingEqs 						= eligFreq[eligFreq[' Earthquake Name'] == earthquake]
 		matchingEqs['scaleDifference'] 		= abs(matchingEqs['avgSpectrumScaleFactor'] - 1.0)
-		leastScaled 						= matchingEqs[matchingEqs['scaleDifference'] == min(matchingEqs['scaleDifference'])]
+		leastScaled 						= matchingEqs.sort_values(by=['scaleDifference']).iloc[:3]
+		#leastScaled 						= matchingEqs[matchingEqs['scaleDifference'] == min(matchingEqs['scaleDifference'])]
 
 		if finalGM is None:
 			GMHeaders 						= list(matchingEqs.columns)
@@ -106,13 +115,13 @@ def cleanGMs(gmDir, resultsCSV, actualS1):
 
 	return(finalGM, targetAverage)
 
-def getST(gmDir, resultsCSV, GMFile, scaleFactor, Tquery):
+def getST(gmDir, resultsCSV, GMFile, scaleFactor, Tquery, summaryStart=33, nSummary=100, unscaledStart=258, nUnscaled=111):
 
 	import re
 
 	# load in sections of the sheet
-	summary 			= pd.read_csv(gmDir+resultsCSV, skiprows=33, nrows=100)
-	unscaledSpectra 	= pd.read_csv(gmDir+resultsCSV, skiprows=258, nrows=111)
+	summary 			= pd.read_csv(gmDir+resultsCSV, skiprows=summaryStart, nrows=nSummary)
+	unscaledSpectra 	= pd.read_csv(gmDir+resultsCSV, skiprows=unscaledStart, nrows=nUnscaled)
 
 	rsn 				= re.search('(\d+)', GMFile).group(1)
 	gmUnscaledName		= 'RSN-' + str(rsn) + ' Horizontal-1 pSa (g)'
@@ -127,10 +136,16 @@ def getST(gmDir, resultsCSV, GMFile, scaleFactor, Tquery):
 
 # Specify locations
 if __name__ == '__main__':
-	gmFolder 	= './groundMotions/PEERNGARecords_Unscaled/'
-	PEERSummary = '_SearchResults.csv'
-	gmDatabase 	= 'gmList.csv'
-	testerS1 	= 1.15
+	summaryStart		= 32
+	summaryLength 		= 133
+	scaledStart 		= 176
+	scaledLength		= 111
+	unscaledStart		= 290
+	unscaledLength		= 111
+	gmFolder 			= './groundMotions/'
+	PEERSummary 		= 'combinedSearch.csv'
+	gmDatabase 			= 'testgmList.csv'
+	testerS1 			= 1.15
 
-	gmDf, specAvg 		= cleanGMs(gmFolder, PEERSummary, testerS1)
+	gmDf, specAvg 		= cleanGMs(gmFolder, PEERSummary, testerS1, summaryStart, summaryLength, scaledStart, scaledLength, unscaledStart, unscaledLength)
 	gmDf.to_csv(gmFolder+gmDatabase, index=False)
