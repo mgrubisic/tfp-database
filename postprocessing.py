@@ -12,6 +12,7 @@
 
 # Open issues: 	(1) avoid rerunning design script
 #				(2) GMDir currently hardcoded here
+# 				(3) Pi groups currently deferred to R
 
 ############################################################################
 
@@ -26,7 +27,7 @@ def getShape(shape):
 	return(shapeName)
 
 # main function
-def failurePostprocess(filename, scaleFactor, spectrumAverage, gmS1, runStatus):
+def failurePostprocess(filename, scaleFactor, spectrumAverage, runStatus):
 
 	# take input as the run 'ok' variable from eqAnly, passes that as one of the results csv columns
 
@@ -76,15 +77,16 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, gmS1, runStatus):
 
 	# spectral accels of GM
 	afterRun['GMSavg'] 		= spectrumAverage
-	afterRun['GMS1'] 		= gmS1
+	afterRun['GMS1'] 		= gmSelector.getST(gmDir, resultsCSV, filename, scaleFactor, 1.0, 32, 133, 290, 111)
 	afterRun['GMST1']		= gmSelector.getST(gmDir, resultsCSV, filename, scaleFactor, afterRun['T1'], 32, 133, 290, 111)
 	afterRun['GMST2']		= gmSelector.getST(gmDir, resultsCSV, filename, scaleFactor, afterRun['T2'], 32, 133, 290, 111)
+	afterRun['GMSTm'] 		= gmSelector.getST(gmDir, resultsCSV, filename, scaleFactor, param['Tm'], 32, 133, 290, 111)
 
-	# calculate nondimensionalized parameters
-	afterRun['Pi1'] 		= afterRun['mu1']/param['S1']
-	afterRun['Pi2'] 		= param['Tm']**2/(386.4/afterRun['R1'])
-	afterRun['Pi3']			= afterRun['T2']/afterRun['T1']
-	afterRun['Pi4']			= afterRun['mu2']/afterRun['ST2']
+	# # calculate nondimensionalized parameters
+	# afterRun['Pi1'] 		= afterRun['mu1']/param['GMS1']
+	# afterRun['Pi2'] 		= param['Tm']**2/(386.4/afterRun['R1'])
+	# afterRun['Pi3']			= afterRun['T2']/afterRun['T1']
+	# afterRun['Pi4']			= afterRun['mu2']/afterRun['GMST2']
 
 	# gather outputs
 	dispColumns = ['time', 'isol1', 'isol2', 'isol3', 'isol4', 'isolLC']

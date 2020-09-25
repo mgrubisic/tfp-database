@@ -8,8 +8,7 @@
 
 # Description: 	Script generates input parameter space based on LHS, given bounds
 
-# Open issues: 	(1) Potentially switch to new distributions
-# 				(2) Seek nondimensionalized variables
+# Open issues: 	(1) Seek nondimensionalized variables
 
 ############################################################################
 
@@ -29,7 +28,7 @@ def generateInputs(num):
 		'mu1' 			: [0.01, 0.05],
 		'R1' 			: [15, 45],
 		'moatAmpli'		: [1.0, 1.25],
-		'RI' 			: [0.5, 2.5]
+		'RI' 			: [0.5, 2.0]
 	}
 
 	# create array of limits, then run LHS

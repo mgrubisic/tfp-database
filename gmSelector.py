@@ -97,21 +97,23 @@ def cleanGMs(gmDir, resultsCSV, actualS1, summaryStart=33, nSummary=100, scaledS
 		finalGM 							= pd.concat([leastScaled,finalGM], sort=False)
 		finalGM[' Horizontal-1 Acc. Filename'] 	= finalGM[' Horizontal-1 Acc. Filename'].str.strip()
 
-	# match new list with headers from spectra section
-	# selectionGMs 			= [('RSN-' + str(rsn) + ' H1 pSa (g)') for rsn in finalGM[' Record Sequence Number']]
-	selectionUnscaledGMs 	= [('RSN-' + str(rsn) + ' Horizontal-1 pSa (g)') for rsn in finalGM[' Record Sequence Number']]
+	# # match new list with headers from spectra section
+	# # selectionGMs 			= [('RSN-' + str(rsn) + ' H1 pSa (g)') for rsn in finalGM[' Record Sequence Number']]
+	# selectionUnscaledGMs 	= [('RSN-' + str(rsn) + ' Horizontal-1 pSa (g)') for rsn in finalGM[' Record Sequence Number']]
 
-	# find row where spectra is at T = 1s, return as column dataframe
-	pSaOneSec 				= unscaledSpectra[selectionUnscaledGMs].loc[targetSpectrum['Period (sec)'] == 1].transpose().reset_index()
-	pSaOneSec.columns 		= ['fullRSN', 'unscaledSa1']
+	# # find row where spectra is at T = 1s, return as column dataframe
+	# pSaOneSec 				= unscaledSpectra[selectionUnscaledGMs].loc[targetSpectrum['Period (sec)'] == 1].transpose().reset_index()
+	# pSaOneSec.columns 		= ['fullRSN', 'unscaledSa1']
 
-	# rename back to old convention and merge with previous dataframe
-	pSaOneSec[' Record Sequence Number'] 		= pSaOneSec['fullRSN'].str.extract('(\d+)')		# extract digits
-	pSaOneSec 				= pSaOneSec.astype({' Record Sequence Number': int})
-	finalGM 		    	= pd.merge(finalGM, pSaOneSec, on=' Record Sequence Number').drop(columns=['fullRSN', 'scaleDifference'])
-	finalGM['scaledSa1'] 	= finalGM['avgSpectrumScaleFactor']*finalGM['unscaledSa1']
+	# # rename back to old convention and merge with previous dataframe
+	# pSaOneSec[' Record Sequence Number'] 		= pSaOneSec['fullRSN'].str.extract('(\d+)')		# extract digits
+	# pSaOneSec 				= pSaOneSec.astype({' Record Sequence Number': int})
+	# finalGM 		    	= pd.merge(finalGM, pSaOneSec, on=' Record Sequence Number').drop(columns=['fullRSN', 'scaleDifference'])
+	# finalGM['scaledSa1'] 	= finalGM['avgSpectrumScaleFactor']*finalGM['unscaledSa1']
 
-	finalGM.columns 			= ['RSN', 'scaleFactorSpecAvg', 'EQName', 'lowestFreq', 'filename', 'unscaledSa1', 'scaledSa1']
+	finalGM						= finalGM.reset_index()
+	finalGM						= finalGM.drop(columns=['index', 'scaleDifference'])
+	finalGM.columns 			= ['RSN', 'scaleFactorSpecAvg', 'EQName', 'lowestFreq', 'filename']
 
 	return(finalGM, targetAverage)
 

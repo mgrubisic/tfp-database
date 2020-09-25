@@ -24,7 +24,7 @@ import math
 import buildModel as bm
 import pandas as pd
 
-def runGM(gmFilename, gmDefScale, gmDefS1):
+def runGM(gmFilename, gmDefScale):
 
 	# build model
 	bm.build()

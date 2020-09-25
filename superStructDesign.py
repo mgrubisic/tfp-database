@@ -10,7 +10,7 @@
 # 				Script also designs superstructure following ASCE 7-16 Ch.12 & 17 provisions
 #				Inputs rely on dictionary calling
 
-# Open issues: 	
+# Open issues: 	(1) Rework beam and column selection using repeatable functions
 
 ############################################################################
 
