@@ -46,7 +46,7 @@ def cleanGMs(gmDir, resultsCSV, actualS1, summaryStart=33, nSummary=100, scaledS
 	targetSpectrum['Target pSa (g)'] 	= np.where(targetSpectrum['Period (sec)'] < Tshort, Ss, actualS1/targetSpectrum['Period (sec)'])
 	# selectionScaledSpectra				= scaledSpectra[selectionGMs]
 
-	# calculate desired target spectrum average (0.2*T1, 3*T1)
+	# calculate desired target spectrum average (0.2*Tm, 1.5*Tm)
 	tLower 					= 0.6
 	tUpper					= 4.5
 
@@ -75,7 +75,7 @@ def cleanGMs(gmDir, resultsCSV, actualS1, summaryStart=33, nSummary=100, scaledS
 	summarySmol 		= summary[summaryNames]
 
 	# Filter by lowest usable frequency
-	TMax 				= 4.5
+	TMax 				= tUpper
 	freqMin 			= 1/TMax
 	eligFreq 			= summarySmol[summarySmol[' Lowest Useable Frequency (Hz)'] < freqMin]
 

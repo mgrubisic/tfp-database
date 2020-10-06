@@ -1,9 +1,9 @@
 variable,value
-S1,1.175
-S1Ampli,1.3125
-Tm,2.875
-zetaM,0.125
-mu1,0.04
-R1,22.5
-moatAmpli,1.1875
-RI,1.625
+S1,1.16375
+S1Ampli,1.859375
+Tm,3.60625
+zetaM,0.16075
+mu1,0.0201
+R1,23.175
+moatAmpli,1.23875
+RI,1.87625

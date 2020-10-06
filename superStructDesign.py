@@ -140,37 +140,9 @@ def design():
 		mu2 		= mu2.real
 		mu3 		= mu3.real
 
-	# torsion, hard coded for building layout
-	# from ASCE 7-16 Ch. 17.5.3.3
-	b 			= 90		# shortest plan dimension, in ft
-	d 			= 90 		# longest plan dimension, in ft
-	y 			= 45	 	# distance from corner isolator to CoR in perpendicular direction, in ft
-	e 			= 0.05*d 	# eccentricity
+	# Since we are doing 2D analysis, we don't want to overdesign for torsion
+	Dtm 		= 1.0*Dm
 
-	xi1 		= 45 		# horizontal distance to CoM of isolator, in ft
-	yi1 		= 45		# horizontal distance to CoM of isolator, in ft
-	xi2 		= 15 		# horizontal distance to CoM of isolator, in ft
-	yi2 		= 45		# horizontal distance to CoM of isolator, in ft
-	xi3 		= 45 		# horizontal distance to CoM of isolator, in ft
-	yi3 		= 15		# horizontal distance to CoM of isolator, in ft
-	xi4 		= 15 		# horizontal distance to CoM of isolator, in ft
-	yi4 		= 15		# horizontal distance to CoM of isolator, in ft
-	N 			= 16		# number of isolator units
-
-
-	rGyration		= math.sqrt((b**2 + d**2)/12)		# radius of gyration, ft
-	sumDistance 	= (xi1**2 + yi1**2) + (xi2**2 + yi2**2) + (xi3**2 + yi3**2) + (xi4**2 + yi4**2)
-	Pt 				= max(1/rGyration*math.sqrt(sumDistance/N),1)
-
-	torsionFactor 	= max(1.15, (1 + (y/Pt**2)*(12*e)/(b**2 + d**2)))
-
-	Dtm 		= torsionFactor*Dm
-
-	# # from ASCE 7-16 Ch. 17.6.4.1
-	# DmTrial 	= (Dm)/math.sqrt(1 + (Tfb/param['Tm'])**2)
-	# DmPrime 	= max(0.8*Dtm, DmTrial)
-
-	# moatGap 	= math.ceil(param['moatAmpli']*DmPrime)
 	moatGap 	= math.ceil(param['moatAmpli']*Dtm)
 
 	############################################################################
