@@ -74,7 +74,7 @@ def design():
 	Ws 		= 2227.5*kip
 	W 		= 3037.5*kip
 	nFrames = 2
-	Tfb 	= 0.735*sec
+	Tfb 	= 0.8*sec
 
 	# from ASCE Ch. 17
 	zetaRef = [0.02, 0.05, 0.10, 0.20, 0.30, 0.40, 0.50]

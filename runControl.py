@@ -56,7 +56,7 @@ import random
 resultsDf 			= None
 
 # generate LHS input sets
-numRuns 						= 200
+numRuns 						= 5
 inputVariables, inputValues 	= LHS.generateInputs(numRuns)
 
 # filter GMs, then get ground motion database list
@@ -101,7 +101,7 @@ for index, row in enumerate(inputValues):
  		
  	# move on to next set if bad friction coeffs encountered (handled in superStructDesign)
 	try:
-		runStatus, scaleFactor 		= eq.runGM(filename, defFactor)				# perform analysis (superStructDesign and buildModel imported within)
+		runStatus, Tfb, scaleFactor 		= eq.runGM(filename, defFactor)				# perform analysis (superStructDesign and buildModel imported within)
 	except ValueError:
 		print('Bearing solver returned negative friction coefficients. Skipping...')
 		continue
@@ -109,7 +109,7 @@ for index, row in enumerate(inputValues):
 		print('Bearing solver returned complex friction coefficients. Skipping...')
 		continue
 
-	resultsHeader, thisRun 	= postprocessing.failurePostprocess(filename, scaleFactor, specAvg, runStatus)		# add run results to holder df
+	resultsHeader, thisRun 	= postprocessing.failurePostprocess(filename, scaleFactor, specAvg, runStatus, Tfb)		# add run results to holder df
 
 	# if initial run, start the dataframe with headers from postprocessing.py
 	if resultsDf is None:

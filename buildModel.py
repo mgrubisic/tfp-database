@@ -32,6 +32,7 @@ from openseespy.postprocessing.Get_Rendering import *
 #              Utilities
 ############################################################################
 
+# get shape properties
 def getProperties(shape):
 	Ag 		= float(shape.iloc[0]['A'])
 	Ix 		= float(shape.iloc[0]['Ix'])
@@ -43,6 +44,27 @@ def getProperties(shape):
 	tf 		= float(shape.iloc[0]['tf'])
 	tw 		= float(shape.iloc[0]['tw'])
 	return(Ag, Ix, Iy, Zx, Sx, d, bf, tf, tw)
+
+# create or destroy fixed base, for eigenvalue analysis
+def refix(nodeTag, action):
+	for j in range(1,7):
+		remove('sp', nodeTag, j)
+	if(action == "fix"):
+		fix(nodeTag,  1, 1, 1, 1, 1, 1)
+	if(action == "unfix"):
+		fix(nodeTag,  0, 1, 0, 1, 0, 1)
+
+# returns load to analysis script
+def giveLoads():
+	return(w0, w1, w2, w3, pLc0, pLc1, pLc2, pLc3)
+
+# add superstructure damping (dependent on eigenvalue anly)
+def provideSuperDamping(regTag, omega1, zetaTarget):
+	alphaM 		= 0.0
+	betaK 		= 0.0
+	betaKInit 	= 0.0
+	a1 			= 2*zetaTarget/omega1
+	region(regTag, '-eleRange', 1, 21, '-rayleigh', alphaM, betaK, betaKInit, a1)
 
 ############################################################################
 #              Start model
@@ -537,18 +559,6 @@ def build():
 
 	# print("Model built!")
 	# plot_model()
-
-# returns load to analysis script
-def giveLoads():
-	return(w0, w1, w2, w3, pLc0, pLc1, pLc2, pLc3)
-
-# add superstructure damping (dependent on eigenvalue anly)
-def provideSuperDamping(regTag, omega1, zetaTarget):
-	alphaM 		= 0.0
-	betaK 		= 0.0
-	betaKInit 	= 0.0
-	a1 			= 2*zetaTarget/omega1
-	region(regTag, '-eleRange', 1, 21, '-rayleigh', alphaM, betaK, betaKInit, a1)
 
 # if ran alone, build model and plot
 if __name__ == '__main__':

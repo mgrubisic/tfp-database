@@ -27,7 +27,7 @@ def getShape(shape):
 	return(shapeName)
 
 # main function
-def failurePostprocess(filename, scaleFactor, spectrumAverage, runStatus):
+def failurePostprocess(filename, scaleFactor, spectrumAverage, runStatus, Tfb):
 
 	# take input as the run 'ok' variable from eqAnly, passes that as one of the results csv columns
 
@@ -68,6 +68,7 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, runStatus):
 	resultsCSV				= 'combinedSearch.csv'
 
 	# calculate system periods
+	afterRun['Tfb'] 		= Tfb
 	afterRun['T1']			= 2*math.pi/(math.sqrt(afterRun['mu2']*386.4/(2*afterRun['R1']*(afterRun['mu2'] - afterRun['mu1']))))
 	afterRun['T2'] 			= 2*math.pi/(math.sqrt(386.4/(2*afterRun['R2'])))
 

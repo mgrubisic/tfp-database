@@ -9,6 +9,7 @@
 # Description: 	Script performs dynamic analysis on OpenSeesPy model
 
 # Open issues: 	(1) Algorithm robustness to be checked
+#				(2) Eigen after re-unfixing causes kernel crash
 
 ############################################################################
 
@@ -106,6 +107,14 @@ def runGM(gmFilename, gmDefScale):
 	############################################################################
 	#                       Eigenvalue Analysis
 	############################################################################
+
+	# fix base for Tfb
+	bm.refix(1, "fix")
+	bm.refix(2, "fix")
+	bm.refix(3, "fix")
+	bm.refix(4, "fix")
+	bm.refix(22, "fix")
+
 	nEigenI 	= 1;					# mode i = 1
 	nEigenJ 	= 3;					# mode j = 3
 	lambdaN 	= eigen(nEigenJ);		# eigenvalue analysis for nEigenJ modes
@@ -113,14 +122,15 @@ def runGM(gmFilename, gmDefScale):
 	lambda2		= lambdaN[1];			# eigenvalue mode j = 2
 	omega1 		= math.sqrt(lambda1)	# w1 (1st mode circular frequency)
 	omega2 		= math.sqrt(lambda2)	# w2 (2nd mode circular frequency)
-	T1 			= 2*math.pi/omega1 		# 1st mode period of the structure
-	T2 			= 2*math.pi/omega2 		# 2nd mode period of the structure				
-	print("T1 = ", T1, " s")			# display the first mode period in the command window
-	print("T2 = ", T2, " s")			# display the second mode period in the command window
+	Tfb 		= 2*math.pi/omega1 		# 1st mode period of the structure
+	print("Tfb = ", Tfb, " s")			# display the first mode period in the command window
 
-	# record()
-	# plot_modeshape(1)
-	# plot_modeshape(2)
+	# unfix base
+	bm.refix(1, "unfix")
+	bm.refix(2, "unfix")
+	bm.refix(3, "unfix")
+	bm.refix(4, "unfix")
+	bm.refix(22, "unfix")
 
 	# Rayleigh damping to the superstructure only
 	regTag 		= 80
@@ -372,4 +382,4 @@ def runGM(gmFilename, gmDefScale):
 
 	wipe()
 
-	return(ok, GMFactor)
+	return(ok, Tfb, GMFactor)
