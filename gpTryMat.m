@@ -26,11 +26,16 @@ A_S1        = isolDat.S1Ampli;
 
 allPis      = [TfbRatio, mu2Ratio, gapRatio, T2Ratio, Ry, zeta, A_S1];
 
+collapsed   = (isolDat.collapseDrift1 | isolDat.collapseDrift2) ...
+    | isolDat.collapseDrift3;
+
+collapsed   = double(collapsed);
+
 % x should be all combinations of x1 and x2
 % y should be their respective resulting impact boolean
 figure
-x           = [gapRatio, T2Ratio];
-y           = isolDat.impacted;
+x           = [A_S1, gapRatio];
+y           = collapsed;
 y(y==0)     = -1;
 scatter(x(:,1), x(:,2), [], y)
 xlabel('$X_1$','Interpreter','latex')
