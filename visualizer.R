@@ -164,3 +164,13 @@ SavgDrift <- ggplot(isolDat, aes(Pi4Savg, maxDrift, colour = impacted)) +
   geom_point()
 
 SavgDrift
+
+summary(lm(isolDat$maxDisplacement ~ isolDat$Pi4STm))$r.squared
+summary(lm(isolDat$maxDisplacement ~ isolDat$Pi4Savg))$r.squared
+summary(lm(isolDat$maxDisplacement ~ isolDat$Pi4ST1))$r.squared
+summary(lm(isolDat$maxDisplacement ~ isolDat$Pi4ST2))$r.squared
+
+summary(lm(isolDat$maxDrift ~ isolDat$Pi4STm))$r.squared
+summary(lm(isolDat$maxDrift ~ isolDat$Pi4Savg))$r.squared
+summary(lm(isolDat$maxDrift ~ isolDat$Pi4ST1))$r.squared
+summary(lm(isolDat$maxDrift ~ isolDat$Pi4ST2))$r.squared
