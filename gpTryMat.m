@@ -37,12 +37,22 @@ xlabel('$X_1$','Interpreter','latex')
 ylabel('$X_2$','Interpreter','latex')
 colorbar
 
+
+
 meanfunc    = @meanConst; hyp.mean = 0;
 covfunc     = @covSEard; ell = 1.0; sf = 1.0; hyp.cov = log([ell ell sf]);
 % Logit regression
 likfunc     = @likLogistic;
+inffunc     = @infLaplace;
 
-hyp = minimize(hyp, @gp, -40, @infEP, meanfunc, covfunc, likfunc, x, y);
+% inducing points for sparse FITC approx
+rangex1     = linspace(min(x(:,1)), max(x(:,1)), 10);
+rangex2     = linspace(min(x(:,2)), max(x(:,2)), 10);
+[u1,u2]     = meshgrid(rangex1, rangex2);
+u           = [u1(:), u2(:)];
+covfuncF    = {@apxSparse, {covfunc}, u};
+
+hyp = minimize(hyp, @gp, -100, inffunc, meanfunc, covfuncF, likfunc, x, y);
 
 % test set
 [t1, t2]    = meshgrid(linspace(min(x(:,1)), max(x(:,1))), ...
@@ -50,7 +60,7 @@ hyp = minimize(hyp, @gp, -40, @infEP, meanfunc, covfunc, likfunc, x, y);
 t           = [t1(:) t2(:)];
 n           = length(t);
 
-[a, b, c, d, lp] = gp(hyp, @infEP, meanfunc, covfunc, likfunc, ...
+[a, b, c, d, lp] = gp(hyp, inffunc, meanfunc, covfuncF, likfunc, ...
     x, y, t, ones(n, 1));
 
 figure
