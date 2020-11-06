@@ -32,8 +32,8 @@ collapsed   = double(collapsed);
 
 % x should be all combinations of x1 and x2
 % y should be their respective resulting impact boolean
-x           = [A_S1, gapRatio, T2Ratio, zeta];
-y           = isolDat.impacted;
+x           = [mu2Ratio, gapRatio, T2Ratio, zeta, Ry];
+y           = collapsed;
 y(y==0)     = -1;
 
 % intervals, mins, and max of variables
@@ -71,7 +71,7 @@ hyp = minimize(hyp, @gp, -200, inffunc, meanfunc, covfunc, likfunc, x, y);
 % 
 % hyp = minimize(hyp, @gp, -100, inffunc, meanfunc, covfuncF, likfunc, x, y);
 
-% Goal: for 3 values of A_S1, plot gapRatio vs. T2Ratio
+% Goal: for 3 values of mu2Ratio, plot gapRatio vs. T2Ratio
 
 v1  = [minX(1) midX(1) maxX(1)];
 
@@ -102,9 +102,9 @@ for i = 1:length(v1)
     
 end
 colorbar
-sgtitle('Varying $A_{S_1}$', 'Interpreter', 'LaTeX')
+sgtitle('Varying $\mu_2$ ratio', 'Interpreter', 'LaTeX')
 
-% Goal: set A_S1 to median, fix three values T2 ratios, plot marginal for
+% Goal: set mu2 ratio to median, fix three values T2 ratios, plot marginal for
 % gap ratio (set x1, fix x3, plot x2)
 t = [t1(:) t2(:)]; n = length(t);
 t = [ones(n,1)*v1(2) t ones(n,1)*midX(4:f)];

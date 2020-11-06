@@ -25,12 +25,12 @@ isolDat$collapsed <- as.numeric(isolDat$collapseDrift1 |
                                   isolDat$collapseDrift3)
 
 collapsedLogit <- glm(collapsed ~ TfbRatio + mu2Ratio + gapRatio + T2Ratio +
-                        Ry + zeta + A_S1, data = isolDat)
+                        Ry + zeta, data = isolDat)
 
 summary(collapsedLogit)
 
 impactedLogit <- glm(impacted ~ TfbRatio + mu2Ratio + gapRatio + T2Ratio +
-                        Ry + zeta + A_S1, data = isolDat)
+                        Ry + zeta, data = isolDat)
 
 summary(impactedLogit)
 
