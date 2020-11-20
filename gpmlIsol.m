@@ -16,10 +16,11 @@
 clear; close all; clc;
 
 isolDat     = readtable('../pastRuns/random200withTfb.csv');
+g           = 386.4;
 
 TfbRatio    = isolDat.Tfb./isolDat.Tm;
 mu2Ratio    = isolDat.mu2./isolDat.GMSTm;
-gapRatio    = isolDat.moatGap./(isolDat.GMSTm.*isolDat.Tm.^2);
+gapRatio    = isolDat.moatGap./(g.*isolDat.GMSTm.*isolDat.Tm.^2);
 T2Ratio     = isolDat.GMST2./isolDat.GMSTm;
 Ry          = isolDat.RI;
 zeta        = isolDat.zetaM;
@@ -32,7 +33,8 @@ collapsed   = double(collapsed);
 
 % x should be all combinations of x1 and x2
 % y should be their respective resulting impact boolean
-x           = [mu2Ratio, gapRatio, T2Ratio, zeta, Ry];
+% x           = [mu2Ratio, gapRatio, T2Ratio, zeta, Ry];
+x           = [mu2Ratio, gapRatio, T2Ratio, Ry];
 y           = collapsed;
 y(y==0)     = -1;
 
@@ -43,11 +45,27 @@ maxX        = round(max(x),1);
 midX        = round(median(x),2);
 stepX       = (maxX-minX)/50;
 
-meanfunc    = @meanConst; hyp.mean = 0;
+% try mean as constant
+% meanfunc    = @meanConst; hyp.mean = 0;
+
+% try ignoring the mean function
+% meanfunc    = [];
+
+% try mean as affine function
+% meanfunc = {@meanSum, {@meanLinear, @meanConst}}; hyp.mean = [zeros(1,f) 0]';
+
+% try mean as linear function
+meanfunc    = @meanLinear; hyp.mean = [zeros(1,f)]';
+
+% poly?
+% meanfunc    = {@meanPoly,2}; hyp.mean = [zeros(1,2*f)]';
+
 covfunc     = @covSEard; ell = 1.0; sf = 1.0; hyp.cov = log([ell*ones(1,f) sf]);
 % Logit regression
 likfunc     = @likLogistic;
 inffunc     = @infLaplace;
+
+hyp = minimize(hyp, @gp, -1000, inffunc, meanfunc, covfunc, likfunc, x, y);
 
 % % inducing points for sparse FITC approx
 % nFITC       = 10;
@@ -59,9 +77,6 @@ inffunc     = @infLaplace;
 % [uRanges{:}]    = ndgrid(xuInput{:});
 % u               = [uRanges{:}];
 % covfuncF    = {@apxSparse, {covfunc}, u};
-
-hyp = minimize(hyp, @gp, -200, inffunc, meanfunc, covfunc, likfunc, x, y);
-
 
 % rangex1     = linspace(min(x(:,1)), max(x(:,1)), 10);
 % rangex2     = linspace(min(x(:,2)), max(x(:,2)), 10);
@@ -175,3 +190,7 @@ sgtitle('Gap ratio marginals for varying $T_2$ ratios', 'Interpreter', 'LaTeX')
 % ylabel('$X_2$','Interpreter','latex')
 % contour(t1, t2, reshape(exp(lp), size(t1)), [0.1:0.1:0.9]);
 % colorbar
+
+for i = 1:length(midX)
+    xs(:,i) = transpose(minX(i):stepX(i):maxX(i));
+end

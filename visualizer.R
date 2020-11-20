@@ -6,8 +6,6 @@
 library(ggplot2)
 library(dplyr)
 
-dev.off()
-
 dataPath <- '../pastRuns/random200withTfb.csv'
 
 isolDat <- read.csv(dataPath, header=TRUE)
@@ -21,9 +19,9 @@ g <- 386.4
 # nondims
 isolDat$TfbRatio <- isolDat$Tfb/isolDat$Tm
 isolDat$mu2Ratio <- isolDat$mu2/isolDat$GMSTm
-isolDat$gapRatio <- isolDat$moatGap/(isolDat$GMSTm * isolDat$Tm^2)
+# isolDat$gapRatio <- isolDat$moatGap/(isolDat$mu2 * g * isolDat$Tm^2)
+isolDat$gapRatio <- isolDat$moatGap/(isolDat$GMSTm * g * isolDat$Tm^2)
 isolDat$T2Ratio <- isolDat$GMST2/isolDat$GMSTm
-
 isolDat$Qm <- isolDat$mu2*g
 
 # point plot function
@@ -42,8 +40,11 @@ dots(aes(Tm, moatGap, color = gapRatio))
 dots(aes(zetaM, moatGap, color = Tm))
 dots(aes(RI, Tfb, color = T2))
 dots(aes(Tfb, T2, color = T1))
+dots(aes(gapRatio, mu2Ratio))
 
 # variables vs collapse
 dots(aes(gapRatio, maxDrift))
 dots(aes(T2Ratio, maxDrift))
 dots(aes(zetaM, maxDrift))
+
+dots(aes(TfbRatio, T2Ratio))

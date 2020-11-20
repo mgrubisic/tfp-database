@@ -34,3 +34,22 @@ impactedLogit <- glm(impacted ~ TfbRatio + mu2Ratio + gapRatio + T2Ratio +
 
 summary(impactedLogit)
 
+piGroups <- data.frame(isolDat$TfbRatio,
+                       isolDat$mu2Ratio,
+                       isolDat$gapRatio,
+                       isolDat$T2Ratio,
+                       isolDat$Ry,
+                       isolDat$zeta)
+
+corMatPi <- piGroups %>% as.matrix %>% cor %>% as.data.frame
+
+rawVars <- data.frame(isolDat$Ry,
+                      isolDat$Tfb,
+                      isolDat$Tm,
+                      isolDat$mu2,
+                      isolDat$moatGap,
+                      isolDat$zetaM,
+                      isolDat$T2,
+                      isolDat$GMSTm)
+
+corMatRaw <- rawVars %>% as.matrix %>% cor %>% as.data.frame
