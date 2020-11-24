@@ -18,18 +18,23 @@ clear; close all; clc;
 isolDat     = readtable('../pastRuns/random200withTfb.csv');
 g           = 386.4;
 
+% scaling Sa(Tm) for damping, ASCE Ch. 17
+zetaRef     = [0.02, 0.05, 0.10, 0.20, 0.30, 0.40, 0.50];
+BmRef       = [0.8, 1.0, 1.2, 1.5, 1.7, 1.9, 2.0];
+isolDat.Bm  = interp1(zetaRef, BmRef, isolDat.zetaM);
+
 TfbRatio    = isolDat.Tfb./isolDat.Tm;
-mu2Ratio    = isolDat.mu2./isolDat.GMSTm;
-gapRatio    = isolDat.moatGap./(g.*isolDat.GMSTm.*isolDat.Tm.^2);
+mu2Ratio    = isolDat.mu2./(isolDat.GMSTm./isolDat.Bm);
+gapRatio    = isolDat.moatGap./(g.*(isolDat.GMSTm./isolDat.Bm).*isolDat.Tm.^2);
 T2Ratio     = isolDat.T2./isolDat.Tm;
 Ry          = isolDat.RI;
 zeta        = isolDat.zetaM;
 A_S1        = isolDat.S1Ampli;
 
-collapsed   = isolDat.impacted;
+% collapsed   = isolDat.impacted;
 
-% collapsed   = (isolDat.collapseDrift1 | isolDat.collapseDrift2) ...
-%     | isolDat.collapseDrift3;
+collapsed   = (isolDat.collapseDrift1 | isolDat.collapseDrift2) ...
+    | isolDat.collapseDrift3;
 
 collapsed   = double(collapsed);
 
@@ -79,4 +84,4 @@ plotMarginalSlices(1, 2, 3, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 %%
 % Goal: get a design space of qualifying probs of failure over 2 variables
 % [designSpace, boundLine] = getDesignSpace(varX, varY, probDesired, probTol, x, y, hyp, meanfunc, covfunc, inffunc, likfunc)
-[design, boundary] = getDesignSpace(2, 3, 0.1, 0.01, x, y, hyp, meanfunc, covfunc, inffunc, likfunc);
+[design, boundary] = getDesignSpace(2, 3, 0.1, 0.02, x, y, hyp, meanfunc, covfunc, inffunc, likfunc);
