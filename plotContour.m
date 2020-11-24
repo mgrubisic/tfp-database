@@ -50,7 +50,8 @@ function plotContour(constIdx, xIdx, yIdx, x, y, hyp, meanfunc, covfunc ,inffunc
             end
         end
         
-        [a,b,c,d,lp] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, t, ones(n, 1)); %a is expected value, b is sd of expected value, lp is the probabilities used to print the contour curves
+        %a is expected value, b is sd of expected value, lp is the probabilities used to print the contour curves
+        [a,b,c,d,lp] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, t, ones(n, 1)); 
         
         % get points close to the desired vConst's
         xPlot = x(( (x(:,constIdx) < vConst(i)+5*stepX(constIdx)) & ...

@@ -67,34 +67,19 @@ inffunc     = @infLaplace;
 
 hyp = minimize(hyp, @gp, -1000, inffunc, meanfunc, covfunc, likfunc, x, y);
 
-% % inducing points for sparse FITC approx
-% nFITC       = 10;
-% oneRange    = linspace(0, 1, nFITC);
-% xRanges     = minX' + oneRange.*(maxX' - minX');
-% uRanges     = cell(1, size(xRanges, 1));
-% xuInput     = num2cell(xRanges, 2);
-% 
-% [uRanges{:}]    = ndgrid(xuInput{:});
-% u               = [uRanges{:}];
-% covfuncF    = {@apxSparse, {covfunc}, u};
-
-% rangex1     = linspace(min(x(:,1)), max(x(:,1)), 10);
-% rangex2     = linspace(min(x(:,2)), max(x(:,2)), 10);
-% [u1,u2]     = meshgrid(rangex1, rangex2);
-% u           = [u1(:), u2(:)];
-% covfuncF    = {@apxSparse, {covfunc}, u};
-% 
-% hyp = minimize(hyp, @gp, -100, inffunc, meanfunc, covfuncF, likfunc, x, y);
 
 % Goal: for 3 values of mu2Ratio, plot gapRatio vs. T2Ratio
 % plotContour(constIdx, xIdx, yIdx, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 plotContour(1, 2, 3, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
+plotContour(2, 1, 3, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
 % % Goal: set mu2 ratio to median, fix three values T2 ratios, plot marginal for
 % % gap ratio (set x1, fix x3, plot x2)
 % plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 plotMarginalSlices(1, 2, 3, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
-% for i = 1:length(midX)
-%     xs(:,i) = transpose(minX(i):stepX(i):maxX(i));
-% end
+
+%% 
+% Goal: get a design space of qualifying probs of failure over 2 variables
+% [designSpace, boundLine] = getDesignSpace(varX, varY, probDesired, probTol, x, y, hyp, meanfunc, covfunc, inffunc, likfunc)
+[design, boundary] = getDesignSpace(2, 3, 0.1, 0.01, x, y, hyp, meanfunc, covfunc, inffunc, likfunc);
