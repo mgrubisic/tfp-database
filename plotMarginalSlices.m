@@ -16,8 +16,8 @@ function plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, hyp, meanfunc, covfunc
 
     [~,f]       = size(x);
     
-    minX        = round(min(x),1);
-    maxX        = round(max(x),1);
+    minX        = round(min(x),2);
+    maxX        = round(max(x),2);
     midX        = round(median(x),2);
     stepX       = (maxX-minX)/50;
     
@@ -46,7 +46,7 @@ function plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, hyp, meanfunc, covfunc
             end
         end
     
-    [a,b,~,~,~] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, t, ones(n, 1));
+    [a,b,~,~,lp] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, t, ones(n, 1));
     
 %     v3  = [midX(3)-10*stepX(3) midX(3) midX(3)+10*stepX(3)];
 
@@ -81,7 +81,7 @@ function plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, hyp, meanfunc, covfunc
         
         % get points close to the desired v1's
         % tolerance: 2 steps of the constant variables
-        % tolerance: 2 steps of the fix variables
+        % tolerance: 5 steps of the fix variables
         
         xPlot = x(( (x(:,constIdx) < constMed+2*stepX(constIdx)) & ...
             (x(:,constIdx) > constMed-2*stepX(constIdx)) ),:);
@@ -101,10 +101,10 @@ function plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, hyp, meanfunc, covfunc
         plot(xPlot(collapsedIdx, xIdx), yPlot(collapsedIdx), 'r+'); 
         plot(xPlot(notIdx, xIdx), yPlot(notIdx), 'b+');
         
-        xlabel('x variable','Interpreter','latex')
+        xlabel('gap ratio','Interpreter','latex')
         ylabel('collapsed?','Interpreter','latex')
         
     end
     
-    sgtitle('marginals for 3 sets of median values', 'Interpreter', 'LaTeX')
+    sgtitle('marginals for 3 sets of T2 ratio, fixed mu2', 'Interpreter', 'LaTeX')
 end

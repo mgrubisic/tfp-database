@@ -15,10 +15,10 @@
 function plotContour(constIdx, xIdx, yIdx, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
     
 
-    [e,f]       = size(x);
+    [~,f]       = size(x);
     
-    minX        = round(min(x),1);
-    maxX        = round(max(x),1);
+    minX        = round(min(x),2);
+    maxX        = round(max(x),2);
     midX        = round(median(x),2);
     stepX       = (maxX-minX)/50;
 
@@ -67,12 +67,12 @@ function plotContour(constIdx, xIdx, yIdx, x, y, hyp, meanfunc, covfunc ,inffunc
         plot(xPlot(collapsedIdx,xIdx), xPlot(collapsedIdx,yIdx), 'r+'); 
         plot(xPlot(notIdx,xIdx), xPlot(notIdx,yIdx), 'b+');
         
-        xlabel('x variable','Interpreter','latex')
-        ylabel('y variable','Interpreter','latex')
+        xlabel('Gap ratio','Interpreter','latex')
+        ylabel('T2 ratio','Interpreter','latex')
         contour(tempX, tempY, reshape(exp(lp), size(tempX)), [0.0:0.1:1.0]);
         
     end
     colorbar
-    sgtitle('Varying constant variable', 'Interpreter', 'LaTeX')
+    sgtitle('3 values mu2 ratio', 'Interpreter', 'LaTeX')
 
 end

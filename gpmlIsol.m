@@ -21,29 +21,27 @@ g           = 386.4;
 TfbRatio    = isolDat.Tfb./isolDat.Tm;
 mu2Ratio    = isolDat.mu2./isolDat.GMSTm;
 gapRatio    = isolDat.moatGap./(g.*isolDat.GMSTm.*isolDat.Tm.^2);
-T2Ratio     = isolDat.GMST2./isolDat.GMSTm;
+T2Ratio     = isolDat.T2./isolDat.Tm;
 Ry          = isolDat.RI;
 zeta        = isolDat.zetaM;
 A_S1        = isolDat.S1Ampli;
 
-collapsed   = (isolDat.collapseDrift1 | isolDat.collapseDrift2) ...
-    | isolDat.collapseDrift3;
+collapsed   = isolDat.impacted;
+
+% collapsed   = (isolDat.collapseDrift1 | isolDat.collapseDrift2) ...
+%     | isolDat.collapseDrift3;
 
 collapsed   = double(collapsed);
 
 % x should be all combinations of x1 and x2
 % y should be their respective resulting impact boolean
-% x           = [mu2Ratio, gapRatio, T2Ratio, zeta, Ry];
-x           = [mu2Ratio, gapRatio, T2Ratio, Ry];
+x           = [mu2Ratio, gapRatio, T2Ratio, zeta, Ry];
+% x           = [mu2Ratio, gapRatio, T2Ratio, Ry];
 y           = collapsed;
 y(y==0)     = -1;
 
 % intervals, mins, and max of variables
 [e,f]       = size(x);
-minX        = round(min(x),1);
-maxX        = round(max(x),1);
-midX        = round(median(x),2);
-stepX       = (maxX-minX)/50;
 
 % try mean as constant
 % meanfunc    = @meanConst; hyp.mean = 0;
@@ -71,15 +69,14 @@ hyp = minimize(hyp, @gp, -1000, inffunc, meanfunc, covfunc, likfunc, x, y);
 % Goal: for 3 values of mu2Ratio, plot gapRatio vs. T2Ratio
 % plotContour(constIdx, xIdx, yIdx, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 plotContour(1, 2, 3, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
-plotContour(2, 1, 3, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
+% plotContour(2, 1, 3, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
 % % Goal: set mu2 ratio to median, fix three values T2 ratios, plot marginal for
 % % gap ratio (set x1, fix x3, plot x2)
 % plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 plotMarginalSlices(1, 2, 3, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
-
-%% 
+%%
 % Goal: get a design space of qualifying probs of failure over 2 variables
 % [designSpace, boundLine] = getDesignSpace(varX, varY, probDesired, probTol, x, y, hyp, meanfunc, covfunc, inffunc, likfunc)
 [design, boundary] = getDesignSpace(2, 3, 0.1, 0.01, x, y, hyp, meanfunc, covfunc, inffunc, likfunc);

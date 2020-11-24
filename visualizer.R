@@ -21,7 +21,7 @@ isolDat$TfbRatio <- isolDat$Tfb/isolDat$Tm
 isolDat$mu2Ratio <- isolDat$mu2/isolDat$GMSTm
 # isolDat$gapRatio <- isolDat$moatGap/(isolDat$mu2 * g * isolDat$Tm^2)
 isolDat$gapRatio <- isolDat$moatGap/(isolDat$GMSTm * g * isolDat$Tm^2)
-isolDat$T2Ratio <- isolDat$GMST2/isolDat$GMSTm
+isolDat$T2Ratio <- isolDat$T2/isolDat$Tm
 isolDat$Qm <- isolDat$mu2*g
 
 # point plot function

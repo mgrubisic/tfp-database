@@ -15,7 +15,7 @@ isolDat <- read.csv(dataPath, header=TRUE)
 isolDat$TfbRatio <- isolDat$Tfb/isolDat$Tm
 isolDat$mu2Ratio <- isolDat$mu2/isolDat$GMSTm
 isolDat$gapRatio <- isolDat$moatGap/(isolDat$GMSTm*isolDat$Tm^2)
-isolDat$T2Ratio <- isolDat$GMST2/isolDat$GMSTm
+isolDat$T2Ratio <- isolDat$T2/isolDat$Tm
 isolDat$Ry <- isolDat$RI
 isolDat$zeta <- isolDat$zetaM
 isolDat$A_S1 <- isolDat$S1Ampli
