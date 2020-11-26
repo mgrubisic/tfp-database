@@ -40,8 +40,9 @@ collapsed   = double(collapsed);
 
 % x should be all combinations of x1 and x2
 % y should be their respective resulting impact boolean
-x           = [mu2Ratio, gapRatio, T2Ratio, zeta, Ry];
-% x           = [mu2Ratio, gapRatio, T2Ratio, Ry];
+% x           = [mu2Ratio, gapRatio, T2Ratio, zeta, Ry];
+% x           = [gapRatio, T2Ratio, mu2Ratio, Ry];
+x           = [gapRatio, T2Ratio, zeta, Ry];
 y           = collapsed;
 y(y==0)     = -1;
 
@@ -55,10 +56,10 @@ y(y==0)     = -1;
 % meanfunc    = [];
 
 % try mean as affine function
-% meanfunc = {@meanSum, {@meanLinear, @meanConst}}; hyp.mean = [zeros(1,f) 0]';
+meanfunc = {@meanSum, {@meanLinear, @meanConst}}; hyp.mean = [zeros(1,f) 0]';
 
 % try mean as linear function
-meanfunc    = @meanLinear; hyp.mean = [zeros(1,f)]';
+% meanfunc    = @meanLinear; hyp.mean = [zeros(1,f)]';
 
 % poly?
 % meanfunc    = {@meanPoly,2}; hyp.mean = [zeros(1,2*f)]';
@@ -68,20 +69,22 @@ covfunc     = @covSEard; ell = 1.0; sf = 1.0; hyp.cov = log([ell*ones(1,f) sf]);
 likfunc     = @likLogistic;
 inffunc     = @infLaplace;
 
-hyp = minimize(hyp, @gp, -1000, inffunc, meanfunc, covfunc, likfunc, x, y);
+hyp = minimize(hyp, @gp, -3000, inffunc, meanfunc, covfunc, likfunc, x, y);
 
 
-% Goal: for 3 values of mu2Ratio, plot gapRatio vs. T2Ratio
+% Goal: for 3 values of zeta, plot gapRatio vs. T2Ratio
 % plotContour(constIdx, xIdx, yIdx, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
-plotContour(1, 2, 3, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
+plotContour(3, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 % plotContour(2, 1, 3, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
-% % Goal: set mu2 ratio to median, fix three values T2 ratios, plot marginal for
+% % Goal: set zeta ratio to median, fix three values T2 ratios, plot marginal for
 % % gap ratio (set x1, fix x3, plot x2)
 % plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
-plotMarginalSlices(1, 2, 3, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
+plotMarginalSlices(3, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
 %%
 % Goal: get a design space of qualifying probs of failure over 2 variables
 % [designSpace, boundLine] = getDesignSpace(varX, varY, probDesired, probTol, x, y, hyp, meanfunc, covfunc, inffunc, likfunc)
-[design, boundary] = getDesignSpace(2, 3, 0.1, 0.02, x, y, hyp, meanfunc, covfunc, inffunc, likfunc);
+% [design, boundary] = getDesignSpace(1, 2, 0.1, 0.02, x, y, hyp, meanfunc, covfunc, inffunc, likfunc);
+
+designSpace = minDesign(0.1, 25, x, y, hyp, meanfunc, covfunc, inffunc, likfunc);

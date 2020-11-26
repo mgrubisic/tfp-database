@@ -106,5 +106,5 @@ function plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, hyp, meanfunc, covfunc
         
     end
     
-    sgtitle('marginals for 3 sets of T2 ratio, fixed mu2', 'Interpreter', 'LaTeX')
+    sgtitle('marginals for 3 sets of T2 ratio, constant damping', 'Interpreter', 'LaTeX')
 end

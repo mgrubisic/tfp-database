@@ -73,6 +73,6 @@ function plotContour(constIdx, xIdx, yIdx, x, y, hyp, meanfunc, covfunc ,inffunc
         
     end
     colorbar
-    sgtitle('3 values mu2 ratio', 'Interpreter', 'LaTeX')
+    sgtitle('3 levels of damping', 'Interpreter', 'LaTeX')
 
 end
