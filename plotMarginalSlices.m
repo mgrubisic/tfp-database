@@ -12,7 +12,8 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
+function plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, ...
+    hyp, meanfunc, covfunc ,inffunc, likfunc)
 
     [~,f]       = size(x);
     

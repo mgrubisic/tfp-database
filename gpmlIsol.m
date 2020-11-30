@@ -86,5 +86,6 @@ plotMarginalSlices(3, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 % Goal: get a design space of qualifying probs of failure over 2 variables
 % [designSpace, boundLine] = getDesignSpace(varX, varY, probDesired, probTol, x, y, hyp, meanfunc, covfunc, inffunc, likfunc)
 % [design, boundary] = getDesignSpace(1, 2, 0.1, 0.02, x, y, hyp, meanfunc, covfunc, inffunc, likfunc);
-
-designSpace = minDesign(0.1, 25, x, y, hyp, meanfunc, covfunc, inffunc, likfunc);
+weightVec   = [3.0, 1.0, 0.05, 5.0];
+[designSpace, designPoint] = minDesign(0.1, 25, x, y, weightVec,...
+    hyp, meanfunc, covfunc, inffunc, likfunc);

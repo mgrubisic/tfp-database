@@ -18,10 +18,10 @@ import math, cmath
 import numpy as np
 
 mu2Ratio 	= 0.25
-gapRatio 	= 0.0740
-T2Ratio 	= 1.19
-zeta 		= 0.15
-Tm 			= 3.5
+gapRatio 	= 0.0320
+T2Ratio 	= 1.10
+zeta 		= 0.10
+Tm 			= 3.0
 
 mu1Guess 	= 0.03
 
@@ -38,8 +38,6 @@ def designBearing(mu1, gapRatio, T2Ratio, zeta, Tm):
 	BmRef	= [0.8, 1.0, 1.2, 1.5, 1.7, 1.9, 2.0]
 
 	Bm 		= np.interp(zeta, zetaRef, BmRef)
-    
-	print(Bm)
 
 	hypmu2 	= SaTm/Bm*mu2Ratio
 	print("If mu2Ratio is specified, mu2 =", hypmu2)

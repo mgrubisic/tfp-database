@@ -12,7 +12,8 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function plotContour(constIdx, xIdx, yIdx, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
+function plotContour(constIdx, xIdx, yIdx, x, y, ...
+    hyp, meanfunc, covfunc ,inffunc, likfunc)
     
 
     [~,f]       = size(x);
