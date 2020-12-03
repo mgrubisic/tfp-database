@@ -69,11 +69,11 @@ function plotContour(constIdx, xIdx, yIdx, x, y, ...
         plot(xPlot(notIdx,xIdx), xPlot(notIdx,yIdx), 'b+');
         
         xlabel('Gap ratio','Interpreter','latex')
-        ylabel('T2 ratio','Interpreter','latex')
+        ylabel('Damping','Interpreter','latex')
         contour(tempX, tempY, reshape(exp(lp), size(tempX)), [0.0:0.1:1.0]);
         
     end
     colorbar
-    sgtitle('3 levels of damping', 'Interpreter', 'LaTeX')
+    sgtitle('3 levels of T2 ratio', 'Interpreter', 'LaTeX')
 
 end

@@ -72,20 +72,20 @@ inffunc     = @infLaplace;
 hyp = minimize(hyp, @gp, -3000, inffunc, meanfunc, covfunc, likfunc, x, y);
 
 
-% Goal: for 3 values of zeta, plot gapRatio vs. T2Ratio
+% Goal: for 3 values of T2 ratio, plot gapRatio vs. damping
 % plotContour(constIdx, xIdx, yIdx, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
-plotContour(3, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
+plotContour(2, 1, 3, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 % plotContour(2, 1, 3, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
-% % Goal: set zeta ratio to median, fix three values T2 ratios, plot marginal for
+% % Goal: set T2 ratio to median, fix three values damping ratios, plot marginal for
 % % gap ratio (set x1, fix x3, plot x2)
 % plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
-plotMarginalSlices(3, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
+plotMarginalSlices(2, 1, 3, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
 %%
 % Goal: get a design space of qualifying probs of failure over 2 variables
 % [designSpace, boundLine] = getDesignSpace(varX, varY, probDesired, probTol, x, y, hyp, meanfunc, covfunc, inffunc, likfunc)
 % [design, boundary] = getDesignSpace(1, 2, 0.1, 0.02, x, y, hyp, meanfunc, covfunc, inffunc, likfunc);
-weightVec   = [3.0, 1.0, 0.05, 5.0];
-[designSpace, designPoint] = minDesign(0.1, 25, x, y, weightVec,...
+weightVec   = [1.0, 0.0, 0.0, 1.0, 0.0];
+[designSpace, designPoint] = minDesign(0.1, 10, x, y, weightVec,...
     hyp, meanfunc, covfunc, inffunc, likfunc);

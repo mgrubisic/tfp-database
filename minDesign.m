@@ -37,7 +37,8 @@ function [designSpace, designPoint] = minDesign(probDesired, steps, x, y, w, ...
     
     designSpace = minSpace((minSpace(:, end) <= probDesired),:);
     
-    penVec      = designSpace(:,1:f)*w';
+%     penVec      = designSpace(:,1:f)*w';
+    penVec      = designSpace*w';
     
 %     pen = @(paramVec) (paramVec*w');
 %     penResult = arrayfun(@(paramVec) pen(paramVec) , ...

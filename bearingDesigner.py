@@ -18,12 +18,12 @@ import math, cmath
 import numpy as np
 
 mu2Ratio 	= 0.25
-gapRatio 	= 0.0320
+gapRatio 	= 0.04
 T2Ratio 	= 1.10
 zeta 		= 0.10
 Tm 			= 3.0
 
-mu1Guess 	= 0.03
+mu1Guess 	= 0.07
 
 def designBearing(mu1, gapRatio, T2Ratio, zeta, Tm):
 

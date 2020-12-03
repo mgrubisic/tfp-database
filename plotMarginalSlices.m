@@ -8,7 +8,7 @@
 
 % Description: 	Script plots marginals for individual params
 
-% Open issues: 	(1)
+% Open issues: 	(1) Not grabbing the right points
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -81,18 +81,21 @@ function plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, ...
         plot(pts, a(idc))
         
         % get points close to the desired v1's
-        % tolerance: 2 steps of the constant variables
+        % tolerance: 5 steps of the constant variables
         % tolerance: 5 steps of the fix variables
         
-        xPlot = x(( (x(:,constIdx) < constMed+2*stepX(constIdx)) & ...
-            (x(:,constIdx) > constMed-2*stepX(constIdx)) ),:);
-        yPlot = y(( (x(:,constIdx) < constMed+2*stepX(constIdx)) & ...
-            (x(:,constIdx) > constMed-2*stepX(constIdx)) ),:);
+        conditionIdxConst = (x(:,constIdx) < (constMed+5*stepX(constIdx)) ) & ...
+            (x(:,constIdx) > (constMed-5*stepX(constIdx)));
         
-        xPlot = xPlot(( (xPlot(:,fixIdx) < vFix(i)+5*stepX(fixIdx)) & ...
-            (xPlot(:,fixIdx) > vFix(i)-5*stepX(fixIdx)) ),:);
-        yPlot = yPlot(( (xPlot(:,fixIdx) < vFix(i)+5*stepX(fixIdx)) & ...
-            (xPlot(:,fixIdx) > vFix(i)-5*stepX(fixIdx)) ),:);
+        xPlot = x(conditionIdxConst,:);
+        yPlot = y(conditionIdxConst,:);
+        
+        % this step is dodgy
+        conditionIdxFix = (xPlot(:,fixIdx) < (vFix(i)+5*stepX(fixIdx)) ) & ...
+            (xPlot(:,fixIdx) > (vFix(i)-5*stepX(fixIdx)) ) ;
+        
+        xPlot = xPlot(conditionIdxFix,:);
+        yPlot = yPlot(conditionIdxFix,:);
         
         % plot data
         collapsedIdx   = yPlot == 1;
@@ -107,5 +110,5 @@ function plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, ...
         
     end
     
-    sgtitle('marginals for 3 sets of T2 ratio, constant damping', 'Interpreter', 'LaTeX')
+    sgtitle('marginals for 3 sets of damping ratio, constant T2', 'Interpreter', 'LaTeX')
 end
