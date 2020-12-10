@@ -11,3 +11,8 @@
 # outputs
 ./outputs/*
 ./sessionOut/*
+./validation/outputs/*
+./validation/sessionOut/*
+
+# matlab saves
+./*.asv

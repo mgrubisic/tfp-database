@@ -25,6 +25,7 @@ isolDat.Bm  = interp1(zetaRef, BmRef, isolDat.zetaM);
 
 TfbRatio    = isolDat.Tfb./isolDat.Tm;
 mu2Ratio    = isolDat.mu2./(isolDat.GMSTm./isolDat.Bm);
+mu1Ratio    = isolDat.mu1./(isolDat.GMSTm./isolDat.Bm);
 gapRatio    = isolDat.moatGap./(g.*(isolDat.GMSTm./isolDat.Bm).*isolDat.Tm.^2);
 T2Ratio     = isolDat.T2./isolDat.Tm;
 Ry          = isolDat.RI;
@@ -42,6 +43,7 @@ collapsed   = double(collapsed);
 % y should be their respective resulting impact boolean
 % x           = [mu2Ratio, gapRatio, T2Ratio, zeta, Ry];
 % x           = [gapRatio, T2Ratio, mu2Ratio, Ry];
+% x           = [mu1Ratio, gapRatio, T2Ratio, zeta, Ry];
 x           = [gapRatio, T2Ratio, zeta, Ry];
 y           = collapsed;
 y(y==0)     = -1;
@@ -74,18 +76,35 @@ hyp = minimize(hyp, @gp, -3000, inffunc, meanfunc, covfunc, likfunc, x, y);
 
 % Goal: for 3 values of T2 ratio, plot gapRatio vs. damping
 % plotContour(constIdx, xIdx, yIdx, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
-plotContour(2, 1, 3, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
-% plotContour(2, 1, 3, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
+plotContour(3, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
+% plotContour(4, 2, 1, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
 % % Goal: set T2 ratio to median, fix three values damping ratios, plot marginal for
 % % gap ratio (set x1, fix x3, plot x2)
 % plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
+% plotMarginalSlices(4, 2, 1, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 plotMarginalSlices(2, 1, 3, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
 %%
 % Goal: get a design space of qualifying probs of failure over 2 variables
 % [designSpace, boundLine] = getDesignSpace(varX, varY, probDesired, probTol, x, y, hyp, meanfunc, covfunc, inffunc, likfunc)
 % [design, boundary] = getDesignSpace(1, 2, 0.1, 0.02, x, y, hyp, meanfunc, covfunc, inffunc, likfunc);
-weightVec   = [1.0, 0.0, 0.0, 1.0, 0.0];
-[designSpace, designPoint] = minDesign(0.1, 10, x, y, weightVec,...
+SaTm    = mean(isolDat.GMSTm);
+Tm      = mean(isolDat.Tm);
+Bm      = mean(isolDat.Bm);
+
+minDm   = min(gapRatio)*g*SaTm/Bm*Tm^2;
+maxDm   = max(gapRatio)*g*SaTm/Bm*Tm^2;
+
+minDmCost   = 531/144*(90*12 + 2*minDm)^2;
+maxDmCost   = 531/144*(90*12 + 2*maxDm)^2;
+dCostdGap   = (maxDmCost - minDmCost)/(maxDm - minDm);
+
+minRyCost = 372030;
+maxRyCost = 205020;
+
+dCostdRI = (maxRyCost - minRyCost)/(2.0 - 0.5);
+
+weightVec   = [dCostdGap, 0.0, 0.0, dCostdRI, 0.0];
+[designSpace, designPoint] = minDesign(0.06, 10, x, y, weightVec,...
     hyp, meanfunc, covfunc, inffunc, likfunc);
