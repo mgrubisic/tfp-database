@@ -15,4 +15,4 @@
 ./validation/sessionOut/*
 
 # matlab saves
-./*.asv
+*.asv
