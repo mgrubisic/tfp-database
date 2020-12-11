@@ -12,6 +12,9 @@
 # 				Adapted for validation study
 
 # Open issues: 	(1) Rework beam and column selection using repeatable functions
+# 				(2) Bearing is closed form, depends on selection of Tm, mu1,
+#					no way to handle type error or bad "iterations"
+#				(3) Using sympy to solve
 
 ############################################################################
 
@@ -19,7 +22,8 @@
 import numpy as np
 import math, cmath
 import pandas as pd
-import sys
+import sympy as sy
+sy.init_printing()
 
 ############################################################################
 #              Searcher utilities
@@ -86,12 +90,9 @@ def design():
 
 	SaTm 	= param['S1']/param['Tm']
 
-	
 	T2 		= param['T2Ratio']*param['Tm']
 	R2 		= T2**2*g/(8*pi**2)
 	R3 		= R2
-
-	RDiv 	= 1.1
 
 	# moat gap from GPML's ratio
 	moatGap = math.ceil(g*(SaTm/Bm)*(param['Tm']**2)*param['gapRatio'])
@@ -99,52 +100,54 @@ def design():
 	if moatGap < Dm:
 		print("Weird. Moat gap is smaller than expected displacement.")
 		
+	# Bearing design starts here
+	# No loops, no iterations, no checking
 	x 		= Dm
-
 	# yield displ
 	xy		= 0.01*inch
 
-	# guess mu1
-	mu1 	= 0.03
-	muBad 	= True
+	# Select mu1
+	mu1 	= 0.015
 
-	while muBad:
+	k0		= mu1/xy
 
-		if RDiv > 10.0:
-			print("Could not find a design within good R ratios.")
-			break
+	b  		= 1/(2*R2)
 
-		R1 		= R2/RDiv
+	kM 		= (2*pi/param['Tm'])**2 * (1/g)
+	Wm 		= param['zetaM']*(2*pi*kM*x**2)
+	
+	# x1 		= (a-b)**(-1/2)*cmath.sqrt(-Wm/4 + (kM - b)*x**2 - (k0 - a)*xy**2)
+	mu2, R1 = sy.symbols('mu2 R1')
 
-		k0		= mu1/xy
+	# initial guesses are fixed
+	solset = sy.nsolve( [ (mu2 + 1/(2*R2)*(x - 2*R1*(mu2-mu1))) /x - kM,
+		4*(mu2 - 1/(2*R2)*(2*R1*(mu2-mu1)))*x - 4*(1/(2*R1) - 1/(2*R2))*(2*R1*(mu2-mu1))**2 - 4*(k0 - 1/(2*R1))*xy**2 - Wm],
+		[mu2, R1], [0.09, 40])
 
-		a 		= 1/(2*R1)
-		b  		= 1/(2*R2)
+	npsol = np.array(solset).astype(np.float64)
 
-		kM 		= (2*pi/param['Tm'])**2 * (1/g)
-		Wm 		= param['zetaM']*(2*pi*kM*x**2)
-		
-		x1 		= (a-b)**(-1/2)*cmath.sqrt(-Wm/4 + (kM - b)*x**2 - (k0 - a)*xy**2)
+	mu2 	= npsol[0].item()
+	R1 		= npsol[1].item()
+	mu3 	= mu2
 
+	# mu2 	= kM*x - b*(x-x1)
+	a 		= 1/(2*R1)
+	x1 		= (a-b)**(-1/2)*math.sqrt(-Wm/4 + (kM - b)*x**2 - (k0 - a)*xy**2)
+	mu1 	= mu2 - x1/(2*R1)
+	
 
+	ke 		= (mu2.real + b*(x - x1.real))/x
+	We 		= (4*(mu2.real - b*x1.real)*x - 
+		4*(a-b)*x1.real**2 - 4*(k0 -a)*xy**2)
+	zetaE	= We/(2*pi*ke*x**2)
+	Te 		= 2*pi/(cmath.sqrt(ke/(1/g)))
 
-		mu2 	= kM*x - b*(x-x1)
-		mu3 	= mu2
-		mu1 	= -x1/(2*R1) + mu2
-		
+	muList 	= [mu1, mu2, mu3]
 
-		ke 		= (mu2.real + b*(x - x1.real))/x
-		We 		= (4*(mu2.real - b*x1.real)*x - 
-			4*(a-b)*x1.real**2 - 4*(k0 -a)*xy**2)
-		zetaE	= We/(2*pi*ke*x**2)
-		Te 		= 2*pi/(cmath.sqrt(ke/(1/g)))
+	# muBad 	= (any(coeff.real < 0 for coeff in muList) or 
+	# 	any(np.iscomplex(muList))) or (mu1 > mu2)
 
-		muList 	= [mu1, mu2, mu3]
-
-		muBad 	= (any(coeff.real < 0 for coeff in muList) or 
-			any(np.iscomplex(muList))) or (mu1 > mu2)
-
-		RDiv 	+= 0.1
+		# RDiv 	+= 0.1
 
 	# Abort if there are nonsensical results
 	if(any(coeff.real < 0 for coeff in muList) or any(np.iscomplex(muList))):

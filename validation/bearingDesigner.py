@@ -9,13 +9,13 @@
 # Description: 	Given ratios returned by the ML algorithm, get a proper bearing
 # design
 
-# Open issues: 	(1) Overconstrained? Yes: mu2 has to be adjusted
-#				(2) Even if mu2 is adjusted, previous design algorithm struggles
-#				(3) Current solution: revert to old design by guessing mu1
+# Open issues: 	(1) Using sympy to solve
 
 ############################################################################
 import math, cmath
 import numpy as np
+import sympy as sy
+sy.init_printing()
 
 mu2Ratio 	= 0.25
 gapRatio 	= 0.03
@@ -23,7 +23,7 @@ T2Ratio 	= 1.14
 zeta 		= 0.10
 Tm 			= 3.5
 
-mu1 		= 0.03
+mu1 		= 0.015
 
 # def designBearing(mu1, gapRatio, T2Ratio, zeta, Tm):
 
@@ -40,7 +40,6 @@ BmRef	= [0.8, 1.0, 1.2, 1.5, 1.7, 1.9, 2.0]
 Bm 		= np.interp(zeta, zetaRef, BmRef)
 
 hypmu2 	= SaTm/Bm*mu2Ratio
-# mu2 	= hypmu2
 print("If mu2Ratio is specified, mu2 =", hypmu2)
 
 moatGap = g*(SaTm/Bm)*(Tm**2)*gapRatio
@@ -67,32 +66,24 @@ while muBad:
 		print("Could not find a design within good R ratios.")
 		break
 
-	R1 		= R2/RDiv
-
-	# R2 		= RDiv*param['R1']
-	# R3 		= RDiv*param['R1']
+	mu2, R1 = sy.symbols('mu2 R1')
 
 	k0		= mu1/xy
-	# a 		= 1/(2*param['R1'])
-
-	a 		= 1/(2*R1)
 	b  		= 1/(2*R2)
 
 	kM 		= (2*pi/Tm)**2 * (1/g)
 	Wm 		= zeta*(2*pi*kM*x**2)
 
-	# x1 		= x + (mu2 - kM*x)/b
-	
-	# x1 		= x - 2*R2*(kM*x - mu2)
-	x1 		= (a-b)**(-1/2)*math.sqrt(-Wm/4 + (kM - b)*x**2 - (k0 - a)*xy**2)
+	solset = sy.nsolve( [ (mu2 + 1/(2*R2)*(x - 2*R1*(mu2-mu1))) /x - kM,
+		4*(mu2 - 1/(2*R2)*(2*R1*(mu2-mu1)))*x - 4*(1/(2*R1) - 1/(2*R2))*(2*R1*(mu2-mu1))**2 - 4*(k0 - 1/(2*R1))*xy**2 - Wm], 
+		[mu2, R1], [0.20, 60])
 
-	# k0 		= -1/(xy**2)*(x1**2*(a-b) + Wm/4 - (kM-b)*x**2) + a
-	# mu1 	= k0*xy
+	npsol = np.array(solset).astype(np.float64)
 
-	# mu2 	= mu1 + x1/(2*R1)
+	mu2 = npsol[0].item()
+	R1 = npsol[1].item()
 
-	mu2 	= kM*x - b*(x-x1)
-	# mu3 	= mu2
+	a 		= 1/(2*R1)
 
     # need way to tie mu1 to something invariable (R2)
 	mu1 	=  mu2 - x1/(2*R1)
@@ -111,7 +102,7 @@ while muBad:
 	muList 	= [mu1, mu2, mu2]
 
 	muBad 	= (any(coeff.real < 0 for coeff in muList) or 
-		any(np.iscomplex(muList))) or (mu1 > mu2) or (mu2 > 3*mu1)
+		any(np.iscomplex(muList))) or (mu1 > mu2)
 
 	RDiv 	+= 0.1
 
