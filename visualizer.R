@@ -43,12 +43,29 @@ dots <- function(mapping){
 # dots(aes(RI, T1, color = Tm))
 # dots(aes(Tm, moatGap, color = gapRatio))
 
-dots(aes(zetaM, T2Ratio, color = moatGap))
+# dots(aes(zetaM, T2Ratio, color = moatGap))
 # dots(aes(RI, Tfb, color = T2))
 # dots(aes(Tfb, T2, color = T1))
-dots(aes(gapRatio, mu2Ratio, color = T2Ratio))
+# dots(aes(gapRatio, mu2Ratio, color = T2Ratio))
 
 # variables vs collapse
-# dots(aes(gapRatio, maxDrift))
-# dots(aes(T2Ratio, maxDrift))
-# dots(aes(zetaM, maxDrift))
+dots(aes(gapRatio, maxDrift, color = collapse))
+dots(aes(mu2Ratio, maxDrift, color = collapse))
+dots(aes(T2Ratio, maxDrift, color = collapse))
+dots(aes(zetaM, maxDrift, color = collapse))
+dots(aes(RI, maxDrift, color = collapse))
+
+
+# variables vs impact
+dots(aes(gapRatio, maxDisplacement, color = impacted))
+dots(aes(mu2Ratio, maxDisplacement, color = impacted))
+dots(aes(T2Ratio, maxDisplacement, color = impacted))
+dots(aes(zetaM, maxDisplacement, color = impacted))
+dots(aes(RI, maxDisplacement, color = impacted))
+
+# among buildings that haven't collapsed, Ry has an effect
+ggplot(data = subset(isolDat, collapse == 0), aes(RI, maxDrift)) + geom_point()
+
+# even clearer are cases where impact isn't felt
+ggplot(data = subset(isolDat, impacted == 0), aes(RI, maxDrift, color = collapse)) + geom_point()
+ggplot(data = subset(isolDat, impacted == 1), aes(RI, maxDrift, color = collapse)) + geom_point()

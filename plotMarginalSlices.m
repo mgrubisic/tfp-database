@@ -105,10 +105,10 @@ function plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, ...
         plot(xPlot(collapsedIdx, xIdx), yPlot(collapsedIdx), 'r+'); 
         plot(xPlot(notIdx, xIdx), yPlot(notIdx), 'b+');
         
-        xlabel('gap ratio','Interpreter','latex')
-        ylabel('collapsed?','Interpreter','latex')
+        xlabel('Gap ratio','Interpreter','latex')
+        ylabel(['$\zeta_M = $', num2str(vFix(i),3)], 'Interpreter','latex')
         
     end
     
-    sgtitle('marginals for 3 sets of damping ratio, constant T2', 'Interpreter', 'LaTeX')
+    %sgtitle('Marginal collapse predictions across $T_2$ values', 'Interpreter', 'LaTeX')
 end

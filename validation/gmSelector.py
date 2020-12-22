@@ -87,7 +87,7 @@ def cleanGMs(gmDir, resultsCSV, actualS1, summaryStart=33, nSummary=100, scaledS
 	for earthquake in uniqEqs:
 		matchingEqs 						= eligFreq[eligFreq[' Earthquake Name'] == earthquake]
 		matchingEqs['scaleDifference'] 		= abs(matchingEqs['avgSpectrumScaleFactor'] - 1.0)
-		leastScaled 						= matchingEqs.sort_values(by=['scaleDifference']).iloc[:3]
+		leastScaled 						= matchingEqs.sort_values(by=['scaleDifference']).iloc[:2]
 		#leastScaled 						= matchingEqs[matchingEqs['scaleDifference'] == min(matchingEqs['scaleDifference'])]
 
 		if finalGM is None:

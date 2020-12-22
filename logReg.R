@@ -20,8 +20,8 @@ isolDat$Ry <- isolDat$RI
 isolDat$zeta <- isolDat$zetaM
 isolDat$A_S1 <- isolDat$S1Ampli
 
-isolDat$collapsed <- as.numeric(isolDat$collapseDrift1 | 
-                                  isolDat$collapseDrift2 | 
+isolDat$collapsed <- as.numeric(isolDat$collapseDrift1 |
+                                  isolDat$collapseDrift2 |
                                   isolDat$collapseDrift3)
 
 collapsedLogit <- glm(collapsed ~ TfbRatio + mu2Ratio + gapRatio + T2Ratio +
@@ -53,3 +53,14 @@ rawVars <- data.frame(isolDat$Ry,
                       isolDat$GMSTm)
 
 corMatRaw <- rawVars %>% as.matrix %>% cor %>% as.data.frame
+
+collapsed <- c(2, 25, 43)
+pCol <- collapsed/54
+level <- c(1, 1.5, 2)
+# 
+# ida <- data.frame(level, pCol)
+# 
+# colFit <- glm(pCol ~ level, data = ida, family = "binomial")
+# 
+# idaNew <- data.frame(level = seq(0.8, 3.0, length.out = 100))
+# idaNew$probs <- predict(colFit, newdata=idaNew, type = "response")

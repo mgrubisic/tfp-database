@@ -12,12 +12,12 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [designSpace, designPoint] = minDesign(probDesired, steps, x, y, w, ...
+function [designSpace, designPoint, minidx] = minDesign(probDesired, steps, x, y, w, ...
     hyp, meanfunc, covfunc, inffunc, likfunc)
     [~,f]       = size(x);
     
-    minX        = round(min(x),1);
-    maxX        = round(max(x),1);
+    minX        = round(min(x),2);
+    maxX        = round(max(x),2);
     midX        = round(median(x),2);
     stepX       = (maxX-minX)/steps;
 
@@ -46,5 +46,5 @@ function [designSpace, designPoint] = minDesign(probDesired, steps, x, y, w, ...
     
     [~, minidx] = min(penVec);
     
-    designPoint     = designSpace(minidx, 1:f);
+    designPoint     = designSpace(minidx, :);
 end

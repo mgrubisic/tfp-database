@@ -9,6 +9,7 @@
 # Description: 	Script creates list of viable ground motions and scales from PEER search
 
 # Open issues: 	(1) Lengths of sections require specifications
+#				(2) Manually specify how many of each EQ you want
 
 ############################################################################
 import pandas as pd

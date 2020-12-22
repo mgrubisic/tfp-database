@@ -106,8 +106,8 @@ def design():
 	# yield displ
 	xy		= 0.01*inch
 
-	# Select mu1
-	mu1 	= 0.015
+	# Read in mu1
+	mu1 	= param['mu1']
 
 	k0		= mu1/xy
 
