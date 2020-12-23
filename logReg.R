@@ -61,18 +61,17 @@ imLevel <- c(1, 1.5, 2)
 # fit lognormal parameters using binomial likelihood function
 startPt <- c(mean(log(imLevel)), sqrt(var(log(imLevel))))
 
-negBinomLik <- function(normPars){
-  p <- pnorm(log(imLevel), mean = normPars[1], sd = normPars[2])
+negBinomLik <- function(lnormPars){
+  p <- pnorm(log(imLevel), mean = lnormPars[1], sd = lnormPars[2])
   binomPdfs <- dbinom(collapsed, size = 54, prob = p)
   likelihood <- prod(binomPdfs)
   return(-likelihood)
 }
 
 fit <- optim(startPt, negBinomLik)
-binomPars <- fit$par
 
-theta <- exp(binomPars[1])
-beta <- binomPars[2]
+theta <- exp(fit$par[1])
+beta <- fit$par[2]
 
 ims <- seq(0, 3, length.out = 100)
 fitcdf <- pnorm(ims, mean = theta, sd = beta)
