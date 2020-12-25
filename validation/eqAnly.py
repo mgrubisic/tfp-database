@@ -296,7 +296,7 @@ def runGM(gmFilename, gmDefScale):
 	DtAnalysis		= 0.005*sec						# time-step Dt for lateral analysis                      	
 	GMTime			= dt*nPts + 10                  # total time of ground motion + 10 sec of free vibration
 	# TmaxAnalysis	= GMTime*sec					# maximum duration of ground-motion analysis
-	TmaxAnalysis 	= 60.0*sec
+	TmaxAnalysis 	= 35.0*sec
 
 	Nsteps			= math.floor(TmaxAnalysis/DtAnalysis)
 	ok				= analyze(Nsteps, DtAnalysis)	# actually perform analysis; returns ok=0 if analysis was successful

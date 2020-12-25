@@ -60,7 +60,7 @@ PEERSummary 	= 'combinedSearch.csv'
 databaseFile 	= 'gmListVal.csv'
 
 # incremental MCE_R levels
-IDALevel 	= np.arange(1.0, 2.5, 0.5).tolist()
+IDALevel 	= np.arange(1.0, 2.25, 0.25).tolist()
 
 # read in params
 parCsv 	= pd.read_csv('./inputs/bearingInputVal.csv', index_col=None, header=0)
