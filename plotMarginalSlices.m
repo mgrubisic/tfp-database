@@ -106,7 +106,7 @@ function plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, ...
         plot(xPlot(notIdx, xIdx), yPlot(notIdx), 'b+');
         
         xlabel('Gap ratio','Interpreter','latex')
-        ylabel(['$\zeta_M = $', num2str(vFix(i),3)], 'Interpreter','latex')
+        ylabel(['$T_2$ ratio = ', num2str(vFix(i),3)], 'Interpreter','latex')
         
     end
     

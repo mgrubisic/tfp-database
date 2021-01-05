@@ -71,10 +71,11 @@ function plotContour(constIdx, xIdx, yIdx, x, y, ...
         xlabel('Gap ratio','Interpreter','latex')
         ylabel('$T_2$ ratio','Interpreter','latex')
         contour(tempX, tempY, reshape(exp(lp), size(tempX)), [0.0:0.1:1.0]);
-        
+        colorbar
+        legend('Collapse', 'No collapse', '$P(Collapse)$', 'Interpreter','latex')
         
     end
-    colorbar
+    %colorbar
     %sgtitle('Probability of collapse at $\zeta_M = 0.10, 0.15, 0.20$', 'Interpreter', 'LaTeX')
 
 end

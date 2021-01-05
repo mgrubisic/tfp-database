@@ -83,7 +83,7 @@ plotContour(4, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 % % Goal: set T2 ratio to median, fix three values damping ratios, plot marginal for
 % % gap ratio (set x1, fix x3, plot x2)
 % plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
-plotMarginalSlices(4, 1, 3, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
+plotMarginalSlices(4, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 % plotMarginalSlices(4, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
 %%

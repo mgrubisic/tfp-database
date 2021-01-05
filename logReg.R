@@ -54,9 +54,14 @@ rm(list=ls())
 # 
 # corMatRaw <- rawVars %>% as.matrix %>% cor %>% as.data.frame
 # 
+
 collapsed <- c(2, 25, 43)
 pCol <- collapsed/54
 imLevel <- c(1, 1.5, 2)
+
+# collapsed <- c(1, 9, 21, 30, 38, 43)
+# pCol <- collapsed/54
+# imLevel <- seq(1, 2.25, by = 0.25)
 
 # fit lognormal parameters using binomial likelihood function
 startPt <- c(mean(log(imLevel)), sqrt(var(log(imLevel))))
