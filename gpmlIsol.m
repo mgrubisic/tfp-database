@@ -74,16 +74,17 @@ inffunc     = @infLaplace;
 
 hyp = minimize(hyp, @gp, -3000, inffunc, meanfunc, covfunc, likfunc, x, y);
 
-
+%%
+close all
 % Goal: for 3 values of T2 ratio, plot gapRatio vs. damping
 % plotContour(constIdx, xIdx, yIdx, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
-plotContour(4, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
+plotContour(3, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 % plotContour(4, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
 % % Goal: set T2 ratio to median, fix three values damping ratios, plot marginal for
 % % gap ratio (set x1, fix x3, plot x2)
 % plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
-plotMarginalSlices(4, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
+plotMarginalSlices(4, 1, 3, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 % plotMarginalSlices(4, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
 %%
@@ -97,8 +98,10 @@ Bm      = mean(isolDat.Bm);
 minDm   = min(gapRatio)*g*SaTm/Bm*Tm^2;
 maxDm   = max(gapRatio)*g*SaTm/Bm*Tm^2;
 
-minDmCost   = 531/144*(90*12 + 2*minDm)^2;
-maxDmCost   = 531/144*(90*12 + 2*maxDm)^2;
+% minDmCost   = 531/144*(90*12 + 2*minDm)^2;
+% maxDmCost   = 531/144*(90*12 + 2*maxDm)^2;
+minDmCost   = (0.20*417)/144*(90*12 + 2*minDm)^2;
+maxDmCost   = (0.20*417)/144*(90*12 + 2*maxDm)^2;
 dCostdGap   = (maxDmCost - minDmCost)/(maxDm - minDm);
 
 minRyCost = 372030;

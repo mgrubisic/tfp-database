@@ -29,14 +29,16 @@ p_collapse_mle_near = normcdf((log(x_vals/theta_hat_mle))/beta_hat_mle); % compu
 
 %% plot resulting fragility functions
 figure
-plot(IM,num_collapse./num_gms, 'xb', 'linewidth', 1.0)
+plot(IM,num_collapse./num_gms, 'xb', 'linewidth', 1.0, 'MarkerSize', 14)
 hold on
 plot(x_vals,p_collapse_mle_near, '-r', 'linewidth', 1.0)
-title ('Fragility Curve', 'Interpreter','latex')
-legh = legend('Observed collapse frequency', 'Maximum likelihood fit', 'location', 'southeast', 'Interpreter','latex');
-set(legh)%, 'fontsize', 12)
-hx = xlabel('Scale factor', 'Interpreter','latex');
-hy = ylabel('Probability of collapse', 'Interpreter','latex');
+yl = yline(0.05, '-.k', {'5\% collapse'}, 'fontsize', 18, 'linewidth', 1.0);
+yl.Interpreter = 'latex';
+legh = legend('Observed collapse frequency', 'Maximum likelihood fit', 'location', 'best', 'Interpreter','latex');
+set(legh, 'fontsize', 18);
+set(gca,'FontSize', 18)
+hx = xlabel('Scale factor', 'fontsize', 18, 'Interpreter','latex');
+hy = ylabel('Probability of collapse', 'fontsize', 18, 'Interpreter','latex');
 axis([0 xmax 0 1])
 
 disp(p_collapse_mle_near(x_vals == 1))

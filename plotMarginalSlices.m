@@ -75,7 +75,7 @@ function plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, ...
         idc = idc + ix;
         
         % plot the marginal with stdev intervals
-        evalMean = [a(idc)+2*sqrt(b(idc)) ; flip(a(idc)-2*sqrt(b(idc)), 1)];
+        evalMean = [a(idc)+sqrt(b(idc)) ; flip(a(idc)-sqrt(b(idc)), 1)];
         fill([pts; flip(pts,1)], evalMean, [7 7 7]/8)
         hold on;
         plot(pts, a(idc))
@@ -102,11 +102,21 @@ function plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, ...
         notIdx = yPlot == -1;
         
         hold on;
-        plot(xPlot(collapsedIdx, xIdx), yPlot(collapsedIdx), 'r+'); 
-        plot(xPlot(notIdx, xIdx), yPlot(notIdx), 'b+');
+        plot(xPlot(collapsedIdx, xIdx), yPlot(collapsedIdx), 'x', 'MarkerEdgeColor', [0.8500 0.3250 0.0980], 'MarkerSize', 10); 
+        plot(xPlot(notIdx, xIdx), yPlot(notIdx), '+', 'MarkerEdgeColor', [0 0.4470 0.7410], 'MarkerSize', 10); 
         
-        xlabel('Gap ratio','Interpreter','latex')
-        ylabel(['$T_2$ ratio = ', num2str(vFix(i),3)], 'Interpreter','latex')
+        % put vertical line where 5% collapse is (= collapse eval of -0.90)
+        [~, idx] = min(abs(a(idc) + 0.90));
+        xl = xline(pts(idx), '-.k', {'5\%', 'collapse'}, 'fontsize', 20);
+        xl.Interpreter = 'latex';
+        
+        xlabel('Gap ratio', 'fontsize', 14, 'Interpreter','latex')
+        %ylabel(['$T_2$ ratio = ', num2str(vFix(i),3)], 'Interpreter','latex')
+        ylabel('Collapse prediction', 'fontsize', 14, 'Interpreter','latex')
+        legend('Standard deviation', 'Collapse prediction', 'Collapse', 'No collapse', 'fontsize', 18, 'Interpreter','latex')
+        set(gca,'FontSize', 18)
+        yticks([-1 0 1])
+        xlim([0.01 0.1])
         
     end
     
