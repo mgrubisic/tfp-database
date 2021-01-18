@@ -8,7 +8,7 @@
 
 % Description: 	Script plots marginals for individual params
 
-% Open issues: 	(1) Not grabbing the right points
+% Open issues: 	(1)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -18,7 +18,9 @@ function plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, ...
     [~,f]       = size(x);
     
     minX        = round(min(x),2);
-    maxX        = round(max(x),2);
+%     maxX        = round(max(x),2);
+%     minX        = round(prctile(x,5), 2);
+    maxX        = round(prctile(x,95), 2);
     midX        = round(median(x),2);
     stepX       = (maxX-minX)/50;
     
@@ -116,9 +118,8 @@ function plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, ...
         legend('Standard deviation', 'Collapse prediction', 'Collapse', 'No collapse', 'fontsize', 18, 'Interpreter','latex')
         set(gca,'FontSize', 18)
         yticks([-1 0 1])
-        xlim([0.01 0.1])
+        xlim([minX(1) maxX(1)])
         
     end
-    
-    %sgtitle('Marginal collapse predictions across $T_2$ values', 'Interpreter', 'LaTeX')
+    sgtitle('Marginal collapse predictions across $T_M$ ratio values', 'Interpreter', 'LaTeX')
 end

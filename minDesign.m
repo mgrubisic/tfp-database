@@ -18,6 +18,8 @@ function [designSpace, designPoint, minidx] = minDesign(probDesired, steps, x, y
     
     minX        = round(min(x),2);
     maxX        = round(max(x),2);
+%     minX        = round(prctile(x,5), 2);
+%     maxX        = round(prctile(x,95), 2);
     midX        = round(median(x),2);
     stepX       = (maxX-minX)/steps;
 
@@ -26,6 +28,9 @@ function [designSpace, designPoint, minidx] = minDesign(probDesired, steps, x, y
     for j = 1:f
         gridVec{j} = minX(j):stepX(j):maxX(j);
     end
+    
+    % higher resolution for gapRatio
+    gridVec{1} = linspace(0.02,0.04,steps+1);
     
     t   = transpose(combvec(gridVec{:}));
     n   = length(t);

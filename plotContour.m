@@ -69,7 +69,7 @@ function plotContour(constIdx, xIdx, yIdx, x, y, ...
         plot(xPlot(notIdx,xIdx), xPlot(notIdx,yIdx), '+', 'MarkerEdgeColor', [0 0.4470 0.7410]); 
         
         xlabel('Gap ratio','Interpreter','latex')
-        ylabel('$T_2$ ratio','Interpreter','latex')
+        ylabel('$T_M$ ratio','Interpreter','latex')
         [C, h] = contour(tempX, tempY, reshape(exp(lp), size(tempX)), [0.0:0.1:1.0]);
         v = [0.1, 0.5, 0.9];
         clabel(C,h,v)
@@ -77,7 +77,6 @@ function plotContour(constIdx, xIdx, yIdx, x, y, ...
         legend('Collapse', 'No collapse', '$P(Collapse)$', 'Interpreter', 'latex')
         
     end
-    %colorbar
-    %sgtitle('Probability of collapse at $\zeta_M = 0.10, 0.15, 0.20$', 'Interpreter', 'LaTeX')
+    sgtitle('Probability of collapse at $R_y$ values', 'Interpreter', 'LaTeX')
 
 end
