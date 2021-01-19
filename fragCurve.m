@@ -16,7 +16,11 @@ clc
 
 % example data: IM levels, number of analyses, and number of collapses
 IM = [1, 1.5, 2.0]; 
-num_collapse = [2, 25, 43]; 
+% conference paper:
+% num_collapse = [2, 25, 43]; 
+
+% higher res
+num_collapse = [3, 25, 43];
 num_gms = [54, 54, 54];
 
 % estimate fragility function using MLE method

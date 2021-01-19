@@ -48,8 +48,13 @@ function [designSpace, designPoint, minidx] = minDesign(probDesired, steps, x, y
 %     pen = @(paramVec) (paramVec*w');
 %     penResult = arrayfun(@(paramVec) pen(paramVec) , ...
 %         designSpace(:,1:f));
+
+    % if ties in cost, find the lowest failure design
+    minCost         = min(penVec);
+    cheapDesigns    = designSpace(penVec == minCost, :);
+    [~, minidx]     = min(cheapDesigns(:, end));
+    designPoint     = cheapDesigns(minidx, :);
     
-    [~, minidx] = min(penVec);
-    
-    designPoint     = designSpace(minidx, :);
+    % [~, minidx] = min(penVec);
+    % designPoint     = designSpace(minidx, :);
 end
