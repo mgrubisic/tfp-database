@@ -1,15 +1,16 @@
 import numpy as np
 import math, cmath
 
-# gapRatio 	= 0.0225
-# TmRatio 	= 7.34
-# T2Ratio 	= 1.2080
-# zeta = 0.10
+gapRatio 	= 0.0280
+TmRatio 	= 11.1
+T2Ratio 	= 1.25
+zeta = 0.20
 
-gapRatio 	= 0.0273
-T2Ratio 	= 1.2340
-zeta 		= 0.10
-Tm 			= 3.25
+# gapRatio 	= 0.0247
+# T2Ratio 	= 1.25
+# zeta 		= 0.10
+# Tm 			= 3.25
+
 mu1 		= 0.02
 
 g 		= 386.4
@@ -17,9 +18,9 @@ inch 	= 1.0
 pi 		= math.pi
 S1 		= 1.017
 
-# Ss 		= 2.281
-# Ts 		= S1/Ss
-# Tm 		= TmRatio*Ts
+Ss 		= 2.281
+Ts 		= S1/Ss
+Tm 		= TmRatio*Ts
 
 SaTm 	= S1/Tm
 

@@ -31,8 +31,8 @@ T2Ratio     = isolDat.T2./isolDat.Tm;
 Ry          = isolDat.RI;
 zeta        = isolDat.zetaM;
 
-% Tshort      = isolDat.S1/2.282;
-Tshort      = (isolDat.S1.*isolDat.S1Ampli)/(2.282);
+Tshort      = isolDat.S1/2.282;
+% Tshort      = (isolDat.S1.*isolDat.S1Ampli)/(2.282);
 TmRatio     = isolDat.Tm./Tshort;
 % TmRatio     = isolDat.Tm./isolDat.Tfb;
 % TmRatio     = isolDat.Tm.^2./(isolDat.GMSTm.*g./isolDat.R2);
@@ -94,15 +94,15 @@ close all
 % conference paper:
 plotContour(3, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
-% plotContour(4, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
+% plotContour(1, 2, 5, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
 % % Goal: set T2 ratio to median, fix three values damping ratios, plot marginal for
 % % gap ratio (set x1, fix x3, plot x2)
 % plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 % conference paper:
-plotMarginalSlices(4, 1, 3, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
+plotMarginalSlices(4, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
-% plotMarginalSlices(4, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
+% plotMarginalSlices(5, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
 %%
 % Goal: get a design space of qualifying probs of failure over 2 variables
@@ -134,5 +134,5 @@ dCostdRI = (maxRyCost - minRyCost)/(2.0 - 0.5);
 weightVec   = [dCostdGap, 0.0, 0.0, dCostdRI, 0.0];
 
 % weightVec   = [dCostdGap, 0.0, 0.0, 0.0, dCostdRI, 0.0];
-[designSpace, designPoint, minidx] = minDesign(0.05, 30, x, y, weightVec,...
+[designSpace, designPoint, designSD, minidx] = minDesign(0.05, 30, x, y, weightVec,...
     hyp, meanfunc, covfunc, inffunc, likfunc);

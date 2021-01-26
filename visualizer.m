@@ -28,6 +28,8 @@ T2Ratio     = isolDat.T2./isolDat.Tm;
 Ry          = isolDat.RI;
 zeta        = isolDat.zetaM;
 A_S1        = isolDat.S1Ampli;
+Tshort      = isolDat.S1/2.282;
+TmRatio     = isolDat.Tm./Tshort;
 
 maxDrift   = max([isolDat.driftMax1, isolDat.driftMax2, isolDat.driftMax3], [], 2);
 impacted   = isolDat.impacted;
@@ -88,3 +90,24 @@ grid on
 set(gca,'FontSize', 18)
 xlabel('$R_y$', 'fontsize', 16, 'Interpreter', 'latex')
 ylabel('Maximum drift', 'fontsize', 16, 'Interpreter', 'latex')
+
+% Tm ratio vs drift
+figure
+scatter(TmRatio(collapsed == 0), maxDrift(collapsed == 0), 75, '+')
+hold on
+grid on
+scatter(TmRatio(collapsed == 1), maxDrift(collapsed == 1), 75, 'x')
+legend('No collapse', 'Collapse', 'fontsize', 16)
+set(gca,'FontSize', 18)
+xlabel('$T_M$ ratio', 'fontsize', 16, 'Interpreter', 'latex')
+ylabel('Maximum drift', 'fontsize', 16, 'Interpreter', 'latex')
+
+figure
+scatter(TmRatio, isolDat.moatGap)
+xlabel('TmRatio')
+ylabel('Moat gap')
+
+figure
+scatter(isolDat.Tm, isolDat.moatGap)
+xlabel('Tm')
+ylabel('Moat gap')

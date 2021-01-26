@@ -113,13 +113,14 @@ function plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, ...
         xl.Interpreter = 'latex';
         
         xlabel('Gap ratio', 'fontsize', 14, 'Interpreter','latex')
-        %ylabel(['$T_2$ ratio = ', num2str(vFix(i),3)], 'Interpreter','latex')
+%         ylabel(['$T_2$ ratio = ', num2str(vFix(i),3)], 'Interpreter','latex')
+%         xlabel('$T_M$ ratio', 'fontsize', 14, 'Interpreter','latex')
         ylabel('Collapse prediction', 'fontsize', 14, 'Interpreter','latex')
         legend('Standard deviation', 'Collapse prediction', 'Collapse', 'No collapse', 'fontsize', 18, 'Interpreter','latex')
         set(gca,'FontSize', 18)
         yticks([-1 0 1])
-        xlim([minX(1) maxX(1)])
+        xlim([minX(xIdx) maxX(xIdx)])
         
     end
-    sgtitle('Marginal collapse predictions across $T_M$ ratio values', 'Interpreter', 'LaTeX')
+%     sgtitle('Marginal collapse predictions at varying $T_M$ ratio', 'Interpreter', 'LaTeX')
 end

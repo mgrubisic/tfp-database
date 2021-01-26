@@ -20,6 +20,7 @@ function plotContour(constIdx, xIdx, yIdx, x, y, ...
     
     minX        = round(min(x),2);
     maxX        = round(max(x),2);
+%     maxX        = round(prctile(x,95), 2);
     midX        = round(median(x),2);
     stepX       = (maxX-minX)/50;
 
@@ -70,13 +71,16 @@ function plotContour(constIdx, xIdx, yIdx, x, y, ...
         
         xlabel('Gap ratio','Interpreter','latex')
         ylabel('$T_M$ ratio','Interpreter','latex')
+%         xlabel('$T_M$ ratio','Interpreter','latex')
+%         ylabel('Damping','Interpreter','latex')
         [C, h] = contour(tempX, tempY, reshape(exp(lp), size(tempX)), [0.0:0.1:1.0]);
         v = [0.1, 0.5, 0.9];
         clabel(C,h,v)
+%         clabel(C,h)
         colorbar
         legend('Collapse', 'No collapse', '$P(Collapse)$', 'Interpreter', 'latex')
         
     end
-    sgtitle('Probability of collapse at $R_y$ values', 'Interpreter', 'LaTeX')
-
+%     sgtitle('Probability of collapse at $R_y$ values', 'Interpreter', 'LaTeX')
+%     sgtitle('Probability of collapse at gapRatio = [0.01, 0.03, 0.11]', 'Interpreter', 'LaTeX')
 end

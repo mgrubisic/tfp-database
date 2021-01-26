@@ -12,7 +12,7 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [designSpace, designPoint, minidx] = minDesign(probDesired, steps, x, y, w, ...
+function [designSpace, designPoint, designFailureSD, minidx] = minDesign(probDesired, steps, x, y, w, ...
     hyp, meanfunc, covfunc, inffunc, likfunc)
     [~,f]       = size(x);
     
@@ -35,7 +35,7 @@ function [designSpace, designPoint, minidx] = minDesign(probDesired, steps, x, y
     t   = transpose(combvec(gridVec{:}));
     n   = length(t);
     
-    [~,~,~,~,lp] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, ...
+    [~,b,~,~,lp] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, ...
         x, y, t, ones(n, 1));
     
     minSpace    = [t exp(lp)];
@@ -54,7 +54,8 @@ function [designSpace, designPoint, minidx] = minDesign(probDesired, steps, x, y
     cheapDesigns    = designSpace(penVec == minCost, :);
     [~, minidx]     = min(cheapDesigns(:, end));
     designPoint     = cheapDesigns(minidx, :);
-    
+    cheapVariance   = b(penVec == minCost,:);
+    designFailureSD = sqrt(cheapVariance(minidx, :))/2;
     % [~, minidx] = min(penVec);
     % designPoint     = designSpace(minidx, :);
 end
