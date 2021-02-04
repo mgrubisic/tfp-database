@@ -103,11 +103,16 @@ xlabel('$T_M$ ratio', 'fontsize', 16, 'Interpreter', 'latex')
 ylabel('Maximum drift', 'fontsize', 16, 'Interpreter', 'latex')
 
 figure
-scatter(TmRatio, isolDat.moatGap)
+scatter(TmRatio, gapRatio)
 xlabel('TmRatio')
-ylabel('Moat gap')
+ylabel('Gap ratio')
 
 figure
 scatter(isolDat.Tm, isolDat.moatGap)
 xlabel('Tm')
+ylabel('Moat gap')
+
+figure
+scatter(TmRatio, isolDat.moatGap)
+xlabel('TmRatio')
 ylabel('Moat gap')

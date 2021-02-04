@@ -50,10 +50,10 @@ collapsed   = double(collapsed);
 % x           = [gapRatio, T2Ratio, mu2Ratio, Ry];
 % x           = [mu1Ratio, gapRatio, T2Ratio, zeta, Ry];
 % x           = [mu2Ratio, T2Ratio, zeta, Ry];
-% x           = [gapRatio, TmRatio, T2Ratio, zeta, Ry];
+x           = [gapRatio, TmRatio, T2Ratio, zeta, Ry];
 
 % conference paper:
-x           = [gapRatio, T2Ratio, zeta, Ry];
+% x           = [gapRatio, T2Ratio, zeta, Ry];
 
 
 y           = collapsed;
@@ -84,25 +84,25 @@ likfunc     = @likLogistic;
 inffunc     = @infLaplace;
 
 % conference paper:
-hyp = minimize(hyp, @gp, -3000, inffunc, meanfunc, covfunc, likfunc, x, y);
-% hyp = minimize(hyp, @gp, -200, inffunc, meanfunc, covfunc, likfunc, x, y);
+% hyp = minimize(hyp, @gp, -3000, inffunc, meanfunc, covfunc, likfunc, x, y);
+hyp = minimize(hyp, @gp, -200, inffunc, meanfunc, covfunc, likfunc, x, y);
 
 %%
 close all
 % Goal: for 3 values of T2 ratio, plot gapRatio vs. damping
 % plotContour(constIdx, xIdx, yIdx, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 % conference paper:
-plotContour(3, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
+% plotContour(3, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
-% plotContour(1, 2, 5, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
+plotContour(1, 2, 3, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
 % % Goal: set T2 ratio to median, fix three values damping ratios, plot marginal for
 % % gap ratio (set x1, fix x3, plot x2)
 % plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 % conference paper:
-plotMarginalSlices(4, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
+% plotMarginalSlices(4, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
-% plotMarginalSlices(5, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
+plotMarginalSlices(5, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
 %%
 % Goal: get a design space of qualifying probs of failure over 2 variables

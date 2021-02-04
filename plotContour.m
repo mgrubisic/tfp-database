@@ -73,10 +73,10 @@ function plotContour(constIdx, xIdx, yIdx, x, y, ...
         ylabel('$T_M$ ratio','Interpreter','latex')
 %         xlabel('$T_M$ ratio','Interpreter','latex')
 %         ylabel('Damping','Interpreter','latex')
-        [C, h] = contour(tempX, tempY, reshape(exp(lp), size(tempX)), [0.0:0.1:1.0]);
+        [C, h] = contour(tempX, tempY, reshape(exp(lp), size(tempX)), [0.0:0.01:1.0]);
         v = [0.1, 0.5, 0.9];
-        clabel(C,h,v)
-%         clabel(C,h)
+%         clabel(C,h,v)
+        clabel(C,h)
         colorbar
         legend('Collapse', 'No collapse', '$P(Collapse)$', 'Interpreter', 'latex')
         

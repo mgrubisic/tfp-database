@@ -60,7 +60,7 @@ y(y==0)     = -1;
 [e,f]       = size(x);
 
 % try mean as constant
-meanfunc    = @meanConst; hyp.mean = 0;
+% meanfunc    = @meanConst; hyp.mean = 0;
 
 % try ignoring the mean function
 % meanfunc    = [];
@@ -70,7 +70,7 @@ meanfunc    = @meanConst; hyp.mean = 0;
 % meanfunc = {@meanSum, {@meanLinear, @meanConst}}; hyp.mean = [zeros(1,f) 0]';
 
 % try mean as linear function
-% meanfunc    = @meanLinear; hyp.mean = [zeros(1,f)]';
+meanfunc    = @meanLinear; hyp.mean = [zeros(1,f)]';
 
 % poly?
 % meanfunc    = {@meanPoly,2}; hyp.mean = [zeros(1,2*f)]';
@@ -84,18 +84,55 @@ inffunc     = @infLaplace;
 hyp = minimize(hyp, @gp, -3000, inffunc, meanfunc, covfunc, likfunc, x, y);
 % hyp = minimize(hyp, @gp, -200, inffunc, meanfunc, covfunc, likfunc, x, y);
 
+
 %%
-% % training?
-% [nlZ, dnlZ] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, x, y);
-% [ymu,ys2,fmu,fs2,lp] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, x, ...
-%     ones(length(x), 1));
-% 
-% % IMSEt (Picheny)
-% PDFx        = exp(lp);
-% T           = -0.90;
-% 
-% sigE        = 0.05*(max(y)- min(y));
-% Wx          = 1./sqrt(2*pi*(sigE^2 + ys2)) .* ...
-%     exp((-1/2)*((ymu - T).^2./sigE^2 + ys2.^2));
-% 
-% IMSEt       = sum(ys2.*Wx.*PDFx);
+% K   = covfunc(hyp.cov, x);
+% if ys2 is unaffected by y observations, create dummy one w/ k+1 rows
+xk = x;
+xnew = [0.04 8 1.1 0.12 1.8];
+k           = length(xk);
+yDummy      = ones(k + 1, 1);
+xSet        = [xk; xnew];
+
+% from Schur's complement formula
+Ck          = covfunc(hyp.cov, xk);
+CkNewTemp   = covfunc(hyp.cov, xSet);
+cnew        = CkNewTemp(1:(end-1),end);
+sigVar      = Ck(1,1);
+CkNew       = [sigVar cnew'; cnew Ck];
+CkNewInv    = [1 zeros(k,1)'; -inv(Ck)*cnew eye(k)]*...
+    [1/(sigVar - cnew'*inv(Ck)*cnew) zeros(k,1)'; zeros(k,1) inv(Ck)]* ...
+    [1 -cnew'*inv(Ck); zeros(k,1) eye(k)];
+
+
+% F           = zeros(k, k);
+% for j = 1:k
+%     F(j,:)  = feval(meanfunc{:}, hyp.mean, x(j,:));
+% end
+
+% basis function is linear, f(x) = x
+F           = xSet;
+s2k         = zeros(k,1);
+for i = 1:(k)
+    ki      = CkNew(i,i);
+    ci      = CkNew(:,i);
+    fi      = xSet(i,:)';
+    s2k(i)  = ki - ci'*CkNewInv*ci + (fi' - ci'*CkNewInv*F)*...
+        inv(F'*CkNewInv*F)*(fi'-ci'*CkNewInv*F)';
+end
+
+
+% training?
+[nlZ, dnlZ] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, x, y);
+[ymu,ys2,fmu,fs2,lp] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, x, ...
+    ones(length(x), 1));
+
+% IMSEt (Picheny)
+PDFx        = exp(lp);
+T           = -0.90;
+
+sigE        = 0.05*(max(y)- min(y));
+Wx          = 1./sqrt(2*pi*(sigE^2 + ys2)) .* ...
+    exp((-1/2)*((ymu - T).^2./sigE^2 + ys2.^2));
+
+IMSEt       = sum(ys2.*Wx.*PDFx);
