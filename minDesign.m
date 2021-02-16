@@ -12,15 +12,15 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [designSpace, designPoint, designFailureSD, minidx] = minDesign(probDesired, steps, x, y, w, ...
-    hyp, meanfunc, covfunc, inffunc, likfunc)
+function [designSpace, designPoint, designFailureSD] = minDesign(probDesired, steps, x, y, ...
+    costV, interceptV, hyp, meanfunc, covfunc, inffunc, likfunc)
     [~,f]       = size(x);
     
     minX        = round(min(x),2);
     maxX        = round(max(x),2);
 %     minX        = round(prctile(x,5), 2);
 %     maxX        = round(prctile(x,95), 2);
-    midX        = round(median(x),2);
+%     midX        = round(median(x),2);
     stepX       = (maxX-minX)/steps;
 
     gridVec     = cell(1, f);
@@ -43,7 +43,9 @@ function [designSpace, designPoint, designFailureSD, minidx] = minDesign(probDes
     designSpace = minSpace((minSpace(:, end) <= probDesired),:);
     
 %     penVec      = designSpace(:,1:f)*w';
-    penVec      = designSpace*w';
+    costV       = [costV; 0];
+    penVec      = designSpace*costV + interceptV;
+%     penVec      = designSpace*costV' + interceptV;
     
 %     pen = @(paramVec) (paramVec*w');
 %     penResult = arrayfun(@(paramVec) pen(paramVec) , ...

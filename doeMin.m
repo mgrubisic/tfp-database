@@ -15,9 +15,9 @@
 
 clear; close all; clc;
 
-isolDat     = readtable('../pastRuns/random200withTfb.csv');
+isolFull    = readtable('../pastRuns/random200withTfb.csv');
 % limit to 20 points, e.g.
-isolDat     = isolDat(1:20,:);
+isolDat     = isolFull(1:20,:);
 g           = 386.4;
 
 % scaling Sa(Tm) for damping, ASCE Ch. 17
@@ -90,25 +90,20 @@ hyp = minimize(hyp, @gp, -3000, inffunc, meanfunc, covfunc, likfunc, x, y);
 % if ys2 is unaffected by y observations, create dummy one w/ k+1 rows
 xk = x;
 xnew = [0.04 8 1.1 0.12 1.8];
+% xnew = [0.5, 10, 1.5, 0.20, 2.5];
 k           = length(xk);
-yDummy      = ones(k + 1, 1);
-xSet        = [xk; xnew];
+xSet        = [xnew; xk];
 
 % from Schur's complement formula
 Ck          = covfunc(hyp.cov, xk);
-CkNewTemp   = covfunc(hyp.cov, xSet);
-cnew        = CkNewTemp(1:(end-1),end);
+cnew        = covfunc(hyp.cov, xk, xnew);
+% cnew        = CkNewTemp(1:(end-1),end);
 sigVar      = Ck(1,1);
 CkNew       = [sigVar cnew'; cnew Ck];
 CkNewInv    = [1 zeros(k,1)'; -inv(Ck)*cnew eye(k)]*...
     [1/(sigVar - cnew'*inv(Ck)*cnew) zeros(k,1)'; zeros(k,1) inv(Ck)]* ...
     [1 -cnew'*inv(Ck); zeros(k,1) eye(k)];
 
-
-% F           = zeros(k, k);
-% for j = 1:k
-%     F(j,:)  = feval(meanfunc{:}, hyp.mean, x(j,:));
-% end
 
 % basis function is linear, f(x) = x
 F           = xSet;
@@ -119,20 +114,39 @@ for i = 1:(k)
     fi      = xSet(i,:)';
     s2k(i)  = ki - ci'*CkNewInv*ci + (fi' - ci'*CkNewInv*F)*...
         inv(F'*CkNewInv*F)*(fi'-ci'*CkNewInv*F)';
+%     test(i) = ki - ci'*CkNewInv*ci;
+%     test2(i)= (fi' - ci'*CkNewInv*F)*...
+%         inv(F'*CkNewInv*F)*(fi'-ci'*CkNewInv*F)';
+end
+
+CkInv       = inv(Ck);
+s2kt        = zeros(k,1);
+Ft          = xk;
+mk          = zeros(k,1);
+betaHat = inv(Ft'*CkInv*Ft)*Ft'*CkInv*y;
+for i = 1:(k)
+    kt      = Ck(i,i);
+    ct      = Ck(:,i);
+    ft      = xk(i,:)';
+    s2kt(i)  = kt - ct'*CkInv*ct + (ft' - ct'*CkInv*Ft)*...
+        inv(Ft'*CkInv*Ft)*(ft'-ct'*CkInv*Ft)';
+    mk(i)   = ft'*betaHat + ct'*CkInv*(y - Ft*betaHat);
+    test(i) = kt - ct'*inv(Ck)*ct;
 end
 
 
 % training?
-[nlZ, dnlZ] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, x, y);
+% [nlZ, dnlZ] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, x, y);
 [ymu,ys2,fmu,fs2,lp] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, x, ...
     ones(length(x), 1));
 
 % IMSEt (Picheny)
-PDFx        = exp(lp);
+% PDFx        = exp(lp);
+mkx         = meanfunc(hyp.mean, x);
 T           = -0.90;
 
 sigE        = 0.05*(max(y)- min(y));
-Wx          = 1./sqrt(2*pi*(sigE^2 + ys2)) .* ...
-    exp((-1/2)*((ymu - T).^2./sigE^2 + ys2.^2));
+Wx          = 1./sqrt(2*pi*(sigE^2 + s2k)) .* ...
+    exp((-1/2)*((mk - T).^2./sigE^2 + s2k.^2));
 
-IMSEt       = sum(ys2.*Wx.*PDFx);
+IMSEt       = sum(s2k.*Wx);

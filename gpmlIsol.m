@@ -105,34 +105,37 @@ plotContour(1, 2, 3, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 plotMarginalSlices(5, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
 %%
-% Goal: get a design space of qualifying probs of failure over 2 variables
-% [designSpace, boundLine] = getDesignSpace(varX, varY, probDesired, probTol, x, y, hyp, meanfunc, covfunc, inffunc, likfunc)
-% [design, boundary] = getDesignSpace(1, 2, 0.1, 0.02, x, y, hyp, meanfunc, covfunc, inffunc, likfunc);
-SaTm    = mean(isolDat.GMSTm);
-Tm      = mean(isolDat.Tm);
-Bm      = mean(isolDat.Bm);
+% Goal: get a design space of qualifying probs of failure, then pick one
+% based on cost
 
-minDm   = min(gapRatio)*g*SaTm/Bm*Tm^2;
-maxDm   = max(gapRatio)*g*SaTm/Bm*Tm^2;
-
-% minDmCost   = 531/144*(90*12 + 2*minDm)^2;
-% maxDmCost   = 531/144*(90*12 + 2*maxDm)^2;
-minDmCost   = (0.20*417)/144*(90*12 + 2*minDm)^2;
-maxDmCost   = (0.20*417)/144*(90*12 + 2*maxDm)^2;
-dCostdGap   = (maxDmCost - minDmCost)/(maxDm - minDm);
-
-minRyCost = 372030;
-maxRyCost = 205020;
-
-dCostdRI = (maxRyCost - minRyCost)/(2.0 - 0.5);
+% SaTm    = mean(isolDat.GMSTm);
+% Tm      = mean(isolDat.Tm);
+% Bm      = mean(isolDat.Bm);
+% 
+% minDm   = min(gapRatio)*g*SaTm/Bm*Tm^2;
+% maxDm   = max(gapRatio)*g*SaTm/Bm*Tm^2;
+% 
+% % minDmCost   = 531/144*(90*12 + 2*minDm)^2;
+% % maxDmCost   = 531/144*(90*12 + 2*maxDm)^2;
+% minDmCost   = (0.20*417)/144*(90*12 + 2*minDm)^2;
+% maxDmCost   = (0.20*417)/144*(90*12 + 2*maxDm)^2;
+% dCostdGap   = (maxDmCost - minDmCost)/(maxDm - minDm);
+% 
+% minRyCost = 372030;
+% maxRyCost = 205020;
+% 
+% dCostdRI = (maxRyCost - minRyCost)/(2.0 - 0.5);
 
 % In general, some damping >10% is desired, and some T2Ratio < 1.2 is
 % desired, so we "cost" T2Ratio and "reward" damping moderately
 % [designSpace, designPoint, minidx] = minDesign(probDesired, steps, x, y, w, ...
 %     hyp, meanfunc, covfunc, inffunc, likfunc)
 % conference paper:
-weightVec   = [dCostdGap, 0.0, 0.0, dCostdRI, 0.0];
+% weightVec   = [dCostdGap, 0.0, 0.0, dCostdRI, 0.0];
+
+% lasso
+[coefVec, coef0, lassoStruc]    = fnLasso(x);
 
 % weightVec   = [dCostdGap, 0.0, 0.0, 0.0, dCostdRI, 0.0];
-[designSpace, designPoint, designSD, minidx] = minDesign(0.05, 30, x, y, weightVec,...
-    hyp, meanfunc, covfunc, inffunc, likfunc);
+[designSpace, designPoint, designSD] = minDesign(0.05, 20, x, y, ...
+    coefVec, coef0, hyp, meanfunc, covfunc, inffunc, likfunc);

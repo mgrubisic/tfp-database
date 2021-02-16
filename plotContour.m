@@ -69,10 +69,10 @@ function plotContour(constIdx, xIdx, yIdx, x, y, ...
         plot(xPlot(collapsedIdx,xIdx), xPlot(collapsedIdx,yIdx), 'x', 'MarkerEdgeColor', [0.8500 0.3250 0.0980]); 
         plot(xPlot(notIdx,xIdx), xPlot(notIdx,yIdx), '+', 'MarkerEdgeColor', [0 0.4470 0.7410]); 
         
-        xlabel('Gap ratio','Interpreter','latex')
-        ylabel('$T_M$ ratio','Interpreter','latex')
-%         xlabel('$T_M$ ratio','Interpreter','latex')
-%         ylabel('Damping','Interpreter','latex')
+%         xlabel('Gap ratio','Interpreter','latex')
+%         ylabel('$T_M$ ratio','Interpreter','latex')
+        xlabel('$T_M$ ratio','Interpreter','latex')
+        ylabel('$T_2$ ratio','Interpreter','latex')
         [C, h] = contour(tempX, tempY, reshape(exp(lp), size(tempX)), [0.0:0.01:1.0]);
         v = [0.1, 0.5, 0.9];
 %         clabel(C,h,v)
