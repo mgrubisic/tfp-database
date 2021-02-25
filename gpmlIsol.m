@@ -13,6 +13,7 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%% Define data
 clear; close all; clc;
 
 isolDat     = readtable('../pastRuns/random200withTfb.csv');
@@ -59,6 +60,7 @@ x           = [gapRatio, TmRatio, T2Ratio, zeta, Ry];
 y           = collapsed;
 y(y==0)     = -1;
 
+%% GP model
 % intervals, mins, and max of variables
 [e,f]       = size(x);
 
@@ -87,7 +89,7 @@ inffunc     = @infLaplace;
 % hyp = minimize(hyp, @gp, -3000, inffunc, meanfunc, covfunc, likfunc, x, y);
 hyp = minimize(hyp, @gp, -200, inffunc, meanfunc, covfunc, likfunc, x, y);
 
-%%
+%% Plotting
 close all
 % Goal: for 3 values of T2 ratio, plot gapRatio vs. damping
 % plotContour(constIdx, xIdx, yIdx, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
@@ -104,7 +106,7 @@ plotContour(1, 2, 3, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
 plotMarginalSlices(5, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
-%%
+%% Old cost regression
 % Goal: get a design space of qualifying probs of failure, then pick one
 % based on cost
 
@@ -134,8 +136,17 @@ plotMarginalSlices(5, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 % weightVec   = [dCostdGap, 0.0, 0.0, dCostdRI, 0.0];
 
 % lasso
-[coefVec, coef0, lassoStruc]    = fnLasso(x);
+% cost = f(moatGap, Tm, T2, zeta, Vs)
+% [coefVec, coef0, lassoStruc]    = fnLasso(x);
 
 % weightVec   = [dCostdGap, 0.0, 0.0, 0.0, dCostdRI, 0.0];
-[designSpace, designPoint, designSD] = minDesign(0.05, 20, x, y, ...
-    coefVec, coef0, hyp, meanfunc, covfunc, inffunc, likfunc);
+% [designSpace, designPoint, designSD] = minDesign(0.05, 5, x, y, ...
+%     coefVec, coef0, hyp, meanfunc, covfunc, inffunc, likfunc);
+
+%% Cost brute force: grid calculation
+
+steelCoefs      = steelCost(isolDat);
+probDesired     = 0.05;
+gridRes         = 10;
+[designSpace, designPoint, designFailureSD] = costGridCalc(probDesired, gridRes, x, y, ...
+    steelCoefs, hyp, meanfunc, covfunc, inffunc, likfunc);

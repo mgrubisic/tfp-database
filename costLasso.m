@@ -52,7 +52,8 @@ isolDat.kM          = (1/g)*(2*pi./isolDat.Tm).^2;
 % 2 layers of frame per direction
 Ws                  = 2227.5;
 W                   = 3037.5;
-isolDat.Vb          = (isolDat.moatGap.*isolDat.kM*2227.5)/2;
+isolDat.Dm          = g*1.017.*isolDat.Tm./(4*pi^2.*isolDat.Bm);
+isolDat.Vb          = (isolDat.Dm.*isolDat.kM*2227.5)/2;
 isolDat.Vst         = (isolDat.Vb.*(Ws/W).^(1 - 2.5*isolDat.zetaM));
 isolDat.Vs          = isolDat.Vst./isolDat.RI;
 
@@ -63,8 +64,8 @@ isolDat.landCost    = landCostPerSqft/144*(90*12 + 2*isolDat.moatGap).^2;
 YCost               = isolDat.landCost + isolDat.steelCost;
 % XCost               = [gapRatio, TmRatio, Ry];
 % XCost               = [isolDat.moatGap, isolDat.Tm, Ry];
-XCost               = [gapRatio, TmRatio, T2Ratio, zeta, Ry];
-% XCost               = [isolDat.moatGap, isolDat.Tm, isolDat.T2, Ry, zeta];
+% XCost               = [gapRatio, TmRatio, T2Ratio, zeta, Ry];
+XCost               = [isolDat.moatGap, isolDat.Tm, isolDat.T2, zeta, isolDat.Vs];
 
 % Split the data into training and test sets
 n           = length(YCost);
@@ -98,3 +99,17 @@ hold off
 
 lassoPlot(B,FitInfo,'PlotType','CV');
 legend('show')
+
+%%
+% Use simple least squares regression to find steel cost as function of Vs
+linMdl      = fitlm(isolDat.Vs, isolDat.steelCost);
+b0          = linMdl.Coefficients.Estimate(1);
+b1          = linMdl.Coefficients.Estimate(2);
+predCost    = b1*isolDat.Vs + b0;
+
+figure
+hold on
+scatter(isolDat.steelCost, predCost)
+plot(isolDat.steelCost, isolDat.steelCost)
+xlabel('Actual steel costs')
+ylabel('Predicted steel costs')

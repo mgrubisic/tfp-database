@@ -14,7 +14,7 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [costVec, intercept, lassoInfo] = fnLasso(XCost)
+function [costVec, intercept, lassoInfo] = fnLasso(~)
     %% prepare cost calculations
     isolDat     = readtable('../pastRuns/random200withTfb.csv');
     g           = 386.4;
@@ -42,7 +42,8 @@ function [costVec, intercept, lassoInfo] = fnLasso(XCost)
     isolDat.landCost    = landCostPerSqft/144*(90*12 + 2*isolDat.moatGap).^2;
     
     YCost               = isolDat.landCost + isolDat.steelCost;
-    
+    XCost               = [isolDat.moatGap, isolDat.Tm, isolDat.T2, ...
+        isolDat.zetaM, isolDat.Vs];
     %% LASSO regression
 
     % Construct the lasso fit using 10-fold cross-validation

@@ -1,19 +1,20 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%             	Minimizer function
+%             	Cost minimizing search: grid calculations
 
 % Created by: 	Huy Pham
 % 				University of California, Berkeley
 
-% Date created:	November 2020
+% Date created:	February 2021
 
-% Description: 	Script finds optimum design point from GP space
+% Description: 	Script finds optimum design point from GP space via brute
+% force cost calculation
 
 % Open issues: 	(1) gp could be parallelized for fine grids
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [designSpace, designPoint, designFailureSD] = minDesign(probDesired, steps, x, y, ...
-    costV, interceptV, hyp, meanfunc, covfunc, inffunc, likfunc)
+function [designSpace, designPoint, designFailureSD] = costGridCalc(probDesired, steps, x, y, ...
+    steelCoef, hyp, meanfunc, covfunc, inffunc, likfunc)
     %% Create grid and perform GP
     [~,f]       = size(x);
     
@@ -57,7 +58,7 @@ function [designSpace, designPoint, designFailureSD] = minDesign(probDesired, st
     zeta        = designSpace(:,4);
     SaTm        = S1./Tm;
     Bm          = interp1(zetaRef, BmRef, zeta);
-    moatGap     = designSpace(:,1).*(g*(SaTm./Bm).^2);
+    moatGap     = designSpace(:,1).*(g*(SaTm./Bm).*Tm.^2);
     
     % base shear calc: 2 layers of frame per direction
     kM          = (1/g)*(2*pi./Tm).^2;
@@ -68,25 +69,20 @@ function [designSpace, designPoint, designFailureSD] = minDesign(probDesired, st
     Vst         = (Vb.*(Ws/W).^(1 - 2.5*zeta));
     Vs          = Vst./designSpace(:,5);
     
-    %% Section for full variable regression
-    costVar     = [moatGap Tm T2 zeta Vs];   
-%     penVec      = designSpace(:,1:f)*w';
-%     costV       = [costV; 0];
-    penVec      = costVar*costV + interceptV;
-%     penVec      = designSpace*costV + interceptV;
-%     penVec      = designSpace*costV' + interceptV;
+    % Hogan: land cost is about 20% of the development cost ($1110/sf)
+    landCostPerSqft     = 0.2*1110;
+    landCost            = landCostPerSqft/144*(90*12 + 2*moatGap).^2;
+    steelCost           = Vs*10*steelCoef(2) + steelCoef(1);
     
-%     pen = @(paramVec) (paramVec*w');
-%     penResult = arrayfun(@(paramVec) pen(paramVec) , ...
-%         designSpace(:,1:f));
-
+    totalCost           = landCost + steelCost;
+    
     %%
     % if ties in cost, find the lowest failure design
-    minCost         = min(penVec);
-    cheapDesigns    = designSpace(penVec == minCost, :);
+    minCost         = min(totalCost);
+    cheapDesigns    = designSpace(totalCost == minCost, :);
     [~, minidx]     = min(cheapDesigns(:, end));
     designPoint     = cheapDesigns(minidx, :);
-    cheapVariance   = b(penVec == minCost,:);
+    cheapVariance   = b(totalCost == minCost,:);
     designFailureSD = sqrt(cheapVariance(minidx, :))/2;
     % [~, minidx] = min(penVec);
     % designPoint     = designSpace(minidx, :);
