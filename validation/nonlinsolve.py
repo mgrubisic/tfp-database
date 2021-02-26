@@ -2,7 +2,7 @@ import numpy as np
 import math, cmath
 
 gapRatio 	= 0.0280
-TmRatio 	= 11.1
+TmRatio 	= 4.45
 T2Ratio 	= 1.25
 zeta = 0.20
 
