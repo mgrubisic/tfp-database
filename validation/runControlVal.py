@@ -60,7 +60,8 @@ PEERSummary 	= 'combinedSearch.csv'
 databaseFile 	= 'gmListVal.csv'
 
 # incremental MCE_R levels
-IDALevel 	= np.arange(1.0, 2.50, 0.5).tolist()
+#IDALevel 	= np.arange(1.0, 2.50, 0.5).tolist()
+IDALevel 	= np.arange(1.0, 1.5, 0.5).tolist()
 
 # read in params
 parCsv 	= pd.read_csv('./inputs/bearingInputVal.csv', index_col=None, header=0)
@@ -75,7 +76,7 @@ for lvl in IDALevel:
 	# scale S1 to match MCE_R level
 	actualS1 	= param['S1']*lvl
 
-	gmDatabase, specAvg = gmSelector.cleanGMs(gmPath, PEERSummary, actualS1, 
+	gmDatabase, specAvg = gmSelector.cleanGMs(gmPath, PEERSummary, actualS1, param['Ss'],
 		32, 133, 176, 111, 290, 111)
 
 	# Run eq analysis for 

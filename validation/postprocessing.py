@@ -35,6 +35,9 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, runStatus, Tfb, I
 
 	# param is dictionary of all inputs. call with param['whatYouWant']
 	param 			= dict(zip(bearingParams.variable, bearingParams.value))
+	
+	Ts 				= param['S1']/param['Ss']
+	param['Tm'] 	= param['TmRatio']*Ts
 
 	# create new dictionary for non-inputs. Put all tabulated results here.
 	afterRun 		= dict()

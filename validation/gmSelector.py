@@ -25,7 +25,7 @@ pd.options.mode.chained_assignment = None  # default='warn', ignore SettingWithC
 
 ############################################################################
 
-def cleanGMs(gmDir, resultsCSV, actualS1, summaryStart=33, nSummary=100, scaledStart=144, nScaled=111, unscaledStart=258, nUnscaled=111):
+def cleanGMs(gmDir, resultsCSV, actualS1, Ss, summaryStart=33, nSummary=100, scaledStart=144, nScaled=111, unscaledStart=258, nUnscaled=111):
 
 	# remove all DT2 VT2 files
 	folder 				= os.listdir(gmDir)
@@ -39,8 +39,7 @@ def cleanGMs(gmDir, resultsCSV, actualS1, summaryStart=33, nSummary=100, scaledS
 	scaledSpectra 		= pd.read_csv(gmDir+resultsCSV, skiprows=scaledStart, nrows=nScaled)
 	unscaledSpectra 	= pd.read_csv(gmDir+resultsCSV, skiprows=unscaledStart, nrows=nUnscaled)
 
-	# Keep Ss as 2.2815 (Berkeley)
-	Ss 									= 2.2815
+	# Keep Ss as 2.2815 (Berkeley), imported from inputs
 	Tshort								= actualS1/Ss
 	targetSpectrum 						= scaledSpectra[['Period (sec)']]
 	targetSpectrum['Target pSa (g)'] 	= np.where(targetSpectrum['Period (sec)'] < Tshort, Ss, actualS1/targetSpectrum['Period (sec)'])

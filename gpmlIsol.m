@@ -147,6 +147,6 @@ plotMarginalSlices(5, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
 steelCoefs      = steelCost(isolDat);
 probDesired     = 0.05;
-gridRes         = 10;
+gridRes         = 15;
 [designSpace, designPoint, designFailureSD] = costGridCalc(probDesired, gridRes, x, y, ...
     steelCoefs, hyp, meanfunc, covfunc, inffunc, likfunc);

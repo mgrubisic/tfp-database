@@ -72,7 +72,7 @@ function [designSpace, designPoint, designFailureSD] = costGridCalc(probDesired,
     % Hogan: land cost is about 20% of the development cost ($1110/sf)
     landCostPerSqft     = 0.2*1110;
     landCost            = landCostPerSqft/144*(90*12 + 2*moatGap).^2;
-    steelCost           = Vs*10*steelCoef(2) + steelCoef(1);
+    steelCost           = Vs*steelCoef(2) + steelCoef(1);
     
     totalCost           = landCost + steelCost;
     
