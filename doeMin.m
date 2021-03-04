@@ -62,7 +62,7 @@ y(y==0)     = -1;
 [e,f]       = size(x);
 
 % try mean as constant
-meanfunc    = @meanConst; hyp.mean = 0;
+% meanfunc    = @meanConst; hyp.mean = 0;
 
 % try ignoring the mean function
 % meanfunc    = [];
@@ -72,7 +72,7 @@ meanfunc    = @meanConst; hyp.mean = 0;
 % meanfunc = {@meanSum, {@meanLinear, @meanConst}}; hyp.mean = [zeros(1,f) 0]';
 
 % try mean as linear function
-% meanfunc    = @meanLinear; hyp.mean = [zeros(1,f)]';
+meanfunc    = @meanLinear; hyp.mean = [zeros(1,f)]';
 
 % poly?
 % meanfunc    = {@meanPoly,2}; hyp.mean = [zeros(1,2*f)]';
@@ -96,22 +96,22 @@ betaHatGLM  = linFit.Coefficients.Estimate;
 hx          = linFit.Residuals.Raw;
 
 % try mean as constant (although we defer mean to kriging)
-meanZ       = @meanZero; hyp.mean = [];
-covZ        = @covSEiso; hyp.cov = [0 0];
+meanfunc       = @meanZero; hyp.mean = [];
+covfunc        = @covSEiso; hyp.cov = [0 0];
 % gaussian likelihood
 % likZ        = @likLogistic;
 % infZ        = @infLaplace;
-likZ        = @likGauss; hyp.lik = -1;
-infZ        = @infGaussLik;
+likfunc        = @likGauss; hyp.lik = -1;
+inffunc        = @infGaussLik;
 % hyp         = minimize(hyp, @gp, -3000, infZ, meanZ, covZ, likZ, x, y);
-hyp         = minimize(hyp, @gp, -100, infZ, meanZ, covZ, likZ, x, hx);
+hyp         = minimize(hyp, @gp, -100, inffunc, meanfunc, covfunc, likfunc, x, hx);
 % C           = linFit.CoefficientCovariance;
 
 %% Kyprioti paper
 k           = length(x);
 
 F           = x;
-RMat        = covZ(hyp.cov, x);
+RMat        = covfunc(hyp.cov, x);
 RInv        = inv(RMat);
 betaHat     = inv(F'*RInv*F)*F'*RInv*y;
 sig2Tilde   = (y - F*betaHat)'*(y - F*betaHat)/k;
@@ -144,11 +144,11 @@ xnew    = [0.05, 2.0];
 % xnew = [10, 10, 10, 10, 10];
 Fnew = [xk;xnew];
 
-cnew        = covZ(hyp.cov, xk, xnew);
+cnew        = covfunc(hyp.cov, xk, xnew);
 etaNew      = 1 - cnew'*RInv*cnew;
 RNewInv    = [RInv+(RInv*cnew*cnew'*RInv)/etaNew -RInv*cnew/etaNew;
                -cnew'*RInv/etaNew 1/etaNew];
-           
+
 % CkNew       = [sig2Tilde cnew'; cnew Ck];
 % CkNewInv    = [1 zeros(k,1)'; -inv(Ck)*cnew eye(k)]*...
 %     [1/(sig2Tilde - cnew'*inv(Ck)*cnew) zeros(k,1)'; zeros(k,1) inv(Ck)]* ...
@@ -157,7 +157,7 @@ RNewInv    = [RInv+(RInv*cnew*cnew'*RInv)/etaNew -RInv*cnew/etaNew;
 sig2nNew    = zeros(k,1);
 
 for i = 1:(k)
-    cCur        = covZ(hyp.cov, [xk; xnew], x(i,:));
+    cCur        = covfunc(hyp.cov, [xk; xnew], x(i,:));
     fnew        = F(i,:)';
     unew        = Fnew'*RNewInv*cCur - fnew;
     
