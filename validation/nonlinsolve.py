@@ -2,7 +2,7 @@ import numpy as np
 import math, cmath
 
 gapRatio 	= 0.0293
-TmRatio 	= 4.45
+TmRatio 	= 4.55
 T2Ratio 	= 1.25
 zeta = 0.20
 
@@ -11,7 +11,7 @@ zeta = 0.20
 # zeta 		= 0.10
 # Tm 			= 3.25
 
-mu1 		= 0.02
+mu1 		= 0.05
 
 g 		= 386.4
 inch 	= 1.0
@@ -66,7 +66,7 @@ mu2, R1 = sy.symbols('mu2 R1')
 # 	4*(mu2 - 1/(2*R2)*(2*R1*(mu2-mu1)))*x - 4*(1/(2*R1) - 1/(2*R2))*(2*R1*(mu2-mu1))**2 - 4*(k0 - 1/(2*R1))*xy**2 - Wm), [mu2, R1], force=True, manual=True, set=True)
 
 solset = sy.nsolve( [ (mu2 + 1/(2*R2)*(x - 2*R1*(mu2-mu1))) /x - kM,
-	4*(mu2 - 1/(2*R2)*(2*R1*(mu2-mu1)))*x - 4*(1/(2*R1) - 1/(2*R2))*(2*R1*(mu2-mu1))**2 - 4*(k0 - 1/(2*R1))*xy**2 - Wm], [mu2, R1], [0.20, 35])
+	4*(mu2 - 1/(2*R2)*(2*R1*(mu2-mu1)))*x - 4*(1/(2*R1) - 1/(2*R2))*(2*R1*(mu2-mu1))**2 - 4*(k0 - 1/(2*R1))*xy**2 - Wm], [mu2, R1], [0.13, 35])
 
 npsol = np.array(solset).astype(np.float64)
 

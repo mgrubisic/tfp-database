@@ -47,8 +47,8 @@ collapsed   = double(collapsed);
 % x           = [gapRatio, T2Ratio, mu2Ratio, Ry];
 % x           = [mu1Ratio, gapRatio, T2Ratio, zeta, Ry];
 % x           = [mu2Ratio, T2Ratio, zeta, Ry];
-% x           = [gapRatio, TmRatio, T2Ratio, zeta, Ry];
-x           = [gapRatio, Ry];
+x           = [gapRatio, TmRatio, T2Ratio, zeta, Ry];
+% x           = [gapRatio, Ry];
 
 % conference paper:
 % x           = [gapRatio, T2Ratio, zeta, Ry];
@@ -78,6 +78,8 @@ meanfunc    = @meanLinear; hyp.mean = [zeros(1,f)]';
 % meanfunc    = {@meanPoly,2}; hyp.mean = [zeros(1,2*f)]';
 
 covfunc     = @covSEard; ell = 1.0; sf = 1.0; hyp.cov = log([ell*ones(1,f) sf]);
+% covfunc        = @covSEiso; hyp.cov = [0 0];
+
 % Logit regression
 likfunc     = @likLogistic;
 inffunc     = @infLaplace;
