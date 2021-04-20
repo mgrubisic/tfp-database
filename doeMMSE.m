@@ -90,7 +90,7 @@ meanfunc = {@meanSum, {@meanLinear, @meanConst}}; hyp.mean = [zeros(1,f) 0]';
 % meanfunc    = {@meanPoly,2}; hyp.mean = [zeros(1,2*f)]';
 
 covfunc     = @covSEard; ell = 1.0; sf = 1.0; hyp.cov = log([ell*ones(1,f) sf]);
-% covfunc        = @covSEiso; hyp.cov = [0 0];
+% covfunc     = @covSEiso; hyp.cov = [0 0];
 
 % Logit regression
 likfunc     = @likLogistic;
@@ -133,8 +133,8 @@ meanfunc    = @meanLinear; hyp.mean = zeros(1,f)';
 % poly?
 % meanfunc    = {@meanPoly,3}; hyp.mean = [zeros(1,3*f)]';
 
-% covfunc     = @covSEard; ell = 1.0; sf = 1.0; hyp.cov = log([ell*ones(1,f) sf]);
-covfunc        = @covSEiso; hyp.cov = [0 0];
+covfunc     = @covSEard; ell = 1.0; sf = 1.0; hyp.cov = log([ell*ones(1,f) sf]);
+% covfunc     = @covSEiso; hyp.cov = [0 0];
 
 % Logit regression
 likfunc     = @likGauss; hyp.lik = log(0.1);
@@ -147,33 +147,29 @@ hyp = minimize(hyp, @gp, -3000, inffunc, meanfunc, covfunc, likfunc, x, y);
 
 %% sequentially add points (option to update hyp)
 % Run optimization
-options = optimset('MaxFunEvals',1000, 'GradObj', 'off'); %maximum 1000 iterations, gradient of the function not provided
-firstTry    = mean(x);
-lb  = min(x);
-ub  = max(x);
-
 lPoints = 20;
 
 % Domain generation
 close all;
+steps       = 15;
 minX        = round(min(x),2);
 maxX        = round(max(x),2);
-stepX       = (maxX-minX)/10;
 
 gridVec     = cell(1, f);
 
 for j = 1:f
-    gridVec{j} = minX(j):stepX(j):maxX(j);
+    gridVec{j} = linspace(minX(j), maxX(j), steps);
 end
 
 xs   = transpose(combvec(gridVec{:}));
-n   = length(xs);
+
+xsOG    = xs;
 
 [x1, x2]  = meshgrid(gridVec{1}',gridVec{2}');
 
 varplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xs, x1, x2)
 meanplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xs, x1, x2)
-% evolplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xs, x1, x2, k)
+evolplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xs, x1, x2, k)
 
 % covTracker = zeros(lPoints, f);
 % meanTracker = zeros(lPoints, f);
@@ -193,16 +189,17 @@ for i = 1:lPoints
      
     % redo GP?
     [e,f]       = size(x);
-%     meanfunc    = @meanLinear; hyp.mean = [zeros(1,f)]';
-    meanfunc    = @meanConst; hyp.mean = 0;
-    covfunc        = @covSEiso; hyp.cov = [0 0];
+    meanfunc = {@meanSum, {@meanLinear, @meanConst}}; hyp.mean = [zeros(1,f) 0]';
+%     covfunc     = @covSEiso; hyp.cov = [0 0];
+    covfunc     = @covSEard; ell = 1.0; sf = 1.0; hyp.cov = log([ell*ones(1,f) sf]);
     likfunc     = @likGauss; hyp.lik = log(0.1);
     inffunc     = @infGaussLik;
     hyp = minimize(hyp, @gp, -200, inffunc, meanfunc, covfunc, likfunc, x, y);
     covTracker(i,:) = hyp.cov;
     meanTracker(i,:) = hyp.mean;
     
-%     varplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xs, x1, x2)
+	% remesh to improve resolution of search
+    xs      = remesh(xFull, f, xFound, steps);
 end
 warning('on')
 
@@ -214,17 +211,43 @@ warning('on')
 % likfunc     = @likGauss; hyp.lik = log(0.1);
 % inffunc     = @infGaussLik;
 % hyp = minimize(hyp, @gp, -200, inffunc, meanfunc, covfunc, likfunc, x, y);
-varplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xs, x1, x2)
-meanplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xs, x1, x2)
-evolplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xs, x1, x2, k)
+varplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xsOG, x1, x2)
+meanplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xsOG, x1, x2)
+evolplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xsOG, x1, x2, k)
+
+%% domain mesher
+
+function xs     = remesh(x, f, xCenter, steps)
+    xRight      = linspace(pi, 3*pi/2, round(steps/2));
+    xLeft       = linspace(pi/2, pi, round(steps/2));
+    
+    minX        = round(min(x),2);
+    maxX        = round(max(x),2);
+    
+    gridVec     = cell(1, f);
+    
+    for i = 1:f
+        leftRange   = xCenter(i) - minX(i);
+        rightRange  = maxX(i) - xCenter(i);
+            
+        leftSpace    = xCenter(i) - (cos(xLeft)+1).*leftRange;
+        rightSpace   = xCenter(i) + (cos(xRight)+1).*rightRange;
+        
+        gridVec{i}   = [leftSpace(1:(end-1)) rightSpace];
+    end
+
+    xs   = transpose(combvec(gridVec{:}));
+end
 
 %% evolution plot
 
 function evolplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xs, x1, x2, k)
-    [~,ys2,~,~] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xs);
+    n = length(xs);
+    [~,ys2,~,~,lp] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, ...
+        xs, ones(n,1));
     
     figure
-    contour(x1, x2, reshape(ys2, size(x1)));
+    contour(x1, x2, reshape(ys2, size(x1))' );
     hold on
     
     xOrig   = x(1:k, :);
@@ -243,13 +266,47 @@ function evolplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xs, x1, x2, k)
     scatter(xAddedFail(:,1), xAddedFail(:,2), 'bx')
     scatter(xAddedOkay(:,1), xAddedOkay(:,2), 'bo')
     
-%     scatter(x(1:k, 1), x(1:k, 2), 'ro')
-%     scatter(x((k+1):end, 1), x((k+1):end, 2), 'bx')
-
     title('Points added on variance contours')
     xlabel('gap ratio')
     ylabel('RI')
     colorbar
+    
+    figure
+    contour(x1, x2, (reshape(exp(lp), size(x1)))');
+    hold on
+    scatter(xOrigFail(:,1), xOrigFail(:,2), 'rx')
+    scatter(xOrigOkay(:,1), xOrigOkay(:,2), 'ro')
+    
+    scatter(xAddedFail(:,1), xAddedFail(:,2), 'bx')
+    scatter(xAddedOkay(:,1), xAddedOkay(:,2), 'bo')
+    
+    title('Points added on probability contours')
+    xlabel('gap ratio')
+    ylabel('RI')
+    colorbar
+    
+    sigE        = 0.2;
+    T           = 0.05;
+    Wx          = 1./sqrt(2*pi*(sigE^2 + ys2)) .* ...
+        exp((-1/2)*((exp(lp) - T).^2./sigE^2 + ys2.^2));
+    
+    figure
+    contour(x1, x2, (reshape(Wx.*ys2, size(x1)))');
+    hold on
+    scatter(xOrigFail(:,1), xOrigFail(:,2), 'rx')
+    scatter(xOrigOkay(:,1), xOrigOkay(:,2), 'ro')
+    
+    scatter(xAddedFail(:,1), xAddedFail(:,2), 'bx')
+    scatter(xAddedOkay(:,1), xAddedOkay(:,2), 'bo')
+    
+    title('Weighted variance')
+    xlabel('gap ratio')
+    ylabel('RI')
+    colorbar
+    
+%     scatter(x(1:k, 1), x(1:k, 2), 'ro')
+%     scatter(x((k+1):end, 1), x((k+1):end, 2), 'bx')
+
 end
 
 %% mean plot
@@ -258,11 +315,12 @@ function meanplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xs, x1, x2)
     [ymu,~,~,~] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xs);
     
     figure
-    surf(x1, x2, reshape(ymu, size(x1)));
+    
+    surf(x1, x2, reshape(ymu, size(x1))');
     title('Mean plot')
     xlabel('gap ratio')
     ylabel('RI')
-    zlim([-1.5, 1.5])
+    zlim([-1.5,1.5])
     colorbar
 end
 
@@ -272,11 +330,11 @@ function varplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xs, x1, x2)
     [~,ys2,~,~] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xs);
     
     figure
-    surf(x1, x2, reshape(ys2, size(x1)));
+    surf(x1, x2, reshape(ys2, size(x1))' );
     title('Variance plot')
     xlabel('gap ratio')
     ylabel('RI')
-%     zlim([0, 5e-3])
+    zlim([0, 1])
     colorbar
 end
 
@@ -284,18 +342,42 @@ end
 % considers only existing dataset
 
 function [MMSE, xNext] = fn_mmse_gpml(hyp, inffunc, meanfunc, covfunc, likfunc, xk, yk, xs)
+
+    n = length(xs);
     
-    [~,s2k,~,~,~] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, xk, yk,...
-        xs);
+    [~,s2k,~,~,lp] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, xk, yk,...
+        xs, ones(n,1));
     
-    [MMSE, mmIdx]   = max(s2k);
+    % Weighting
+    
+    sigE        = 0.2;
+    T           = 0.05;
+    Wx          = 1./sqrt(2*pi*(sigE^2 + s2k)) .* ...
+        exp((-1/2)*((exp(lp) - T).^2./sigE^2 + s2k.^2));
+        
+    [MMSE, mmIdx]   = max(s2k.*Wx);
     xNext           = xs(mmIdx,:);
+    
+%     % find subset with probability of failure around 5%
+%     Hk      = xs((exp(lp) <= 0.07) & (exp(lp) >= 0.03),:);
+%     s2kHk   = s2k((exp(lp) <= 0.07) & (exp(lp) >= 0.03),:);
+%     
+%     if isempty(Hk)
+%         [MMSE, mmIdx]   = max(s2k);
+%         xNext           = xs(mmIdx,:);
+%         disp('no test point found with p(f) around 5%')
+%     else
+%         [MMSE, mmIdx]   = max(s2kHk);
+%         xNext           = Hk(mmIdx,:);
+%     end
+
 end
 
 %% libSearch function
 % search through the reserves to find closest point (Euclidean distance)
 
 function [xFound, yFound, xReserve, yReserve] = libSearch(xNext, xReserve, yReserve)
+    % normalize since dimensions have different scale
     xNormed     = xReserve./max(xReserve);
     xNextNorm   = xNext./max(xReserve);
     kIdx  = dsearchn(xNormed, xNextNorm);
