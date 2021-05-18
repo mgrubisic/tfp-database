@@ -17,6 +17,7 @@
 clear; close all; clc;
 
 isolDat     = readtable('../pastRuns/random200withTfb.csv');
+% isolDat    = readtable('../pastRuns/random600.csv');
 g           = 386.4;
 
 % scaling Sa(Tm) for damping, ASCE Ch. 17
@@ -27,7 +28,8 @@ isolDat.Bm  = interp1(zetaRef, BmRef, isolDat.zetaM);
 TfbRatio    = isolDat.Tfb./isolDat.Tm;
 mu2Ratio    = isolDat.mu2./(isolDat.GMSTm./isolDat.Bm);
 mu1Ratio    = isolDat.mu1./(isolDat.GMSTm./isolDat.Bm);
-gapRatio    = isolDat.moatGap./(g.*(isolDat.GMSTm./isolDat.Bm).*isolDat.Tm.^2);
+% gapRatio    = isolDat.moatGap./(g.*(isolDat.GMSTm./isolDat.Bm).*isolDat.Tm.^2);
+gapRatio    = (isolDat.moatGap*4*pi^2)./(g.*(isolDat.GMSTm./isolDat.Bm).*isolDat.Tm.^2);
 T2Ratio     = isolDat.T2./isolDat.Tm;
 Ry          = isolDat.RI;
 zeta        = isolDat.zetaM;
@@ -81,8 +83,13 @@ meanfunc = {@meanSum, {@meanLinear, @meanConst}}; hyp.mean = [zeros(1,f) 0]';
 % meanfunc    = {@meanPoly,2}; hyp.mean = [zeros(1,2*f)]';
 
 covfunc     = @covSEard; ell = 1.0; sf = 1.0; hyp.cov = log([ell*ones(1,f) sf]);
-% Logit regression
-likfunc     = @likLogistic;
+
+% % Logit regression
+% likfunc     = @likLogistic;
+% inffunc     = @infLaplace;
+
+% Probit regression
+likfunc     = @likErf;
 inffunc     = @infLaplace;
 
 % conference paper:
@@ -91,20 +98,20 @@ hyp = minimize(hyp, @gp, -200, inffunc, meanfunc, covfunc, likfunc, x, y);
 
 %% Plotting
 close all
-% Goal: for 3 values of T2 ratio, plot gapRatio vs. damping
+% Goal: for 3 values of T2 ratio, plot gapRatio vs. TmRatio
 % plotContour(constIdx, xIdx, yIdx, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 % conference paper:
-% plotContour(3, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
+plotContour(3, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
-plotContour(1, 2, 3, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
+% plotContour(1, 2, 3, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
 % % Goal: set T2 ratio to median, fix three values damping ratios, plot marginal for
 % % gap ratio (set x1, fix x3, plot x2)
 % plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 % conference paper:
-% plotMarginalSlices(4, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
+plotMarginalSlices(3, 1, 4, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
-plotMarginalSlices(5, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
+% plotMarginalSlices(5, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
 %% Old cost regression
 % Goal: get a design space of qualifying probs of failure, then pick one

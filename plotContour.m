@@ -71,12 +71,12 @@ function plotContour(constIdx, xIdx, yIdx, x, y, ...
         
 %         xlabel('Gap ratio','Interpreter','latex')
 %         ylabel('$T_M$ ratio','Interpreter','latex')
-        xlabel('$T_M$ ratio','Interpreter','latex')
-        ylabel('$T_2$ ratio','Interpreter','latex')
-        [C, h] = contour(tempX, tempY, reshape(exp(lp), size(tempX)), [0.0:0.01:1.0]);
-        v = [0.1, 0.5, 0.9];
-%         clabel(C,h,v)
-        clabel(C,h)
+        xlabel('Gap ratio','Interpreter','latex')
+        ylabel('$T_M$ ratio','Interpreter','latex')
+        [C, h] = contour(tempX, tempY, reshape(exp(lp), size(tempX)), [0.0:0.05:1.0]);
+        v = [0.05, 0.5, 0.95];
+        clabel(C,h,v)
+%         clabel(C,h)
         colorbar
         legend('Collapse', 'No collapse', '$P(Collapse)$', 'Interpreter', 'latex')
         

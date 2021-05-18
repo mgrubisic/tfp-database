@@ -16,7 +16,8 @@
 clear; close all; clc;
 
 rng(0,'twister');
-isolFull    = readtable('../pastRuns/random200withTfb.csv');
+% isolFull    = readtable('../pastRuns/random200withTfb.csv');
+isolFull    = readtable('../pastRuns/random600.csv');
 
 % scaling Sa(Tm) for damping, ASCE Ch. 17
 g           = 386.4;
@@ -27,7 +28,8 @@ isolFull.Bm  = interp1(zetaRef, BmRef, isolFull.zetaM);
 TfbRatio    = isolFull.Tfb./isolFull.Tm;
 mu2Ratio    = isolFull.mu2./(isolFull.GMSTm./isolFull.Bm);
 mu1Ratio    = isolFull.mu1./(isolFull.GMSTm./isolFull.Bm);
-gapRatio    = isolFull.moatGap./(g.*(isolFull.GMSTm./isolFull.Bm).*isolFull.Tm.^2);
+% gapRatio    = isolFull.moatGap./(g.*(isolFull.GMSTm./isolFull.Bm).*isolFull.Tm.^2);
+gapRatio    = (isolFull.moatGap*4*pi^2)./(g.*(isolFull.GMSTm./isolFull.Bm).*isolFull.Tm.^2);
 T2Ratio     = isolFull.T2./isolFull.Tm;
 Ry          = isolFull.RI;
 zeta        = isolFull.zetaM;
@@ -59,15 +61,21 @@ maxDrift    = max([isolFull.driftMax1, isolFull.driftMax2, isolFull.driftMax3], 
 %% Classification GP
 
 xFull       = [gapRatio, Ry];
+yFull       = collapsed;
 % xFull           = [gapRatio, TmRatio, T2Ratio, zeta, Ry];
 
-% limit to 20 points
-randSet     = randsample(height(isolFull), 100);
+% limit to 90th quantile of gap ratios (around 4.8%)
+xFull       = xFull(gapRatio <= quantile(gapRatio, 0.9),:);
+yFull       = yFull(gapRatio <= quantile(gapRatio, 0.9),:);
+
+% limit to ninit points
+ninit       = 100;
+randSet     = randsample(height(xFull), ninit);
 x           = xFull(randSet,:);
 xReserve    = xFull(setdiff(1:height(xFull), randSet), :);
 
-y           = collapsed(randSet);
-yReserve    = collapsed(setdiff(1:height(xFull), randSet));
+y           = yFull(randSet);
+yReserve    = yFull(setdiff(1:height(xFull), randSet));
 
 k           = length(x);
 
@@ -92,53 +100,9 @@ meanfunc = {@meanSum, {@meanLinear, @meanConst}}; hyp.mean = [zeros(1,f) 0]';
 covfunc     = @covSEard; ell = 1.0; sf = 1.0; hyp.cov = log([ell*ones(1,f) sf]);
 % covfunc     = @covSEiso; hyp.cov = [0 0];
 
-% Logit regression
-likfunc     = @likLogistic;
+% Logit regression or probit regression
+likfunc     = @likErf;
 inffunc     = @infLaplace;
-
-% conference paper:
-hyp = minimize(hyp, @gp, -3000, inffunc, meanfunc, covfunc, likfunc, x, y);
-% hyp = minimize(hyp, @gp, -200, inffunc, meanfunc, covfunc, likfunc, x, y);
-
-
-%% Regression try GP
-
-xFull       = [gapRatio, Ry];
-% xFull           = [gapRatio, TmRatio, T2Ratio, zeta, Ry];
-
-% limit to 20 points
-randSet     = randsample(height(isolFull), 100);
-x           = xFull(randSet,:);
-xReserve    = xFull(setdiff(1:height(xFull), randSet), :);
-y           = maxDrift(randSet);
-yReserve    = maxDrift(setdiff(1:height(xFull), randSet));
-
-k           = length(x);
-
-[e,f]       = size(x);
-
-% try mean as constant
-% meanfunc    = @meanConst; hyp.mean = 0;
-
-% try ignoring the mean function
-% meanfunc    = [];
-
-% conference paper:
-% try mean as affine function
-% meanfunc = {@meanSum, {@meanLinear, @meanConst}}; hyp.mean = [zeros(1,f) 0]';
-
-% try mean as linear function
-meanfunc    = @meanLinear; hyp.mean = zeros(1,f)';
-
-% poly?
-% meanfunc    = {@meanPoly,3}; hyp.mean = [zeros(1,3*f)]';
-
-covfunc     = @covSEard; ell = 1.0; sf = 1.0; hyp.cov = log([ell*ones(1,f) sf]);
-% covfunc     = @covSEiso; hyp.cov = [0 0];
-
-% Logit regression
-likfunc     = @likGauss; hyp.lik = log(0.1);
-inffunc     = @infGaussLik;
 
 % conference paper:
 hyp = minimize(hyp, @gp, -3000, inffunc, meanfunc, covfunc, likfunc, x, y);
@@ -147,13 +111,13 @@ hyp = minimize(hyp, @gp, -3000, inffunc, meanfunc, covfunc, likfunc, x, y);
 
 %% sequentially add points (option to update hyp)
 % Run optimization
-lPoints = 20;
+lPoints = 50;
 
 % Domain generation
 close all;
 steps       = 15;
-minX        = round(min(x),2);
-maxX        = round(max(x),2);
+minX        = round(min(xFull),2);
+maxX        = round(max(xFull),2);
 
 gridVec     = cell(1, f);
 
@@ -177,8 +141,6 @@ xSuggest    = zeros(lPoints, f);
 
 warning('off')
 for i = 1:lPoints
-%     xNext   = fminsearchbnd(@fn_imse, firstTry, lb, ub, options, hyp, covfunc, x);
-%     xNext   = fminsearchbnd(@fn_imse_gpml, firstTry, lb, ub, options, hyp, inffunc, meanfunc, covfunc, likfunc, x, y);
     [~, xNext]   = fn_mmse_gpml(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xs);
     xSuggest(i,:) = xNext;
     
@@ -189,12 +151,11 @@ for i = 1:lPoints
      
     % redo GP?
     [e,f]       = size(x);
-    meanfunc = {@meanSum, {@meanLinear, @meanConst}}; hyp.mean = [zeros(1,f) 0]';
-%     covfunc     = @covSEiso; hyp.cov = [0 0];
+    meanfunc    = {@meanSum, {@meanLinear, @meanConst}}; hyp.mean = [zeros(1,f) 0]';
     covfunc     = @covSEard; ell = 1.0; sf = 1.0; hyp.cov = log([ell*ones(1,f) sf]);
-    likfunc     = @likGauss; hyp.lik = log(0.1);
-    inffunc     = @infGaussLik;
-    hyp = minimize(hyp, @gp, -200, inffunc, meanfunc, covfunc, likfunc, x, y);
+    likfunc     = @likErf;
+    inffunc     = @infLaplace;
+    hyp = minimize(hyp, @gp, -100, inffunc, meanfunc, covfunc, likfunc, x, y);
     covTracker(i,:) = hyp.cov;
     meanTracker(i,:) = hyp.mean;
     
@@ -203,14 +164,7 @@ for i = 1:lPoints
 end
 warning('on')
 
-% % see variance plot
-% % redo GP?
-% [e,f]       = size(x);
-% meanfunc    = @meanLinear; hyp.mean = [zeros(1,f)]';
-% covfunc        = @covSEiso; hyp.cov = [0 0];
-% likfunc     = @likGauss; hyp.lik = log(0.1);
-% inffunc     = @infGaussLik;
-% hyp = minimize(hyp, @gp, -200, inffunc, meanfunc, covfunc, likfunc, x, y);
+% final plots
 varplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xsOG, x1, x2)
 meanplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xsOG, x1, x2)
 evolplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xsOG, x1, x2, k)
@@ -243,7 +197,7 @@ end
 
 function evolplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xs, x1, x2, k)
     n = length(xs);
-    [~,ys2,~,~,lp] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, ...
+    [ymu,ys2,~,~,lp] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, ...
         xs, ones(n,1));
     
     figure
@@ -270,9 +224,11 @@ function evolplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xs, x1, x2, k)
     xlabel('gap ratio')
     ylabel('RI')
     colorbar
-    
+
     figure
-    contour(x1, x2, (reshape(exp(lp), size(x1)))');
+    [C, h] = contour(x1, x2, (reshape(exp(lp), size(x1)))', [0.0:0.05:1.0]);
+    v = [0.05, 0.5, 0.95];
+    clabel(C,h,v)
     hold on
     scatter(xOrigFail(:,1), xOrigFail(:,2), 'rx')
     scatter(xOrigOkay(:,1), xOrigOkay(:,2), 'ro')
@@ -285,10 +241,12 @@ function evolplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xs, x1, x2, k)
     ylabel('RI')
     colorbar
     
-    sigE        = 0.2;
-    T           = 0.05;
+    % Weighting
+    
+    sigE        = 0.1;
+    T           = -1;
     Wx          = 1./sqrt(2*pi*(sigE^2 + ys2)) .* ...
-        exp((-1/2)*((exp(lp) - T).^2./sigE^2 + ys2.^2));
+        exp((-1/2)*((ymu - T).^2./sigE^2 + ys2.^2));
     
     figure
     contour(x1, x2, (reshape(Wx.*ys2, size(x1)))');
@@ -345,15 +303,32 @@ function [MMSE, xNext] = fn_mmse_gpml(hyp, inffunc, meanfunc, covfunc, likfunc, 
 
     n = length(xs);
     
-    [~,s2k,~,~,lp] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, xk, yk,...
+    [ymu,s2k,~,~,lp] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, xk, yk,...
         xs, ones(n,1));
     
     % Weighting
     
-    sigE        = 0.2;
-    T           = 0.05;
+    sigE        = 0.1;  % recommended at 5% of range
+    T           = -1;
+%     Wx          = 1./sqrt(2*pi*(sigE^2 + s2k)) .* ...
+%         exp((-1/2)*((exp(lp) - T).^2./sigE^2 + s2k.^2));
+
+    pcol        = exp(lp);
+    region5     = (pcol <= 0.055 & pcol >= 0.045);
+    var5        = s2k(region5);
+    topThresh   = ymu(region5) + sqrt(var5);
+    
+    region10    = (pcol >= 0.25);
+    thresh10    = min(ymu(region10));
+    
+    if max(topThresh) <= thresh10
+        disp('The 5% region is within +1 std of 10%.')
+        disp(max(topThresh))
+    end
+    
+    
     Wx          = 1./sqrt(2*pi*(sigE^2 + s2k)) .* ...
-        exp((-1/2)*((exp(lp) - T).^2./sigE^2 + s2k.^2));
+        exp((-1/2)*((ymu - T).^2./sigE^2 + s2k.^2));
         
     [MMSE, mmIdx]   = max(s2k.*Wx);
     xNext           = xs(mmIdx,:);
