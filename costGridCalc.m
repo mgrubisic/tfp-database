@@ -28,8 +28,8 @@ function [designSpace, designPoint, designFailureSD] = costGridCalc(probDesired,
         gridVec{j} = minX(j):stepX(j):maxX(j);
     end
     
-    % higher resolution for gapRatio
-    gridVec{1} = linspace(0.02,0.04,steps+1);
+%     % higher resolution for gapRatio
+%     gridVec{1} = linspace(0.02,0.04,steps+1);
     
     t   = transpose(combvec(gridVec{:}));
     n   = length(t);

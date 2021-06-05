@@ -23,6 +23,13 @@ isolFull    = readtable('../pastRuns/random600.csv');
 g           = 386.4;
 zetaRef     = [0.02, 0.05, 0.10, 0.20, 0.30, 0.40, 0.50];
 BmRef       = [0.8, 1.0, 1.2, 1.5, 1.7, 1.9, 2.0];
+
+isolFull.Tshort      = isolFull.S1/2.282;
+
+% Consider filtering out cases where the Tshort is smaller
+% to prevent distortion of TmRatio
+% isolFull    = isolFull(isolFull.Tshort >= 0.4,:);
+
 isolFull.Bm  = interp1(zetaRef, BmRef, isolFull.zetaM);
 
 TfbRatio    = isolFull.Tfb./isolFull.Tm;
@@ -31,11 +38,11 @@ mu1Ratio    = isolFull.mu1./(isolFull.GMSTm./isolFull.Bm);
 % gapRatio    = isolFull.moatGap./(g.*(isolFull.GMSTm./isolFull.Bm).*isolFull.Tm.^2);
 gapRatio    = (isolFull.moatGap*4*pi^2)./(g.*(isolFull.GMSTm./isolFull.Bm).*isolFull.Tm.^2);
 T2Ratio     = isolFull.T2./isolFull.Tm;
+T1Ratio     = isolFull.T1./isolFull.Tm;
 Ry          = isolFull.RI;
 zeta        = isolFull.zetaM;
 
-Tshort      = isolFull.S1/2.282;
-TmRatio     = isolFull.Tm./Tshort;
+TmRatio     = isolFull.Tm./isolFull.Tshort;
 
 collapsed   = (isolFull.collapseDrift1 | isolFull.collapseDrift2) ...
     | isolFull.collapseDrift3;
@@ -60,16 +67,17 @@ maxDrift    = max([isolFull.driftMax1, isolFull.driftMax2, isolFull.driftMax3], 
 
 %% Classification GP
 
-xFull       = [gapRatio, Ry];
+% xFull       = [gapRatio, Ry];
 yFull       = collapsed;
-% xFull           = [gapRatio, TmRatio, T2Ratio, zeta, Ry];
+xFull       = [gapRatio, TmRatio, T2Ratio, Ry];
+% xFull       = [gapRatio, TmRatio, mu1Ratio, zeta, Ry];
 
-% limit to 90th quantile of gap ratios (around 4.8%)
+% limit to 90th quantile of gap ratios
 xFull       = xFull(gapRatio <= quantile(gapRatio, 0.9),:);
 yFull       = yFull(gapRatio <= quantile(gapRatio, 0.9),:);
 
 % limit to ninit points
-ninit       = 100;
+ninit       = 20;
 randSet     = randsample(height(xFull), ninit);
 x           = xFull(randSet,:);
 xReserve    = xFull(setdiff(1:height(xFull), randSet), :);
@@ -82,14 +90,14 @@ k           = length(x);
 [~,f]       = size(x);
 
 % try mean as constant
-% meanfunc    = @meanConst; hyp.mean = 0;
+meanfunc    = @meanConst; hyp.mean = 0;
 
 % try ignoring the mean function
 % meanfunc    = [];
 
 % conference paper:
 % try mean as affine function
-meanfunc = {@meanSum, {@meanLinear, @meanConst}}; hyp.mean = [zeros(1,f) 0]';
+% meanfunc = {@meanSum, {@meanLinear, @meanConst}}; hyp.mean = [zeros(1,f) 0]';
 
 % try mean as linear function
 % meanfunc    = @meanLinear; hyp.mean = [zeros(1,f)]';
@@ -111,7 +119,7 @@ hyp = minimize(hyp, @gp, -3000, inffunc, meanfunc, covfunc, likfunc, x, y);
 
 %% sequentially add points (option to update hyp)
 % Run optimization
-lPoints = 50;
+lPoints = 20;
 
 % Domain generation
 close all;
@@ -131,9 +139,11 @@ xsOG    = xs;
 
 [x1, x2]  = meshgrid(gridVec{1}',gridVec{2}');
 
-varplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xs, x1, x2)
-meanplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xs, x1, x2)
-evolplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xs, x1, x2, k)
+if (f == 2)
+    varplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xs, x1, x2)
+    meanplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xs, x1, x2)
+    evolplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xs, x1, x2, k)
+end
 
 % covTracker = zeros(lPoints, f);
 % meanTracker = zeros(lPoints, f);
@@ -165,10 +175,11 @@ end
 warning('on')
 
 % final plots
-varplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xsOG, x1, x2)
-meanplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xsOG, x1, x2)
-evolplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xsOG, x1, x2, k)
-
+if (f == 2)
+    varplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xsOG, x1, x2)
+    meanplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xsOG, x1, x2)
+    evolplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xsOG, x1, x2, k)
+end
 %% domain mesher
 
 function xs     = remesh(x, f, xCenter, steps)
@@ -226,8 +237,10 @@ function evolplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xs, x1, x2, k)
     colorbar
 
     figure
-    [C, h] = contour(x1, x2, (reshape(exp(lp), size(x1)))', [0.0:0.05:1.0]);
-    v = [0.05, 0.5, 0.95];
+%     [C, h] = contour(x1, x2, (reshape(exp(lp), size(x1)))', [0.0:0.05:1.0]);
+%     v = [0.05, 0.5, 0.95];
+    [C, h] = contour(x1, x2, (reshape(exp(lp), size(x1)))', [0.0:0.01:0.1]);
+    v = [0.01, 0.05, 0.1];
     clabel(C,h,v)
     hold on
     scatter(xOrigFail(:,1), xOrigFail(:,2), 'rx')
@@ -270,7 +283,7 @@ end
 %% mean plot
 
 function meanplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xs, x1, x2)
-    [ymu,~,~,~] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xs);
+    [ymu,~,fmu,~] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xs);
     
     figure
     
@@ -279,6 +292,14 @@ function meanplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xs, x1, x2)
     xlabel('gap ratio')
     ylabel('RI')
     zlim([-1.5,1.5])
+    colorbar
+    
+    figure
+    
+    surf(x1, x2, reshape(fmu, size(x1))');
+    title('Latent plot')
+    xlabel('gap ratio')
+    ylabel('RI')
     colorbar
 end
 
@@ -303,34 +324,56 @@ function [MMSE, xNext] = fn_mmse_gpml(hyp, inffunc, meanfunc, covfunc, likfunc, 
 
     n = length(xs);
     
-    [ymu,s2k,~,~,lp] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, xk, yk,...
+    [ymu,s2k,fmu,fs2,lp] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, xk, yk,...
         xs, ones(n,1));
     
     % Weighting
-    
     sigE        = 0.1;  % recommended at 5% of range
-    T           = -1;
+
 %     Wx          = 1./sqrt(2*pi*(sigE^2 + s2k)) .* ...
 %         exp((-1/2)*((exp(lp) - T).^2./sigE^2 + s2k.^2));
 
+%     % output mean and variance formulation
+%     T           = -1;
+%     pcol        = exp(lp);
+%     region5     = (pcol <= 0.055 & pcol >= 0.045);
+%     var5        = s2k(region5);
+%     topThresh   = ymu(region5) + sqrt(var5);
+%     
+%     region10    = (pcol >= 0.10);
+%     thresh10    = min(ymu(region10));
+%     
+%     if max(topThresh) <= thresh10
+%         disp('The 5% region is within +1 std of 10%.')
+%         disp(max(topThresh))
+%     end
+% 
+%     Wx          = 1./sqrt(2*pi*(sigE^2 + s2k)) .* ...
+%         exp((-1/2)*((ymu - T).^2./sigE^2 + s2k.^2));
+% 
+%     [MMSE, mmIdx]   = max(s2k.*Wx);
+%     xNext           = xs(mmIdx,:);
+   
+    % Latent formulation
+    % Latent variable is the mean passed through probit
     pcol        = exp(lp);
     region5     = (pcol <= 0.055 & pcol >= 0.045);
-    var5        = s2k(region5);
-    topThresh   = ymu(region5) + sqrt(var5);
+    var5        = fs2(region5);
+    topThresh   = fmu(region5) + sqrt(var5);
     
-    region10    = (pcol >= 0.25);
-    thresh10    = min(ymu(region10));
+    thresh10    = norminv(0.1);
     
     if max(topThresh) <= thresh10
         disp('The 5% region is within +1 std of 10%.')
         disp(max(topThresh))
     end
     
+    T           = norminv(0.05);
+
+    Wx          = 1./sqrt(2*pi*(sigE^2 + fs2)) .* ...
+        exp((-1/2)*((fmu - T).^2./sigE^2 + fs2.^2));
     
-    Wx          = 1./sqrt(2*pi*(sigE^2 + s2k)) .* ...
-        exp((-1/2)*((ymu - T).^2./sigE^2 + s2k.^2));
-        
-    [MMSE, mmIdx]   = max(s2k.*Wx);
+    [MMSE, mmIdx]   = max(fs2.*Wx);
     xNext           = xs(mmIdx,:);
     
 %     % find subset with probability of failure around 5%

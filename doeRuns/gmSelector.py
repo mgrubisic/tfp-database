@@ -9,7 +9,6 @@
 # Description: 	Script creates list of viable ground motions and scales from PEER search
 
 # Open issues: 	(1) Lengths of sections require specifications
-#				(2) Manually specify how many of each EQ you want
 
 ############################################################################
 import pandas as pd
@@ -26,7 +25,7 @@ pd.options.mode.chained_assignment = None  # default='warn', ignore SettingWithC
 
 ############################################################################
 
-def cleanGMs(gmDir, resultsCSV, actualS1, summaryStart=33, nSummary=100, scaledStart=144, nScaled=111, unscaledStart=258, nUnscaled=111):
+def cleanGMs(gmDir, resultsCSV, actualS1, Ss, summaryStart=33, nSummary=100, scaledStart=144, nScaled=111, unscaledStart=258, nUnscaled=111):
 
 	# remove all DT2 VT2 files
 	folder 				= os.listdir(gmDir)
@@ -40,9 +39,7 @@ def cleanGMs(gmDir, resultsCSV, actualS1, summaryStart=33, nSummary=100, scaledS
 	scaledSpectra 		= pd.read_csv(gmDir+resultsCSV, skiprows=scaledStart, nrows=nScaled)
 	unscaledSpectra 	= pd.read_csv(gmDir+resultsCSV, skiprows=unscaledStart, nrows=nUnscaled)
 
-	# Keep Ss as 2.2815 (Berkeley)
-	# Create spectrum (Ss or S1/T)
-	Ss 									= 2.2815
+	# Keep Ss as 2.2815 (Berkeley), imported from inputs
 	Tshort								= actualS1/Ss
 	targetSpectrum 						= scaledSpectra[['Period (sec)']]
 	targetSpectrum['Target pSa (g)'] 	= np.where(targetSpectrum['Period (sec)'] < Tshort, Ss, actualS1/targetSpectrum['Period (sec)'])
@@ -89,7 +86,7 @@ def cleanGMs(gmDir, resultsCSV, actualS1, summaryStart=33, nSummary=100, scaledS
 	for earthquake in uniqEqs:
 		matchingEqs 						= eligFreq[eligFreq[' Earthquake Name'] == earthquake]
 		matchingEqs['scaleDifference'] 		= abs(matchingEqs['avgSpectrumScaleFactor'] - 1.0)
-		leastScaled 						= matchingEqs.sort_values(by=['scaleDifference']).iloc[:3]
+		leastScaled 						= matchingEqs.sort_values(by=['scaleDifference']).iloc[:2]
 		#leastScaled 						= matchingEqs[matchingEqs['scaleDifference'] == min(matchingEqs['scaleDifference'])]
 
 		if finalGM is None:
