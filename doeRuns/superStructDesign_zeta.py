@@ -67,11 +67,24 @@ def design():
 	ksi 	= kip/(inch**2)
 
 	# TFP Algorithm: Becker & Mahin
-	bearingParams = pd.read_csv('./inputs/bearingInputDOE.csv', 
+	bearingParams = pd.read_csv('./inputs/bearingInput_zeta.csv', 
 		index_col=None, header=0)
 
 	# param is dictionary of all inputs. call with param['whatYouWant']
 	param 	= dict(zip(bearingParams.variable, bearingParams.value))
+
+	gapRatio = param['gapRatio']
+	TmRatio = param['TmRatio']
+	zeta = param['zetaM']
+	mu1In = param['mu1']
+	T2Ratio = param['T2Ratio']
+	S1 = param['S1']
+	Ss = param['Ss']
+
+	Ts 	= S1/Ss
+	Tm 	= TmRatio*Ts
+
+	SaTm 	= param['S1']/Tm
 
 	# Building params, hardcoded
 	# Mostly constant, so not varying
@@ -83,56 +96,47 @@ def design():
 	# from ASCE Ch. 17
 	zetaRef = [0.02, 0.05, 0.10, 0.20, 0.30, 0.40, 0.50]
 	BmRef	= [0.8, 1.0, 1.2, 1.5, 1.7, 1.9, 2.0]
-	
-	zetaGuess = param['zetaM']
 
-	Ts 				= param['S1']/param['Ss']
-	param['Tm'] 	= param['TmRatio']*Ts
-	print('Tm: ', param['Tm'])
+	Bm 		= np.interp(zeta, zetaRef, BmRef)
 
-	SaTm 	= param['S1']/param['Tm']
+	moatGap = math.ceil(g*(SaTm/Bm)*(Tm**2)*gapRatio/(4*pi**2))
 
-	T2 		= param['T2Ratio']*param['Tm']
-	print('T2: ', T2)
-	R2 		= T2**2*g/(8*pi**2)
-	R3 		= R2
-	
-	zetaBad = True
-	
-	while zetaBad:
+	T2Bad = True
+
+	while T2Bad:
 		
-		if zetaGuess > 0.20:
+		if T2Ratio > 1.23:
 			break
 		
-		# moat gap from GPML's ratio
-		Bm 		= np.interp(zetaGuess, zetaRef, BmRef)
-		moatGap = math.ceil(g*(SaTm/Bm)*(param['Tm']**2)*param['gapRatio']/(4*pi**2))
-		Dm 		= g*param['S1']*param['Tm']/(4*pi**2*Bm)
-			
+		T2 		= T2Ratio*Tm
+		R2 		= T2**2*g/(8*pi**2)
+		R3 		= R2
+		
+		Dm 		= g*S1*Tm/(4*pi**2*Bm)
+		
 		# Bearing design starts here
 		x 		= Dm
 		# yield displ
 		xy		= 0.01*inch
-	
-	
+		
 		# muguess will start from the LHS and grow outward +/- 0.03
 		a1 = np.arange(0.01, 0.04, 0.01)
 		a1 = np.repeat(a1,2)
 		a2 = [(-1)**i for i in range(len(a1))]
-		muTries = param['mu1']+np.multiply(a1,a2)
+		muTries = mu1In + np.multiply(a1,a2)
 		muTries = muTries[muTries > 0]
 		
 		# start with the initial read in
-		muTries = np.insert(muTries, 0, param['mu1'], axis = 0)
+		muTries = np.insert(muTries, 0, mu1In, axis = 0)
 		for mu1Try in muTries:
 			try:
 				mu1 = mu1Try
 				k0		= mu1/xy
-	
+		
 				b  		= 1/(2*R2)
 			
-				kM 		= (2*pi/param['Tm'])**2 * (1/g)
-				Wm 		= zetaGuess*(2*pi*kM*x**2)
+				kM 		= (2*pi/Tm)**2 * (1/g)
+				Wm 		= zeta*(2*pi*kM*x**2)
 				
 				mu2, R1 = sy.symbols('mu2 R1')
 				
@@ -165,39 +169,43 @@ def design():
 				# check to see if mu2 is positive
 				testMu2 = math.sqrt(mu2)
 			except (ValueError, TypeError) as e:
-				# print("Bad solve, trying a new mu1...")
+				#print("Bad solve, trying a new mu1...")
 				continue
 			else:
 				break
-	
-	
-		# mu2 	= kM*x - b*(x-x1)
+
 		
 		# catch cases where we were unable to solve using mu1 guesses
 		try:
 			a 		= 1/(2*R1)
 			x1 		= (a-b)**(-1/2)*cmath.sqrt(-Wm/4 + (kM - b)*x**2 - (k0 - a)*xy**2)
 		except TypeError:
-			zetaBad = True
-			zetaGuess = zetaGuess + 0.01
+			T2Bad = True
+			T2Ratio = T2Ratio + 0.01
 			continue
+		
 		mu1 	= mu2 - x1/(2*R1)
 		
-	
 		ke 		= (mu2.real + b*(x - x1.real))/x
 		We 		= (4*(mu2.real - b*x1.real)*x - 
 			4*(a-b)*x1.real**2 - 4*(k0 -a)*xy**2)
 		zetaE	= We/(2*pi*ke*x**2)
 		Te 		= 2*pi/(cmath.sqrt(ke/(1/g)))
-	
-		muList 	= [mu1, mu2, mu3]
+		
+		muList 	= [mu1.real, mu2.real, mu3.real]
 		
 		# conditions for a sensible bearing
-		zetaBad = (mu2.real > 2.5*mu1.real) or (mu2.real < mu1.real) \
-			 or (R2 < 2*R1) or (R1 < 10)
-		zetaGuess = zetaGuess + 0.01
+	# 	T2Bad = (mu2.real > 2.5*mu1.real) or (mu2.real < mu1.real) \
+	# 		 or (R2 < 2*R1) or (R1 < 10)
+		T2Bad = (mu2.real > 0.13) or (mu2.real < 0.05) or (mu2.real < mu1.real) \
+			 or (R2 < 2*R1) or (R1 < 15)
+		T2Ratio = T2Ratio + 0.01
 
-	print('Final damping: ', zetaGuess)
+
+	print('Damping: ', zeta)
+	print('Tm: ', Tm)
+	print('Final T2 ratio: ', T2Ratio)
+	print('T2: ', T2)
 
 	# Invoke error if all reasonable bearings have been tried without success
 	if(any(coeff.real < 0 for coeff in muList) or any(np.iscomplex(muList))):
@@ -293,10 +301,12 @@ def design():
 	IBeamRoofReq 	= Ib[-1]
 	ZBeamRoofReq 	= Zb[-1]
 
-	beamShapes 		= pd.read_csv('./inputs/beamShapes.csv', index_col=None, header=0)
+	beamShapes 		= pd.read_csv('./inputs/beamShapes.csv', 
+		index_col=None, header=0)
 	sortedBeams 	= beamShapes.sort_values(by=['Ix'])
 
-	colShapes 		= pd.read_csv('./inputs/colShapes.csv', index_col=None, header=0)
+	colShapes 		= pd.read_csv('./inputs/colShapes.csv', 
+		index_col=None, header=0)
 	sortedCols 		= colShapes.sort_values(by=['Ix'])
 
 	############################################################################
@@ -327,7 +337,8 @@ def design():
 	Ry 				= 1.1
 	Cpr 			= (Fy + Fu)/(2*Fy)
 
-	(beamMn, beamMpr, beamVpr, beamVGrav) 	= calcStrength(selectedBeam, VGravStory)
+	(beamMn, beamMpr, beamVpr, beamVGrav) = calcStrength(selectedBeam, 
+		VGravStory)
 
 	# PH location check
 	phVGrav 		= wLoad[:-1]*LBay/2
@@ -340,8 +351,9 @@ def design():
 		qualifiedZx 		= qualifiedIx[qualifiedIx['Zx'] > ZBeamPHReq]				# narrow list further down to only sufficient Zx
 		sortedWeight 		= qualifiedZx.sort_values(by=['W'])							# select lightest from list
 		selectedBeam 		= sortedWeight.iloc[:1]
-		(beamAg, beambf, beamtf, beamIx, beamZx) 	= getProp(selectedBeam)
-		(beamMn, beamMpr, beamVpr, beamVGrav) 		= calcStrength(selectedBeam, VGravStory)
+		(beamAg, beambf, beamtf, beamIx, beamZx) = getProp(selectedBeam)
+		(beamMn, beamMpr, beamVpr, beamVGrav) = calcStrength(selectedBeam, 
+			VGravStory)
 
 	# beam shear
 	beamAweb 		= beamAg - 2*(beamtf*beambf)
@@ -367,7 +379,8 @@ def design():
 		beamAweb 		= beamAg - 2*(beamtf*beambf)
 		beamVn 			= 0.9*beamAweb*0.6*Fy
 
-		(beamMn, beamMpr, beamVpr, beamVGrav) 	= calcStrength(selectedBeam, VGravStory)
+		(beamMn, beamMpr, beamVpr, beamVGrav) = calcStrength(selectedBeam, 
+			VGravStory)
 		
 		beamShearFail 	= beamVn < beamVpr
 
@@ -392,7 +405,7 @@ def design():
 		selectedRoofBeam 		= sortedWeight.iloc[:1]
 		(roofBeamAg, roofBeambf, roofBeamtf, roofBeamIx, roofBeamZx) = getProp(selectedRoofBeam)
 
-	(roofBeamMn, roofBeamMpr, roofBeamVpr, roofBeamVGrav) 	= calcStrength(selectedRoofBeam, VGravRoof)
+	(roofBeamMn, roofBeamMpr, roofBeamVpr, roofBeamVGrav) = calcStrength(selectedRoofBeam, VGravRoof)
 
 	# PH location check
 	phVGravRoof 		= wLoad[-1]*LBay/2

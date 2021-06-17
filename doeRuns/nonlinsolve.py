@@ -5,7 +5,7 @@ import sympy as sy
 gapRatio 	= 1.15
 TmRatio 	= 7.4
 T2Ratio 	= 1.05
-zeta  = 0.15
+zeta  = 0.1
 mu1In 		= 0.03
 
 g 		= 386.4
@@ -24,7 +24,6 @@ zetaRef = [0.02, 0.05, 0.10, 0.20, 0.30, 0.40, 0.50]
 BmRef	= [0.8, 1.0, 1.2, 1.5, 1.7, 1.9, 2.0]
 
 Bm 		= np.interp(zeta, zetaRef, BmRef)
-
 
 moatGap = math.ceil(g*(SaTm/Bm)*(Tm**2)*gapRatio/(4*pi**2))
 

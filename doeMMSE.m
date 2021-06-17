@@ -43,6 +43,7 @@ Ry          = isolFull.RI;
 zeta        = isolFull.zetaM;
 
 TmRatio     = isolFull.Tm./isolFull.Tshort;
+% TmRatio     = isolFull.Tm./(1.107/2.2815);
 
 collapsed   = (isolFull.collapseDrift1 | isolFull.collapseDrift2) ...
     | isolFull.collapseDrift3;
@@ -69,7 +70,7 @@ maxDrift    = max([isolFull.driftMax1, isolFull.driftMax2, isolFull.driftMax3], 
 
 % xFull       = [gapRatio, Ry];
 yFull       = collapsed;
-xFull       = [gapRatio, TmRatio, T2Ratio, Ry];
+xFull       = [gapRatio, TmRatio, zeta, Ry];
 % xFull       = [gapRatio, TmRatio, mu1Ratio, zeta, Ry];
 
 % limit to 90th quantile of gap ratios
@@ -119,7 +120,7 @@ hyp = minimize(hyp, @gp, -3000, inffunc, meanfunc, covfunc, likfunc, x, y);
 
 %% sequentially add points (option to update hyp)
 % Run optimization
-lPoints = 20;
+lPoints = 10;
 
 % Domain generation
 close all;
@@ -180,6 +181,17 @@ if (f == 2)
     meanplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xsOG, x1, x2)
     evolplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xsOG, x1, x2, k)
 end
+
+% write to csv input file
+fid = fopen('./doeRuns/inputs/bearingInput_zeta.csv','w');
+fprintf(fid, 'variable,value\n');
+fprintf(fid, 'S1,1.017\n');
+fprintf(fid, 'Ss,2.281\n');
+fprintf(fid, 'T2Ratio,1.09\n');
+fprintf(fid, 'mu1,0.04\n');
+formatSpec = 'gapRatio,%5.4f\nTmRatio,%5.4f\nzetaM,%5.4f\nRI,%5.4f';
+fprintf(fid, formatSpec, xSuggest(6,:));
+fclose(fid);
 %% domain mesher
 
 function xs     = remesh(x, f, xCenter, steps)

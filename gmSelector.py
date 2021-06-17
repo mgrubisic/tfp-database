@@ -28,12 +28,12 @@ pd.options.mode.chained_assignment = None  # default='warn', ignore SettingWithC
 
 def cleanGMs(gmDir, resultsCSV, actualS1, summaryStart=33, nSummary=100, scaledStart=144, nScaled=111, unscaledStart=258, nUnscaled=111):
 
-	# remove all DT2 VT2 files
-	folder 				= os.listdir(gmDir)
+	# # remove all DT2 VT2 files
+	# folder 				= os.listdir(gmDir)
 
-	for item in folder:
-		if item.endswith('.VT2') or item.endswith('.DT2'):
-			os.remove(os.path.join(gmDir,item))
+	# for item in folder:
+	# 	if item.endswith('.VT2') or item.endswith('.DT2'):
+	# 		os.remove(os.path.join(gmDir,item))
 
 	# load in sections of the sheet
 	summary 			= pd.read_csv(gmDir+resultsCSV, skiprows=summaryStart, nrows=nSummary)

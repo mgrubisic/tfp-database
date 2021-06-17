@@ -1,14 +1,16 @@
 ############################################################################
-#             	Design algorithm
+#             	Design algorithm (DOE)
 
 # Created by: 	Huy Pham
 # 				University of California, Berkeley
 
-# Date created:	July 2020
+# Date created:	June 2021
 
-# Description: 	Script designs TFP bearing given site parameters and desired stiffness and damping.
+# Description: 	Script designs TFP bearing given site parameters and desired stiffnesses.
 # 				Script also designs superstructure following ASCE 7-16 Ch.12 & 17 provisions
 #				Inputs rely on dictionary calling
+# 				Adapted for DOE study
+#               Constraints are placed on sensible design (mu2 <= 3*mu1), at the cost of not specifying damping
 
 # Open issues: 	(1) Rework beam and column selection using repeatable functions
 
@@ -18,7 +20,8 @@
 import numpy as np
 import math, cmath
 import pandas as pd
-import sys
+import sympy as sy
+sy.init_printing()
 
 ############################################################################
 #              Searcher utilities
@@ -64,7 +67,8 @@ def design():
 	ksi 	= kip/(inch**2)
 
 	# TFP Algorithm: Becker & Mahin
-	bearingParams = pd.read_csv('./inputs/bearingInput.csv', index_col=None, header=0)
+	bearingParams = pd.read_csv('./inputs/bearingInput_T2.csv', 
+		index_col=None, header=0)
 
 	# param is dictionary of all inputs. call with param['whatYouWant']
 	param 	= dict(zip(bearingParams.variable, bearingParams.value))
@@ -79,71 +83,135 @@ def design():
 	# from ASCE Ch. 17
 	zetaRef = [0.02, 0.05, 0.10, 0.20, 0.30, 0.40, 0.50]
 	BmRef	= [0.8, 1.0, 1.2, 1.5, 1.7, 1.9, 2.0]
+	
+	zetaGuess = param['zetaM']
 
-	Bm 		= np.interp(param['zetaM'], zetaRef, BmRef)
+	Ts 				= param['S1']/param['Ss']
+	param['Tm'] 	= param['TmRatio']*Ts
+	print('Tm: ', param['Tm'])
 
-	RMult 	= 1.1
+	SaTm 	= param['S1']/param['Tm']
 
-	Dm 		= g*param['S1']*param['Tm']/(4*pi**2*Bm)
-
-	x 		= Dm
-
-	xy		= 0.01*inch
-
-	muBad 	= True
-
-	while muBad:
-
-		if RMult > 10.0:
-			break
-
-		R2 		= RMult*param['R1']
-		R3 		= RMult*param['R1']
-
-		k0		= param['mu1']/xy
-		a 		= 1/(2*param['R1'])
-		b  		= 1/(R2 + R3)
+	T2 		= param['T2Ratio']*param['Tm']
+	print('T2: ', T2)
+	R2 		= T2**2*g/(8*pi**2)
+	R3 		= R2
+	
+	zetaBad = True
+	
+	while zetaBad:
 		
-		# x1 		= 2*R1*(mu2 - mu1)
-		# ke 		= (mu2 + b*(x - x1))/x
-		# We 		= 4*(mu2 - b*x1)*x - 4*(a-b)*x1**2 - 4*(k0 - a)*xy**2
-		# zetaE 	= We/(2*pi*ke*x**2)
-		# Te 		= 2*pi/(math.sqrt(ke/(1/g)))
-
-		kM 		= (2*pi/param['Tm'])**2 * (1/g)
-		Wm 		= param['zetaM']*(2*pi*kM*x**2)
-		x1 		= (a-b)**(-1/2)*cmath.sqrt(-Wm/4 + (kM - b)*x**2 - (k0 - a)*xy**2)
-		mu2 	= kM*x - b*(x-x1)
-		mu3 	= mu2
-		mu1 	= -x1/(2*param['R1']) + mu2
-
+		if zetaGuess > 0.20:
+			break
+		
+		# moat gap from GPML's ratio
+		Bm 		= np.interp(zetaGuess, zetaRef, BmRef)
+		moatGap = math.ceil(g*(SaTm/Bm)*(param['Tm']**2)*param['gapRatio']/(4*pi**2))
+		Dm 		= g*param['S1']*param['Tm']/(4*pi**2*Bm)
+			
+		# Bearing design starts here
+		x 		= Dm
+		# yield displ
+		xy		= 0.01*inch
+	
+	
+		# muguess will start from the LHS and grow outward +/- 0.03
+		a1 = np.arange(0.01, 0.04, 0.01)
+		a1 = np.repeat(a1,2)
+		a2 = [(-1)**i for i in range(len(a1))]
+		muTries = param['mu1']+np.multiply(a1,a2)
+		muTries = muTries[muTries > 0]
+		
+		# start with the initial read in
+		muTries = np.insert(muTries, 0, param['mu1'], axis = 0)
+		for mu1Try in muTries:
+			try:
+				mu1 = mu1Try
+				k0		= mu1/xy
+	
+				b  		= 1/(2*R2)
+			
+				kM 		= (2*pi/param['Tm'])**2 * (1/g)
+				Wm 		= zetaGuess*(2*pi*kM*x**2)
+				
+				mu2, R1 = sy.symbols('mu2 R1')
+				
+				# initial guesses will try to readjust for 10 attempts
+				attemptsGuess = 0
+				attemptsMax = 10
+				mu2Guess = 0.05
+				R1Guess = R2/2
+				
+				solset = None
+				
+				while attemptsGuess < attemptsMax:
+					try:
+						solset = sy.nsolve( [ (mu2 + 1/(2*R2)*(x - 2*R1*(mu2-mu1))) /x - kM,
+							4*(mu2 - 1/(2*R2)*(2*R1*(mu2-mu1)))*x \
+								- 4*(1/(2*R1) - 1/(2*R2))*(2*R1*(mu2-mu1))**2 \
+									- 4*(k0 - 1/(2*R1))*xy**2 - Wm],
+							[mu2, R1], [mu2Guess, R1Guess])
+					except ValueError:
+						attemptsGuess += 1
+						#print("Bad solve, try new starting guess for mu2...")
+						mu2Guess += 0.01
+						continue
+					else:
+						npsol = np.array(solset).astype(np.float64)
+						mu2 	= npsol[0].item()
+						R1 		= npsol[1].item()
+						mu3 	= mu2
+						break
+				# check to see if mu2 is positive
+				testMu2 = math.sqrt(mu2)
+			except (ValueError, TypeError) as e:
+				# print("Bad solve, trying a new mu1...")
+				continue
+			else:
+				break
+	
+	
+		# mu2 	= kM*x - b*(x-x1)
+		
+		# catch cases where we were unable to solve using mu1 guesses
+		try:
+			a 		= 1/(2*R1)
+			x1 		= (a-b)**(-1/2)*cmath.sqrt(-Wm/4 + (kM - b)*x**2 - (k0 - a)*xy**2)
+		except TypeError:
+			zetaBad = True
+			zetaGuess = zetaGuess + 0.01
+			continue
+		mu1 	= mu2 - x1/(2*R1)
+		
+	
 		ke 		= (mu2.real + b*(x - x1.real))/x
-		We 		= 4*(mu2.real - b*x1.real)*x - 4*(a-b)*x1.real**2 - 4*(k0 -a)*xy**2
+		We 		= (4*(mu2.real - b*x1.real)*x - 
+			4*(a-b)*x1.real**2 - 4*(k0 -a)*xy**2)
 		zetaE	= We/(2*pi*ke*x**2)
-		Te 		= 2*pi/(math.sqrt(ke/(1/g)))
-
+		Te 		= 2*pi/(cmath.sqrt(ke/(1/g)))
+	
 		muList 	= [mu1, mu2, mu3]
+		
+		# conditions for a sensible bearing
+		zetaBad = (mu2.real > 2.5*mu1.real) or (mu2.real < mu1.real) \
+			 or (R2 < 2*R1) or (R1 < 10)
+		zetaGuess = zetaGuess + 0.01
 
-		muBad 	= any(coeff.real < 0 for coeff in muList) or any(np.iscomplex(muList))
+	print('Final damping: ', zetaGuess)
 
-		RMult 	+= 0.1
-
-	# Abort if there are nonsensical results
+	# Invoke error if all reasonable bearings have been tried without success
 	if(any(coeff.real < 0 for coeff in muList) or any(np.iscomplex(muList))):
 		# sys.exit('Bearing solver incorrectly output friction coefficients...')
-		muList 	= [math.sqrt(coeff) for coeff in muList]	# invoke the ValueError or TypeError
+
+		# invoke the ValueError or TypeError
+		muList 	= [math.sqrt(coeff) for coeff in muList]	
 
 	else:
 		muList 		= [coeff.real for coeff in muList]
-		RList		= [param['R1'], R2, R3]
+		RList		= [R1, R2, R3]
 		mu1 		= mu1.real
 		mu2 		= mu2.real
 		mu3 		= mu3.real
-
-	# Since we are doing 2D analysis, we don't want to overdesign for torsion
-	Dtm 		= 1.0*Dm
-
-	moatGap 	= math.ceil(param['moatAmpli']*Dtm)
 
 	############################################################################
 	#              ASCE 7-16: Story forces
@@ -433,7 +501,7 @@ def design():
 		
 		colShearFail 	= colVn < colVpr
 
-	return(mu1, mu2, mu3, param['R1'], R2, R3, moatGap, selectedBeam, selectedRoofBeam, selectedCol)
+	return(mu1, mu2, mu3, R1, R2, R3, moatGap, selectedBeam, selectedRoofBeam, selectedCol)
 
 # if ran as standalone, display designs
 if __name__ == '__main__':
@@ -448,3 +516,5 @@ if __name__ == '__main__':
 	print(selectedRoofBeam)
 	print('Selected column:')
 	print(selectedCol)
+	print('Moat gap:')
+	print(moatGap)
