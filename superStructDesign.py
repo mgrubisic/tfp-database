@@ -404,7 +404,7 @@ def design():
 	for i in range(nFloor-2, -1, -1):
 		ratio[i] = (colMpr[i+1] + colMpr[i])/(2*beamMpr)
 		if (ratio[i] < 1.0):
-			print('SCWB check failed at floor ' + (nFloor+1) + ".")
+			print('SCWB check failed at floor ' + str(nFloor+1) + ".")
 
 	# column shear
 	colAweb 		= colAg - 2*(coltf*colbf)

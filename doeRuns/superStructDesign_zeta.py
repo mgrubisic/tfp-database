@@ -7,10 +7,12 @@
 # Date created:	June 2021
 
 # Description: 	Script designs TFP bearing given site parameters and desired stiffnesses.
+# 				Specifications for bearings: Tm, mu1, zeta. Design starts from R2
+# and solves for R1, mu2
 # 				Script also designs superstructure following ASCE 7-16 Ch.12 & 17 provisions
 #				Inputs rely on dictionary calling
 # 				Adapted for DOE study
-#               Constraints are placed on sensible design (mu2 <= 3*mu1), at the cost of not specifying damping
+#               Constraints are placed on sensible design (mu2 <= 3*mu1)
 
 # Open issues: 	(1) Rework beam and column selection using repeatable functions
 

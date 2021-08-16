@@ -473,12 +473,22 @@ def build():
 	# command: element TripleFrictionPendulum $eleTag $iNode $jNode $frnTag1 $frnTag2 $frnTag3 $vertMatTag $rotZMatTag $rotXMatTag $rotYMatTag $L1 $L2 $L3 $d1 $d2 $d3 $W $uy $kvt $minFv $tol
 	kvt 	= 0.01*kv
 	minFv 	= 1.0
-	element('TripleFrictionPendulum', 22, 17, 1, frn1ModelTag, frn2ModelTag, frn3ModelTag, fpsMatPTag, fpsMatMzTag, fpsMatMzTag, fpsMatMzTag, L1, L2, L3, d1, d2, d3, pOuter, uy, kvt, minFv, 1e-5)
-	element('TripleFrictionPendulum', 23, 18, 2, frn1ModelTag, frn2ModelTag, frn3ModelTag, fpsMatPTag, fpsMatMzTag, fpsMatMzTag, fpsMatMzTag, L1, L2, L3, d1, d2, d3, pInner, uy, kvt, minFv, 1e-5)
-	element('TripleFrictionPendulum', 24, 19, 3, frn1ModelTag, frn2ModelTag, frn3ModelTag, fpsMatPTag, fpsMatMzTag, fpsMatMzTag, fpsMatMzTag, L1, L2, L3, d1, d2, d3, pInner, uy, kvt, minFv, 1e-5)
-	element('TripleFrictionPendulum', 25, 20, 4, frn1ModelTag, frn2ModelTag, frn3ModelTag, fpsMatPTag, fpsMatMzTag, fpsMatMzTag, fpsMatMzTag, L1, L2, L3, d1, d2, d3, pOuter, uy, kvt, minFv, 1e-5)
+	element('TripleFrictionPendulum', 22, 17, 1, frn1ModelTag, frn2ModelTag, 
+		frn3ModelTag, fpsMatPTag, fpsMatMzTag, fpsMatMzTag, fpsMatMzTag, 
+		L1, L2, L3, d1, d2, d3, pOuter, uy, kvt, minFv, 1e-5)
+	element('TripleFrictionPendulum', 23, 18, 2, frn1ModelTag, frn2ModelTag, 
+		frn3ModelTag, fpsMatPTag, fpsMatMzTag, fpsMatMzTag, fpsMatMzTag, 
+		L1, L2, L3, d1, d2, d3, pInner, uy, kvt, minFv, 1e-5)
+	element('TripleFrictionPendulum', 24, 19, 3, frn1ModelTag, frn2ModelTag, 
+		frn3ModelTag, fpsMatPTag, fpsMatMzTag, fpsMatMzTag, fpsMatMzTag, 
+		L1, L2, L3, d1, d2, d3, pInner, uy, kvt, minFv, 1e-5)
+	element('TripleFrictionPendulum', 25, 20, 4, frn1ModelTag, frn2ModelTag, 
+		frn3ModelTag, fpsMatPTag, fpsMatMzTag, fpsMatMzTag, fpsMatMzTag, 
+		L1, L2, L3, d1, d2, d3, pOuter, uy, kvt, minFv, 1e-5)
 
-	element('TripleFrictionPendulum', 26, 21,22, frn1ModelTag, frn2ModelTag, frn3ModelTag, fpsMatPTag, fpsMatMzTag, fpsMatMzTag, fpsMatMzTag, L1, L2, L3, d1, d2, d3, pLc, uy, kvt, minFv, 1e-5)
+	element('TripleFrictionPendulum', 26, 21,22, frn1ModelTag, frn2ModelTag, 
+		frn3ModelTag, fpsMatPTag, fpsMatMzTag, fpsMatMzTag, fpsMatMzTag, 
+		L1, L2, L3, d1, d2, d3, pLc, uy, kvt, minFv, 1e-5)
 
 
 	# define leaning columns, all beam sizes
@@ -490,9 +500,12 @@ def build():
 
 	# p-Delta columns
 	# command: element('elasticBeamColumn', eleTag, *eleNodes, Area, E_mod, G_mod, Jxx, Iy, Iz, transfTag[, '-mass', massPerLength][, '-cMass'])
-	element('elasticBeamColumn', 30, 22, 23, ARigid, Es, Gs, J, IRigid, IRigid, colTransfTag)
-	element('elasticBeamColumn', 31, 25, 26, ARigid, Es, Gs, J, IRigid, IRigid, colTransfTag)
-	element('elasticBeamColumn', 32, 28, 29, ARigid, Es, Gs, J, IRigid, IRigid, colTransfTag)
+	element('elasticBeamColumn', 30, 22, 23, 
+		ARigid, Es, Gs, J, IRigid, IRigid, colTransfTag)
+	element('elasticBeamColumn', 31, 25, 26, 
+		ARigid, Es, Gs, J, IRigid, IRigid, colTransfTag)
+	element('elasticBeamColumn', 32, 28, 29, 
+		ARigid, Es, Gs, J, IRigid, IRigid, colTransfTag)
 
 	# Rotational hinge at leaning column joints via zeroLength elements
 	kLC = 1e-9*kip/inch
@@ -515,9 +528,12 @@ def build():
 
 	# define rigid 'diaphragm' at bottom layer
 	# command: element('elasticBeamColumn', eleTag, *eleNodes, Area, E_mod, G_mod, Jxx, Iy, Iz, transfTag[, '-mass', massPerLength][, '-cMass'])
-	element('elasticBeamColumn', 38, 1, 2, ARigid, Es, Gs, J, IRigid, IRigid, beamTransfTag)
-	element('elasticBeamColumn', 39, 2, 3, ARigid, Es, Gs, J, IRigid, IRigid, beamTransfTag)
-	element('elasticBeamColumn', 40, 3, 4, ARigid, Es, Gs, J, IRigid, IRigid, beamTransfTag)
+	element('elasticBeamColumn', 38, 1, 2, 
+		ARigid, Es, Gs, J, IRigid, IRigid, beamTransfTag)
+	element('elasticBeamColumn', 39, 2, 3, 
+		ARigid, Es, Gs, J, IRigid, IRigid, beamTransfTag)
+	element('elasticBeamColumn', 40, 3, 4, 
+		ARigid, Es, Gs, J, IRigid, IRigid, beamTransfTag)
 
 	# element('elasticBeamColumn', 41, 4,22, AgBeam, Es, Gs, J, IyBeam, IzBeam, beamTransfTag)
 	element('Truss', 41, 4, 22, ARigid, frameLinkTag)
@@ -553,9 +569,11 @@ def build():
 	# command: element zeroLengthImpact3D $tag $cNode $rNode $direction $initGap $frictionRatio $Kt $Kn $Kn2 $Delta_y $cohesion
 	# element('zeroLengthImpact3D', 51, 311, 312, dirWall, moatGap, muWall, KtWall, K1, K2, delY, cohesionTag)
 	# element('zeroLengthImpact3D', 52, 322, 321, dirWall, moatGap, muWall, KtWall, K1, K2, delY, cohesionTag)
-	element('zeroLengthImpact3D', 51, 312, 311, dirWall, moatGap, muWall, KtWall, K1, K2, delY, cohesionTag)
+	element('zeroLengthImpact3D', 51, 312, 311, 
+		dirWall, moatGap, muWall, KtWall, K1, K2, delY, cohesionTag)
 	# element('zeroLengthImpact3D', 52, 321, 322, dirWall, moatGap, muWall, KtWall, K1, K2, delY, cohesionTag)
-	element('zeroLengthImpact3D', 52, 322, 321, dirWall, moatGap, muWall, KtWall, K1, K2, delY, cohesionTag)
+	element('zeroLengthImpact3D', 52, 322, 321, 
+		dirWall, moatGap, muWall, KtWall, K1, K2, delY, cohesionTag)
 
 	# print("Model built!")
 	# plot_model()

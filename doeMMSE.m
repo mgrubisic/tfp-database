@@ -24,7 +24,8 @@ g           = 386.4;
 zetaRef     = [0.02, 0.05, 0.10, 0.20, 0.30, 0.40, 0.50];
 BmRef       = [0.8, 1.0, 1.2, 1.5, 1.7, 1.9, 2.0];
 
-isolFull.Tshort      = isolFull.S1/2.282;
+isolFull.Tshort      = (isolFull.S1)/2.282;
+% isolFull.Tshort      = (isolFull.S1.*isolFull.S1Ampli)/2.282;
 
 % Consider filtering out cases where the Tshort is smaller
 % to prevent distortion of TmRatio
@@ -51,26 +52,14 @@ collapsed   = (isolFull.collapseDrift1 | isolFull.collapseDrift2) ...
 collapsed   = double(collapsed);
 collapsed(collapsed==0)   = -1;
 
-% x should be all combinations of x1 and x2
-% y should be their respective resulting impact boolean
-% x           = [mu2Ratio, gapRatio, T2Ratio, zeta, Ry];
-% x           = [gapRatio, T2Ratio, mu2Ratio, Ry];
-% x           = [mu1Ratio, gapRatio, T2Ratio, zeta, Ry];
-% x           = [mu2Ratio, T2Ratio, zeta, Ry];
-% x           = [gapRatio, TmRatio, T2Ratio, zeta, Ry];
-% x           = [gapRatio, Ry];
-
-% conference paper:
-% x           = [gapRatio, T2Ratio, zeta, Ry];
-
 maxDrift    = max([isolFull.driftMax1, isolFull.driftMax2, isolFull.driftMax3], ...
     [], 2);
 
 %% Classification GP
 
-% xFull       = [gapRatio, Ry];
+xFull       = [gapRatio, TmRatio];
 yFull       = collapsed;
-xFull       = [gapRatio, TmRatio, zeta, Ry];
+% xFull       = [gapRatio, TmRatio, zeta, Ry];
 % xFull       = [gapRatio, TmRatio, mu1Ratio, zeta, Ry];
 
 % limit to 90th quantile of gap ratios
@@ -117,8 +106,7 @@ inffunc     = @infLaplace;
 hyp = minimize(hyp, @gp, -3000, inffunc, meanfunc, covfunc, likfunc, x, y);
 % hyp = minimize(hyp, @gp, -200, inffunc, meanfunc, covfunc, likfunc, x, y);
 
-
-%% sequentially add points (option to update hyp)
+%% sequentially add points (option to update hyp) (classification)
 % Run optimization
 lPoints = 10;
 
@@ -172,6 +160,9 @@ for i = 1:lPoints
     
 	% remesh to improve resolution of search
     xs      = remesh(xFull, f, xFound, steps);
+    
+%     % write DoE point to csv file
+%     writeInput(filepath, xNext)
 end
 warning('on')
 
@@ -182,16 +173,28 @@ if (f == 2)
     evolplot(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, xsOG, x1, x2, k)
 end
 
-% write to csv input file
-fid = fopen('./doeRuns/inputs/bearingInput_zeta.csv','w');
-fprintf(fid, 'variable,value\n');
-fprintf(fid, 'S1,1.017\n');
-fprintf(fid, 'Ss,2.281\n');
-fprintf(fid, 'T2Ratio,1.09\n');
-fprintf(fid, 'mu1,0.04\n');
-formatSpec = 'gapRatio,%5.4f\nTmRatio,%5.4f\nzetaM,%5.4f\nRI,%5.4f';
-fprintf(fid, formatSpec, xSuggest(6,:));
-fclose(fid);
+
+%% write input file
+
+function writeInput(filename, doePoint)
+
+    % randomly generate values within bounds
+    S1 = (1.3 - 0.8)*rand + 0.8;
+    S1Ampli = (2.25 - 1.0)*rand + 1.0;
+    mu1 = (0.05 - 0.01)*rand + 0.01;
+    R1 = (45 - 15)*rand + 15;
+    
+    % write csv
+    fid = fopen(filename,'w');
+    fprintf(fid, 'variable,value\n');
+    fprintf(fid, 'S1,%5.4f\n', S1);
+    fprintf(fid, 'S1Ampli,%5.4f\n', S1Ampli);
+    fprintf(fid, 'mu1,%5.4f\n', mu1);
+    fprintf(fid, 'R1,%5.4f\n', R1);
+    formatSpec = 'gapRatio,%5.4f\nTmRatio,%5.4f\nzetaM,%5.4f\nRI,%5.4f';
+    fprintf(fid, formatSpec, doePoint(1,:));
+    fclose(fid);
+end
 %% domain mesher
 
 function xs     = remesh(x, f, xCenter, steps)
@@ -345,48 +348,48 @@ function [MMSE, xNext] = fn_mmse_gpml(hyp, inffunc, meanfunc, covfunc, likfunc, 
 %     Wx          = 1./sqrt(2*pi*(sigE^2 + s2k)) .* ...
 %         exp((-1/2)*((exp(lp) - T).^2./sigE^2 + s2k.^2));
 
-%     % output mean and variance formulation
-%     T           = -1;
-%     pcol        = exp(lp);
-%     region5     = (pcol <= 0.055 & pcol >= 0.045);
-%     var5        = s2k(region5);
-%     topThresh   = ymu(region5) + sqrt(var5);
-%     
-%     region10    = (pcol >= 0.10);
-%     thresh10    = min(ymu(region10));
-%     
-%     if max(topThresh) <= thresh10
-%         disp('The 5% region is within +1 std of 10%.')
-%         disp(max(topThresh))
-%     end
-% 
-%     Wx          = 1./sqrt(2*pi*(sigE^2 + s2k)) .* ...
-%         exp((-1/2)*((ymu - T).^2./sigE^2 + s2k.^2));
-% 
-%     [MMSE, mmIdx]   = max(s2k.*Wx);
-%     xNext           = xs(mmIdx,:);
-   
-    % Latent formulation
-    % Latent variable is the mean passed through probit
+    % output mean and variance formulation
+    T           = -1;
     pcol        = exp(lp);
     region5     = (pcol <= 0.055 & pcol >= 0.045);
-    var5        = fs2(region5);
-    topThresh   = fmu(region5) + sqrt(var5);
+    var5        = s2k(region5);
+    topThresh   = ymu(region5) + sqrt(var5);
     
-    thresh10    = norminv(0.1);
+    region10    = (pcol >= 0.10);
+    thresh10    = min(ymu(region10));
     
     if max(topThresh) <= thresh10
         disp('The 5% region is within +1 std of 10%.')
         disp(max(topThresh))
     end
-    
-    T           = norminv(0.05);
 
-    Wx          = 1./sqrt(2*pi*(sigE^2 + fs2)) .* ...
-        exp((-1/2)*((fmu - T).^2./sigE^2 + fs2.^2));
-    
-    [MMSE, mmIdx]   = max(fs2.*Wx);
+    Wx          = 1./sqrt(2*pi*(sigE^2 + s2k)) .* ...
+        exp((-1/2)*((ymu - T).^2./sigE^2 + s2k.^2));
+
+    [MMSE, mmIdx]   = max(s2k.*Wx);
     xNext           = xs(mmIdx,:);
+   
+    % % Latent formulation
+    % % Latent variable is the mean passed through probit
+    % pcol        = exp(lp);
+    % region5     = (pcol <= 0.055 & pcol >= 0.045);
+    % var5        = fs2(region5);
+    % topThresh   = fmu(region5) + sqrt(var5);
+    
+    % thresh10    = norminv(0.1);
+    
+    % if max(topThresh) <= thresh10
+    %     disp('The 5% region is within +1 std of 10%.')
+    %     disp(max(topThresh))
+    % end
+    
+    % T           = norminv(0.05);
+
+    % Wx          = 1./sqrt(2*pi*(sigE^2 + fs2)) .* ...
+    %     exp((-1/2)*((fmu - T).^2./sigE^2 + fs2.^2));
+    
+    % [MMSE, mmIdx]   = max(fs2.*Wx);
+    % xNext           = xs(mmIdx,:);
     
 %     % find subset with probability of failure around 5%
 %     Hk      = xs((exp(lp) <= 0.07) & (exp(lp) >= 0.03),:);

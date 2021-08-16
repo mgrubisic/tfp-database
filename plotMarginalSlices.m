@@ -50,7 +50,9 @@ function plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, ...
         end
     
     [a,b,~,~,lp] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, t, ones(n, 1));
-    
+
+    pf = exp(lp);
+
 %     v3  = [midX(3)-10*stepX(3) midX(3) midX(3)+10*stepX(3)];
 
     vFix  = [midX(fixIdx)-10*stepX(fixIdx) ...
@@ -108,7 +110,8 @@ function plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, ...
         plot(xPlot(notIdx, xIdx), yPlot(notIdx), '+', 'MarkerEdgeColor', [0 0.4470 0.7410], 'MarkerSize', 10); 
         
         % put vertical line where 5% collapse is (= collapse eval of -0.90)
-        [~, idx] = min(abs(a(idc) + 0.90));
+        [~, idx] = min(abs(pf(idc) - 0.05));
+        % [~, idx] = min(abs(a(idc) + 0.90));
         xl = xline(pts(idx), '-.k', {'5\%', 'collapse'}, 'fontsize', 20);
         xl.Interpreter = 'latex';
         

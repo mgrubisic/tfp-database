@@ -45,7 +45,8 @@ def cleanGMs(gmDir, resultsCSV, actualS1, summaryStart=33, nSummary=100, scaledS
 	Ss 									= 2.2815
 	Tshort								= actualS1/Ss
 	targetSpectrum 						= scaledSpectra[['Period (sec)']]
-	targetSpectrum['Target pSa (g)'] 	= np.where(targetSpectrum['Period (sec)'] < Tshort, Ss, actualS1/targetSpectrum['Period (sec)'])
+	targetSpectrum['Target pSa (g)'] 	= np.where(targetSpectrum['Period (sec)'] < Tshort, 
+		Ss, actualS1/targetSpectrum['Period (sec)'])
 	# selectionScaledSpectra				= scaledSpectra[selectionGMs]
 
 	# calculate desired target spectrum average (0.2*Tm, 1.5*Tm)

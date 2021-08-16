@@ -7,6 +7,8 @@
 # Date created:	June 2021
 
 # Description: 	Script designs TFP bearing given site parameters and desired stiffnesses.
+# 				Specifications for bearings: Tm, mu1, R2. Design starts from zeta
+# and solves for R1, mu2
 # 				Script also designs superstructure following ASCE 7-16 Ch.12 & 17 provisions
 #				Inputs rely on dictionary calling
 # 				Adapted for DOE study
