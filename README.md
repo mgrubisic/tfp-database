@@ -1,5 +1,6 @@
-# frolic-fauna
+# tfp-database
 OpenSeesPy model of triple friction pendulum isolated steel moment frame, packaged for EQ database.
+Additional inverse designing capabilities based off of GPML in progress.
 
 buildModel.py: Construct the model
 
