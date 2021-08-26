@@ -132,6 +132,17 @@ def runGM(gmFilename, gmDefScale):
 	bm.refix(4, "unfix")
 	bm.refix(22, "unfix")
 
+	# lambdaN 	= eigen(nEigenJ);		# eigenvalue analysis for nEigenJ modes
+	# lambda1 	= lambdaN[0];			# eigenvalue mode i = 1
+	# lambda2		= lambdaN[1];			# eigenvalue mode j = 2
+	# omega1 		= math.sqrt(lambda1)	# w1 (1st mode circular frequency)
+	# omega2 		= math.sqrt(lambda2)	# w2 (2nd mode circular frequency)
+	# T1 			= 2*math.pi/omega1 		# 1st mode period of the structure
+	# T2 			= 2*math.pi/omega2 		# 2nd mode period of the structure
+	# print("T1 = ", T1, " s")			# display the first mode period in the command window
+	# print("T2 = ", T2, " s")			# display the first mode period in the command window
+
+
 	# Rayleigh damping to the superstructure only
 	regTag 		= 80
 	zetaTarget 	= 0.05
