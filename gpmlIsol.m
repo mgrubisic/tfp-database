@@ -53,10 +53,10 @@ collapsed   = double(collapsed);
 % x           = [gapRatio, T2Ratio, mu2Ratio, Ry];
 % x           = [mu1Ratio, gapRatio, T2Ratio, zeta, Ry];
 % x           = [mu2Ratio, T2Ratio, zeta, Ry];
-x           = [gapRatio, TmRatio, T2Ratio, zeta, Ry];
+% x           = [gapRatio, TmRatio, T2Ratio, zeta, Ry];
 
 % conference paper:
-% x           = [gapRatio, T2Ratio, zeta, Ry];
+x           = [gapRatio, T2Ratio, zeta, Ry];
 
 
 y           = collapsed;
@@ -85,33 +85,33 @@ meanfunc = {@meanSum, {@meanLinear, @meanConst}}; hyp.mean = [zeros(1,f) 0]';
 covfunc     = @covSEard; ell = 1.0; sf = 1.0; hyp.cov = log([ell*ones(1,f) sf]);
 
 % % Logit regression
-% likfunc     = @likLogistic;
-% inffunc     = @infLaplace;
-
-% Probit regression
-likfunc     = @likErf;
+likfunc     = @likLogistic;
 inffunc     = @infLaplace;
 
+% Probit regression
+% likfunc     = @likErf;
+% inffunc     = @infLaplace;
+
 % conference paper:
-% hyp = minimize(hyp, @gp, -3000, inffunc, meanfunc, covfunc, likfunc, x, y);
-hyp = minimize(hyp, @gp, -200, inffunc, meanfunc, covfunc, likfunc, x, y);
+hyp = minimize(hyp, @gp, -1000, inffunc, meanfunc, covfunc, likfunc, x, y);
+% hyp = minimize(hyp, @gp, -200, inffunc, meanfunc, covfunc, likfunc, x, y);
 
 %% Plotting
 close all
 % Goal: for 3 values of T2 ratio, plot gapRatio vs. TmRatio
 % plotContour(constIdx, xIdx, yIdx, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 % conference paper:
-plotContour(3, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
+% plotContour(3, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
-% plotContour(1, 2, 3, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
+plotContour(4, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
 % % Goal: set T2 ratio to median, fix three values damping ratios, plot marginal for
 % % gap ratio (set x1, fix x3, plot x2)
 % plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 % conference paper:
-plotMarginalSlices(3, 1, 4, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
+% plotMarginalSlices(2, 1, 3, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
-% plotMarginalSlices(5, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
+plotMarginalSlices(4, 1, 2, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 
 %% Old cost regression
 % Goal: get a design space of qualifying probs of failure, then pick one
@@ -151,6 +151,7 @@ plotMarginalSlices(3, 1, 4, x, y, hyp, meanfunc, covfunc ,inffunc, likfunc)
 %     coefVec, coef0, hyp, meanfunc, covfunc, inffunc, likfunc);
 
 %% Cost brute force: grid calculation
+% hardcoded for [gapRatio, TmRatio, T2Ratio, zeta, Ry]
 
 steelCoefs      = steelCost(isolDat);
 probDesired     = 0.05;

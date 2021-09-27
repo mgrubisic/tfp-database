@@ -112,7 +112,10 @@ function plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, ...
         % put vertical line where 5% collapse is (= collapse eval of -0.90)
         [~, idx] = min(abs(pf(idc) - 0.05));
         % [~, idx] = min(abs(a(idc) + 0.90));
-        xl = xline(pts(idx), '-.k', {'5\%', 'collapse'}, 'fontsize', 20);
+        xl = xline(pts(idx), '-.k', {'5\%', 'collapse'}, 'fontsize', 10, 'Interpreter', 'latex');
+        [~, idx] = min(abs(pf(idc) - 0.1));
+        % [~, idx] = min(abs(a(idc) + 0.90));
+        xl = xline(pts(idx), '-.r', {'10\%', 'collapse'}, 'fontsize', 10, 'Interpreter', 'latex');
         xl.Interpreter = 'latex';
         
         xlabel('Gap ratio', 'fontsize', 14, 'Interpreter','latex')
