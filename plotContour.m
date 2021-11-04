@@ -66,19 +66,24 @@ function plotContour(constIdx, xIdx, yIdx, x, y, ...
         notIdx = yPlot == -1;
         
         hold on;
-        plot(xPlot(collapsedIdx,xIdx), xPlot(collapsedIdx,yIdx), 'x', 'MarkerEdgeColor', [0.8500 0.3250 0.0980]); 
-        plot(xPlot(notIdx,xIdx), xPlot(notIdx,yIdx), '+', 'MarkerEdgeColor', [0 0.4470 0.7410]); 
+        plot(xPlot(collapsedIdx,xIdx), xPlot(collapsedIdx,yIdx), 'x', ...
+            'MarkerEdgeColor', [0.8500 0.3250 0.0980], 'linewidth',2.5, 'MarkerSize', 20); 
+        plot(xPlot(notIdx,xIdx), xPlot(notIdx,yIdx), '+', ...
+            'MarkerEdgeColor', [0 0.4470 0.7410], 'linewidth',2.5, 'MarkerSize', 20); 
+        
+        extraInputs = {'Interpreter','latex','fontsize',18}; % name, value pairs
+        set(gca,'fontsize',18)
         
 %         xlabel('Gap ratio','Interpreter','latex')
 %         ylabel('$T_M$ ratio','Interpreter','latex')
-        xlabel('Gap ratio','Interpreter','latex')
-        ylabel('$T_M$ ratio','Interpreter','latex')
-        [C, h] = contour(tempX, tempY, reshape(exp(lp), size(tempX)), [0.0:0.05:1.0]);
-        v = [0.05, 0.5, 0.95];
-        clabel(C,h,v)
+        xlabel('Gap ratio', extraInputs{:})
+        ylabel('$T_2$ ratio', extraInputs{:})
+        [C, h] = contour(tempX, tempY, reshape(exp(lp), size(tempX)), [0.1:0.1:0.9]);
+        v = [0.1, 0.5, 0.9];
+        clabel(C,h,v, extraInputs{:})
 %         clabel(C,h)
         colorbar
-        legend('Collapse', 'No collapse', '$P(Collapse)$', 'Interpreter', 'latex')
+        legend('Collapse', 'No collapse', '$P(Collapse)$', extraInputs{:})
         
     end
 %     sgtitle('Probability of collapse at $R_y$ values', 'Interpreter', 'LaTeX')

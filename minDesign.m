@@ -28,13 +28,12 @@ function [designSpace, designPoint, designFailureSD] = minDesign(probDesired, st
     end
     
     % higher resolution for gapRatio
-    gridVec{1} = linspace(0.02,0.04,steps+1);
+    gridVec{1} = linspace(0.8,1.3,steps+1);
     
     t   = transpose(combvec(gridVec{:}));
     n   = length(t);
     
-    [~,b,~,~,lp] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, ...
-        x, y, t, ones(n, 1));
+    [~,b,~,~,lp] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, x, y, t, ones(n, 1));
     
     minSpace    = [t exp(lp)];
     

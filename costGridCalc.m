@@ -10,6 +10,8 @@
 % force cost calculation
 
 % Open issues: 	(1) gp could be parallelized for fine grids
+%               (2) currently hardcoded for
+%               [gapRatio, TmRatio, T2Ratio, zeta, Ry];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

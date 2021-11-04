@@ -109,18 +109,26 @@ function plotMarginalSlices(constIdx, xIdx, fixIdx, x, y, ...
         plot(xPlot(collapsedIdx, xIdx), yPlot(collapsedIdx), 'x', 'MarkerEdgeColor', [0.8500 0.3250 0.0980], 'MarkerSize', 10); 
         plot(xPlot(notIdx, xIdx), yPlot(notIdx), '+', 'MarkerEdgeColor', [0 0.4470 0.7410], 'MarkerSize', 10); 
         
+        extraInputs = {'Interpreter','latex','fontsize',18}; % name, value pairs
+        set(gca,'fontsize',18)
+        
         % put vertical line where 5% collapse is (= collapse eval of -0.90)
         [~, idx] = min(abs(pf(idc) - 0.05));
         % [~, idx] = min(abs(a(idc) + 0.90));
-        xl = xline(pts(idx), '-.k', {'5\%', 'collapse'}, 'fontsize', 20);
+%         xl = xline(pts(idx), '-.k', {'5\%', 'collapse'}, extraInputs{:});
+        xl = xline(pts(idx), '-.k', {'5\%', 'collapse', pts(idx)}, extraInputs{:});
+        [~, idx] = min(abs(pf(idc) - 0.1));
+        % [~, idx] = min(abs(a(idc) + 0.90));
+%         xl = xline(pts(idx), '-.r', {'10\%', 'collapse'}, extraInputs{:});
+        xl = xline(pts(idx), '-.r', {'10\%', 'collapse', pts(idx)}, extraInputs{:}, 'LabelHorizontalAlignment', 'left');
         xl.Interpreter = 'latex';
         
-        xlabel('Gap ratio', 'fontsize', 14, 'Interpreter','latex')
+        xlabel('Gap ratio', extraInputs{:})
 %         ylabel(['$T_2$ ratio = ', num2str(vFix(i),3)], 'Interpreter','latex')
 %         xlabel('$T_M$ ratio', 'fontsize', 14, 'Interpreter','latex')
-        ylabel('Collapse prediction', 'fontsize', 14, 'Interpreter','latex')
-        legend('Standard deviation', 'Collapse prediction', 'Collapse', 'No collapse', 'fontsize', 18, 'Interpreter','latex')
-        set(gca,'FontSize', 18)
+        ylabel('Collapse prediction', extraInputs{:})
+        legend('Standard deviation', 'Collapse prediction', 'Collapse', 'No collapse', ...
+            extraInputs{:})
         yticks([-1 0 1])
         xlim([minX(xIdx) maxX(xIdx)])
         
