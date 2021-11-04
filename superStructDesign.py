@@ -25,6 +25,8 @@ import sys
 ############################################################################
 
 def getProp(shape):
+	if (len(shape) == 0):
+		raise IndexError('No shape fits the requirements.')
 	Zx 		= float(shape.iloc[0]['Zx'])
 	Ag 		= float(shape.iloc[0]['A'])
 	Ix 		= float(shape.iloc[0]['Ix'])
@@ -64,7 +66,8 @@ def design():
 	ksi 	= kip/(inch**2)
 
 	# TFP Algorithm: Becker & Mahin
-	bearingParams = pd.read_csv('./inputs/bearingInput.csv', index_col=None, header=0)
+	bearingParams = pd.read_csv('./inputs/bearingInput.csv', 
+		index_col=None, header=0)
 
 	# param is dictionary of all inputs. call with param['whatYouWant']
 	param 	= dict(zip(bearingParams.variable, bearingParams.value))
@@ -124,7 +127,7 @@ def design():
 
 		muList 	= [mu1, mu2, mu3]
 
-		muBad 	= any(coeff.real < 0 for coeff in muList) or any(np.iscomplex(muList))
+		muBad 	= any(coeff.real < 0.01 for coeff in muList) or any(np.iscomplex(muList))
 
 		RMult 	+= 0.1
 

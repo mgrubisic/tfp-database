@@ -56,7 +56,7 @@ import random
 resultsDf 			= None
 
 # generate LHS input sets
-numRuns 						= 3
+numRuns 						= 400
 inputVariables, inputValues 	= LHS.generateInputs(numRuns)
 
 # filter GMs, then get ground motion database list
@@ -88,7 +88,8 @@ for index, row in enumerate(inputValues):
 
 	# scaler for GM needs to go here
 	actualS1 		= param['S1']*param['S1Ampli']
-	gmDatabase, specAvg 	= gmSelector.cleanGMs(gmPath, PEERSummary, actualS1, 32, 133, 176, 111, 290, 111)
+	gmDatabase, specAvg 	= gmSelector.cleanGMs(gmPath, PEERSummary, actualS1,
+		param['S1Ampli'], 32, 133, 176, 111, 290, 111)
 
 	# for each input file, run a random GM in the database
 	# with random.randrange(len(gmDatabase.index)) as ind:
@@ -107,6 +108,9 @@ for index, row in enumerate(inputValues):
 		continue
 	except TypeError:
 		print('Bearing solver returned complex friction coefficients. Skipping...')
+		continue
+	except IndexError:
+		print('SCWB check failed, no shape exists for design. Skipping...')
 		continue
 
 	resultsHeader, thisRun 	= postprocessing.failurePostprocess(filename, scaleFactor, specAvg, runStatus, Tfb)		# add run results to holder df
