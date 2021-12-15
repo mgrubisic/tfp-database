@@ -47,7 +47,7 @@ def cleanGMs(gmDir, resultsCSV, actualS1, S1Ampli, summaryStart=33, nSummary=100
 	Tshort		= actualS1/actualSs
 	targetSpectrum 						= scaledSpectra[['Period (sec)']]
 	targetSpectrum['Target pSa (g)'] 	= np.where(targetSpectrum['Period (sec)'] < Tshort, 
-		Ss, actualS1/targetSpectrum['Period (sec)'])
+		actualSs, actualS1/targetSpectrum['Period (sec)'])
 	# selectionScaledSpectra				= scaledSpectra[selectionGMs]
 
 	# calculate desired target spectrum average (0.2*Tm, 1.5*Tm)
@@ -91,7 +91,7 @@ def cleanGMs(gmDir, resultsCSV, actualS1, S1Ampli, summaryStart=33, nSummary=100
 	for earthquake in uniqEqs:
 		matchingEqs 						= eligFreq[eligFreq[' Earthquake Name'] == earthquake]
 		matchingEqs['scaleDifference'] 		= abs(matchingEqs['avgSpectrumScaleFactor'] - 1.0)
-		leastScaled 						= matchingEqs.sort_values(by=['scaleDifference']).iloc[:3]
+		leastScaled 						= matchingEqs.sort_values(by=['scaleDifference']).iloc[:3] # take 3 least scaled ones
 		#leastScaled 						= matchingEqs[matchingEqs['scaleDifference'] == min(matchingEqs['scaleDifference'])]
 
 		if finalGM is None:

@@ -330,8 +330,8 @@ def build():
 	uniaxialMaterial('Elastic', torsionSecTag, J)
 
 	# Fiber section parameters
-	nfw			= 16		# number of fibers in web
-	nff			= 64		# number of fibers in each flange
+	nfw			= 4		# number of fibers in web
+	nff			= 8		# number of fibers in each flange
 
 	# column section: fiber wide flange section
 	# command:  section('WFSection2d', secTag, matTag, d, tw, bf, tf, Nfw, Nff)

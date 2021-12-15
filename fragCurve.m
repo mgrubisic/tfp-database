@@ -20,8 +20,8 @@ IM = [1, 1.5, 2.0];
 % num_collapse = [2, 25, 43]; 
 
 % higher res
-num_collapse = [3, 25, 43];
-num_gms = [54, 54, 54];
+num_collapse = [0, 2, 2];
+num_gms = [59, 50, 44];
 
 % estimate fragility function using MLE method
 [theta_hat_mle, beta_hat_mle] = fn_mle(IM, num_gms, num_collapse);
