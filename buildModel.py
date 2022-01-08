@@ -317,64 +317,65 @@ def build():
 	hingeBeamTag 	= 91
 	hingeRoofTag 	= 92
 
-
 	# define material: Steel01
 	# command: uniaxialMaterial('Steel01', matTag, Fy, E0, b, a1, a2, a3, a4)
-	Fy 	= 50*ksi		# yield strength
-	Es 	= 29000*ksi		# initial elastic tangent
-	nu 	= 0.3			# Poisson's ratio
-	Gs 	= Es/2/(1 + nu) # Torsional stiffness modulus
-	J 	= 1e10			# Set large torsional stiffness
-	b  	= 0.1			# hardening ratio
-	uniaxialMaterial('Steel01', steelMatTag, Fy, Es, b)
+	Fy  = 50*ksi        # yield strength
+	Es  = 29000*ksi     # initial elastic tangent
+	nu  = 0.2          # Poisson's ratio
+	Gs  = Es/(1 + nu) # Torsional stiffness modulus
+	J   = 1e10          # Set large torsional stiffness
+	b   = 0.1           # hardening ratio
+
+	R0 = 15
+	cR1 = 0.925
+	cR2 = 0.15
+	# uniaxialMaterial('Steel01', steelMatTag, Fy, Es, b)
 	uniaxialMaterial('Elastic', torsionSecTag, J)
+	uniaxialMaterial('Steel02', steelMatTag, Fy, Es, b, R0, cR1, cR2)
 
 	# Fiber section parameters
 	nfw			= 4		# number of fibers in web
-	nff			= 8		# number of fibers in each flange
+	nff			= 4		# number of fibers in each flange
 
 	# column section: fiber wide flange section
-	# command:  section('WFSection2d', secTag, matTag, d, tw, bf, tf, Nfw, Nff)
-	section('WFSection2d', colFiberTag, steelMatTag, dCol, twCol, bfCol, tfCol, nfw, nff)
-	section('Aggregator', colSecTag, torsionSecTag, 'T', '-section', colFiberTag)
+	section('Fiber', colSecTag, '-GJ', Gs*J)
+	patch('rect', steelMatTag, 1, nff,  dCol/2-tfCol, -bfCol/2, dCol/2, bfCol/2)
+	patch('rect', steelMatTag, 1, nff, -dCol/2, -bfCol/2, -dCol/2+tfCol, bfCol/2)
+	patch('rect', steelMatTag, nfw, 1, -dCol/2+tfCol, -twCol, dCol/2-tfCol, twCol)
 
-	# # beam section: fiber wide flange section
-	# # command:  section('WFSection2d', secTag, matTag, d, tw, bf, tf, Nfw, Nff)
-	# section('WFSection2d', beamFiberTag, steelMatTag, dBeam, twBeam, bfBeam, tfBeam, nfw, nff)
-	# section('Aggregator', beamSecTag, torsionSecTag, 'T', '-section', beamFiberTag)
+	# beam section: fiber wide flange section
+	section('Fiber', beamSecTag, '-GJ', Gs*J)
+	patch('rect', steelMatTag, 1, nff,  dBeam/2-tfBeam, -bfBeam/2, dBeam/2, bfBeam/2)
+	patch('rect', steelMatTag, 1, nff, -dBeam/2, -bfBeam/2, -dBeam/2+tfBeam, bfBeam/2)
+	patch('rect', steelMatTag, nfw, 1, -dBeam/2+tfBeam, -twBeam, dBeam/2-tfBeam, twBeam)
 
-	# column section: uniaxial section
-	# colMatFlexTag 	= 6
-	# colMatAxialTag 	= 7
-	# EICol 			= Es*IzCol				# EI, for moment-curvature relationship
-	# EACol 			= Es*AgCol				# EA, for axial-force-strain relationship
-	# MyCol 			= SxCol*Fy				# yield moment kip*in
-	# bCol 			= b						# strain-hardening ratio (ratio between post-yield tangent and initial elastic tangent)
-	# uniaxialMaterial('Steel01', colMatFlexTag, MyCol, EICol, bCol) 				# bilinear behavior for flexure
-	# uniaxialMaterial('Elastic', colMatAxialTag, EACol)							# this is not used as a material, this is an axial-force-strain response
-	# section('Aggregator', colSecTag, colMatAxialTag, 'P', colMatFlexTag, 'Mz', torsionSecTag, 'T')	# combine axial and flexural behavior into one section (no P-M interaction here)
+	# roof beam section: fiber wide flange section
+	section('Fiber', roofSecTag, '-GJ', Gs*J)
+	patch('rect', steelMatTag, 1, nff,  dRoofBeam/2-tfRoofBeam, -bfRoofBeam/2, dRoofBeam/2, bfRoofBeam/2)
+	patch('rect', steelMatTag, 1, nff, -dRoofBeam/2, -bfRoofBeam/2, -dRoofBeam/2+tfRoofBeam, bfRoofBeam/2)
+	patch('rect', steelMatTag, nfw, 1, -dRoofBeam/2+tfRoofBeam, -twRoofBeam, dRoofBeam/2-tfRoofBeam, twRoofBeam)
 
-	# roof beam section: uniaxial section
-	roofMatFlexTag 	= 6
-	roofMatAxialTag = 7
-	EIRoof 			= Es*IzRoofBeam				# EI, for moment-curvature relationship
-	EARoof 			= Es*AgRoofBeam				# EA, for axial-force-strain relationship
-	MyRoof 			= SxRoofBeam*Fy				# yield moment kip*in
-	bRoof 			= b							# strain-hardening ratio (ratio between post-yield tangent and initial elastic tangent)
-	uniaxialMaterial('Steel01', roofMatFlexTag, MyRoof, EIRoof, bRoof) 				# bilinear behavior for flexure
-	uniaxialMaterial('Elastic', roofMatAxialTag, EARoof)							# this is not used as a material, this is an axial-force-strain response
-	section('Aggregator', roofSecTag, roofMatAxialTag, 'P', roofMatFlexTag, 'Mz', torsionSecTag, 'T')	# combine axial and flexural behavior into one section (no P-M interaction here)
+	# # roof beam section: uniaxial section
+	# roofMatFlexTag 	= 6
+	# roofMatAxialTag = 7
+	# EIRoof 			= Es*IzRoofBeam				# EI, for moment-curvature relationship
+	# EARoof 			= Es*AgRoofBeam				# EA, for axial-force-strain relationship
+	# MyRoof 			= SxRoofBeam*Fy				# yield moment kip*in
+	# bRoof 			= b							# strain-hardening ratio (ratio between post-yield tangent and initial elastic tangent)
+	# uniaxialMaterial('Steel01', roofMatFlexTag, MyRoof, EIRoof, bRoof) 				# bilinear behavior for flexure
+	# uniaxialMaterial('Elastic', roofMatAxialTag, EARoof)							# this is not used as a material, this is an axial-force-strain response
+	# section('Aggregator', roofSecTag, roofMatAxialTag, 'P', roofMatFlexTag, 'Mz', torsionSecTag, 'T')	# combine axial and flexural behavior into one section (no P-M interaction here)
 
-	# beam section: uniaxial section
-	beamMatFlexTag 	= 8
-	beamMatAxialTag = 9
-	EIBeam 			= Es*IzBeam				# EI, for moment-curvature relationship
-	EABeam 			= Es*AgBeam				# EA, for axial-force-strain relationship
-	MyBeam 			= SxBeam*Fy				# yield moment kip*in
-	bBeam 			= b						# strain-hardening ratio (ratio between post-yield tangent and initial elastic tangent)
-	uniaxialMaterial('Steel01', beamMatFlexTag, MyBeam, EIBeam, bBeam) 				# bilinear behavior for flexure
-	uniaxialMaterial('Elastic', beamMatAxialTag, EABeam)							# this is not used as a material, this is an axial-force-strain response
-	section('Aggregator', beamSecTag, beamMatAxialTag, 'P', beamMatFlexTag, 'Mz', torsionSecTag, 'T')	# combine axial and flexural behavior into one section (no P-M interaction here)
+	# # beam section: uniaxial section
+	# beamMatFlexTag 	= 8
+	# beamMatAxialTag = 9
+	# EIBeam 			= Es*IzBeam				# EI, for moment-curvature relationship
+	# EABeam 			= Es*AgBeam				# EA, for axial-force-strain relationship
+	# MyBeam 			= SxBeam*Fy				# yield moment kip*in
+	# bBeam 			= b						# strain-hardening ratio (ratio between post-yield tangent and initial elastic tangent)
+	# uniaxialMaterial('Steel01', beamMatFlexTag, MyBeam, EIBeam, bBeam) 				# bilinear behavior for flexure
+	# uniaxialMaterial('Elastic', beamMatAxialTag, EABeam)							# this is not used as a material, this is an axial-force-strain response
+	# section('Aggregator', beamSecTag, beamMatAxialTag, 'P', beamMatFlexTag, 'Mz', torsionSecTag, 'T')	# combine axial and flexural behavior into one section (no P-M interaction here)
 
 	# General elastic section
 	# command: section('Elastic', secTag, E, A, Iz, Iy, G, J, alphaY=0.0, alphaZ=0.0)
@@ -436,9 +437,13 @@ def build():
 
 	# command:  beamIntegration(type, tag, *args)
 	# args:	 beamIntegration('HingeRadau', secI, lpI, secJ, lpJ, secE)
-	beamIntegration('HingeRadau', hingeColTag, colSecTag, 0.1, colSecTag, 0.1, elasticColSecTag)
-	beamIntegration('HingeRadau', hingeBeamTag, beamSecTag, 0.1, beamSecTag, 0.1, elasticBeamSecTag)
-	beamIntegration('HingeRadau', hingeRoofTag, roofSecTag, 0.1, roofSecTag, 0.1, elasticRoofBeamSecTag)
+	# args:	 beamIntegration('Lobatto', tag, secTag, numInt)
+	beamIntegration('Lobatto', hingeColTag, colSecTag, 4)
+	beamIntegration('Lobatto', hingeBeamTag, beamSecTag, 4)
+	beamIntegration('Lobatto', hingeRoofTag, roofSecTag, 4)
+	# beamIntegration('HingeRadau', hingeColTag, colSecTag, 0.1, colSecTag, 0.1, elasticColSecTag)
+	# beamIntegration('HingeRadau', hingeBeamTag, beamSecTag, 0.1, beamSecTag, 0.1, elasticBeamSecTag)
+	# beamIntegration('HingeRadau', hingeRoofTag, roofSecTag, 0.1, roofSecTag, 0.1, elasticRoofBeamSecTag)
 
 	# create force-based beam-column elements, with BeamWithHinges integration tags
 	# command:  element('forceBeamColumn', eleTag, iNode, jNode, transfTag, integrationTag, '-iter', maxIter=10, tol=1e-12, '-mass', mass=0.0)
