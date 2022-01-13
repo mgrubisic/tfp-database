@@ -158,7 +158,7 @@ def design():
 	hsx 	= np.array([13.0*ft, 13.0*ft, 13.0*ft])					# Column heights
 	wLoad 	= np.array([2.72*kip/ft, 2.72*kip/ft, 1.94*kip/ft]) 	# Floor line loads
 
-	Vb 		= (Dm * ke * Ws)/nFrames
+	Vb 		= (x * ke * Ws)/nFrames
 	Vst 	= (Vb*(Ws/W)**(1 - 2.5*zetaE))
 	Vs 		= (Vst/param['RI'])
 	F1 		= (Vb - Vst)/param['RI']
