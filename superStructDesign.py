@@ -151,7 +151,7 @@ def design():
     # Since we are doing 2D analysis, we don't want to overdesign for torsion
     Dtm         = 1.0*Dm
 
-    moatGap     = math.ceil(param['moatAmpli']*Dtm)
+    moatGap     = param['moatAmpli']*Dtm
 
     ############################################################################
     #              ASCE 7-16: Story forces

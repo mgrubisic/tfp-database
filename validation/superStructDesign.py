@@ -98,7 +98,7 @@ def design():
 	R3 		= R2
 
 	# moat gap from GPML's ratio
-	moatGap = math.ceil(g*(SaTm/Bm)*(param['Tm']**2)*param['gapRatio'])
+	moatGap = g*(SaTm/Bm)*(param['Tm']**2)*param['gapRatio']
 	Dm 		= g*param['S1']*param['Tm']/(4*pi**2*Bm)
 	if moatGap < Dm:
 		print("Weird. Moat gap is smaller than expected displacement.")
