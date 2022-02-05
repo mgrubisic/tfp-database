@@ -56,7 +56,7 @@ import random
 resultsDf           = None
 
 # generate LHS input sets
-numRuns                         = 1
+numRuns                         = 200
 inputVariables, inputValues     = LHS.generateInputs(numRuns)
 
 # filter GMs, then get ground motion database list
@@ -87,14 +87,13 @@ for index, row in enumerate(inputValues):
     bearingIndex.to_csv('./inputs/bearingInput.csv', index=False)
 
     # scaler for GM needs to go here
-    actualS1        = param['S1']*param['S1Ampli']
-    gmDatabase, specAvg     = gmSelector.cleanGMs(gmPath, PEERSummary, actualS1,
-        param['S1Ampli'], 32, 133, 176, 111, 290, 111)
+    actualS1        = param['S1']
+    gmDatabase, specAvg     = gmSelector.cleanGMs(gmPath, PEERSummary, actualS1, 
+        32, 133, 176, 111, 290, 111)
 
     # for each input file, run a random GM in the database
     # with random.randrange(len(gmDatabase.index)) as ind:
-    # ind           = random.randrange(len(gmDatabase.index))
-    ind = 4
+    ind           = random.randrange(len(gmDatabase.index))
 
     filename                = str(gmDatabase['filename'][ind])                  # ground motion name
     filename                = filename.replace('.AT2', '')                      # remove extension from file name
