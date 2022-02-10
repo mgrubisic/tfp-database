@@ -27,7 +27,7 @@ def generateInputs(num):
         'mu1'           : [0.01, 0.05],
         'R1'            : [15, 45],
         # 'moatAmpli'     : [0.5, 0.5],
-        'moatAmpli'       : [1.0, 2.25],
+        'moatAmpli'       : [0.5, 2.0],
         'RI'            : [0.5, 2.0]
     }
 
