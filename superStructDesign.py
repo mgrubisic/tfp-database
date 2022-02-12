@@ -117,22 +117,22 @@ def design():
         # zetaE     = We/(2*pi*ke*x**2)
         # Te        = 2*pi/(math.sqrt(ke/(1/g)))
 
-        kM      = (2*pi/param['Tm'])**2 * (1/g)
-        Wm      = param['zetaM']*(2*pi*kM*x**2)
-        x1      = (a-b)**(-1/2)*cmath.sqrt(-Wm/4 + (kM - b)*x**2 - (k0 - a)*xy**2)
+        kM = (2*pi/param['Tm'])**2 * (1/g)
+        Wm = param['zetaM']*(2*pi*kM*x**2)
+        x1 = (a-b)**(-1/2)*cmath.sqrt(-Wm/4 + (kM - b)*x**2 - (k0 - a)*xy**2)
         mu2     = kM*x - b*(x-x1)
         mu3     = mu2
         mu1     = -x1/(2*param['R1']) + mu2
 
         # these values should match the _M subscript values
-        ke      = (mu2.real + b*(x - x1.real))/x
-        We      = 4*(mu2.real - b*x1.real)*x - 4*(a-b)*x1.real**2 - 4*(k0 -a)*xy**2
+        ke = (mu2.real + b*(x - x1.real))/x
+        We = 4*(mu2.real - b*x1.real)*x - 4*(a-b)*x1.real**2 - 4*(k0 -a)*xy**2
         zetaE   = We/(2*pi*ke*x**2)
         Te      = 2*pi/(math.sqrt(ke/(1/g)))
 
         muList  = [mu1, mu2, mu3]
 
-        muBad   = any(coeff.real < 0.01 for coeff in muList) or any(np.iscomplex(muList))
+        muBad = any(coeff.real < 0.01 for coeff in muList) or any(np.iscomplex(muList))
 
         RMult   += 0.1
 
@@ -233,10 +233,12 @@ def design():
     IBeamRoofReq    = Ib[-1]
     ZBeamRoofReq    = Zb[-1]
 
-    beamShapes      = pd.read_csv('./inputs/beamShapes.csv', index_col=None, header=0)
+    beamShapes      = pd.read_csv('./inputs/beamShapes.csv',
+        index_col=None, header=0)
     sortedBeams     = beamShapes.sort_values(by=['Ix'])
 
-    colShapes       = pd.read_csv('./inputs/colShapes.csv', index_col=None, header=0)
+    colShapes       = pd.read_csv('./inputs/colShapes.csv',
+        index_col=None, header=0)
     sortedCols      = colShapes.sort_values(by=['Ix'])
 
     ############################################################################
@@ -247,8 +249,8 @@ def design():
     #              Floor beams
 
     # select beams that qualify Ix requirement
-    qualifiedIx     = sortedBeams[sortedBeams['Ix'] > IBeamReq]         # eliminate all shapes with insufficient Ix
-    sortedWeight    = qualifiedIx.sort_values(by=['W'])                 # select lightest from list     
+    qualifiedIx     = sortedBeams[sortedBeams['Ix'] > IBeamReq] # eliminate all shapes with insufficient Ix
+    sortedWeight    = qualifiedIx.sort_values(by=['W'])         # select lightest from list     
     selectedBeam    = sortedWeight.iloc[:1]
 
     ############################################################################
@@ -259,29 +261,31 @@ def design():
 
     if(beamZx < ZBeamReq):
         # print("The beam does not meet Zx requirement. Reselecting...")
-        qualifiedZx         = qualifiedIx[qualifiedIx['Zx'] > ZBeamReq]             # narrow list further down to only sufficient Zx
-        sortedWeight        = qualifiedZx.sort_values(by=['W'])                     # select lightest from list
+        qualifiedZx         = qualifiedIx[qualifiedIx['Zx'] > ZBeamReq]  # narrow list further down to only sufficient Zx
+        sortedWeight        = qualifiedZx.sort_values(by=['W'])          # select lightest from list
         selectedBeam        = sortedWeight.iloc[:1]
         (beamAg, beambf, beamtf, beamIx, beamZx) = getProp(selectedBeam)
 
     Ry              = 1.1
     Cpr             = (Fy + Fu)/(2*Fy)
 
-    (beamMn, beamMpr, beamVpr, beamVGrav)   = calcStrength(selectedBeam, VGravStory)
+    (beamMn, beamMpr, beamVpr, beamVGrav)   = calcStrength(selectedBeam,
+        VGravStory)
 
     # PH location check
     phVGrav         = wLoad[:-1]*LBay/2
-    phVBeam         = 2*beamMpr/(0.8*LBay)                                          # 0.9LBay for plastic hinge length
+    phVBeam         = 2*beamMpr/(0.9*LBay)  # 0.9LBay for plastic hinge length
     phLocation      = phVBeam > phVGrav
 
     if False in phLocation:
         # print('Detected plastic hinge away from ends. Reselecting...')
         ZBeamPHReq          = max(wLoad*LBay**2/(4*Fy*Ry*Cpr))
-        qualifiedZx         = qualifiedIx[qualifiedIx['Zx'] > ZBeamPHReq]               # narrow list further down to only sufficient Zx
-        sortedWeight        = qualifiedZx.sort_values(by=['W'])                         # select lightest from list
+        qualifiedZx         = qualifiedIx[qualifiedIx['Zx'] > ZBeamPHReq] # narrow list further down to only sufficient Zx
+        sortedWeight        = qualifiedZx.sort_values(by=['W'])           # select lightest from list
         selectedBeam        = sortedWeight.iloc[:1]
         (beamAg, beambf, beamtf, beamIx, beamZx)    = getProp(selectedBeam)
-        (beamMn, beamMpr, beamVpr, beamVGrav)       = calcStrength(selectedBeam, VGravStory)
+        (beamMn, beamMpr, beamVpr, beamVGrav) = calcStrength(selectedBeam,
+            VGravStory)
 
     # beam shear
     beamAweb        = beamAg - 2*(beamtf*beambf)
@@ -307,7 +311,8 @@ def design():
         beamAweb        = beamAg - 2*(beamtf*beambf)
         beamVn          = 0.9*beamAweb*0.6*Fy
 
-        (beamMn, beamMpr, beamVpr, beamVGrav)   = calcStrength(selectedBeam, VGravStory)
+        (beamMn, beamMpr, beamVpr, beamVGrav) = calcStrength(selectedBeam,
+            VGravStory)
         
         beamShearFail   = beamVn < beamVpr
 
@@ -332,11 +337,12 @@ def design():
         selectedRoofBeam        = sortedWeight.iloc[:1]
         (roofBeamAg, roofBeambf, roofBeamtf, roofBeamIx, roofBeamZx) = getProp(selectedRoofBeam)
 
-    (roofBeamMn, roofBeamMpr, roofBeamVpr, roofBeamVGrav)   = calcStrength(selectedRoofBeam, VGravRoof)
+    (roofBeamMn, roofBeamMpr, roofBeamVpr, roofBeamVGrav)   = calcStrength(selectedRoofBeam,
+        VGravRoof)
 
     # PH location check
     phVGravRoof         = wLoad[-1]*LBay/2
-    phVBeamRoof         = 2*roofBeamMpr/(0.8*LBay)                                  # 0.9LBay for plastic hinge length
+    phVBeamRoof         = 2*roofBeamMpr/(0.9*LBay)                                  # 0.9LBay for plastic hinge length
     phLocationRoof      = phVBeamRoof > phVGravRoof
 
     if not phLocationRoof:
@@ -368,7 +374,8 @@ def design():
 
         # recheck beam shear
         (roofBeamAg, roofBeambf, roofBeamtf, roofBeamIx, roofBeamZx)    = getProp(selectedRoofBeam)
-        (roofBeamMn, roofBeamMpr, roofBeamVpr, roofBeamVGrav)           = calcStrength(selectedRoofBeam, VGravRoof)
+        (roofBeamMn, roofBeamMpr, roofBeamVpr, roofBeamVGrav) = calcStrength(selectedRoofBeam,
+            VGravRoof)
         
         roofBeamAweb        = roofBeamAg - 2*(roofBeamtf*roofBeambf)
         roofBeamVn          = 0.9*roofBeamAweb*0.6*Fy

@@ -74,12 +74,12 @@ databaseFile    = 'gmList.csv'
 # for each input sets, write input files
 for index, row in enumerate(inputValues):
 
-    print('The run index is ' + str(index) + '.')                   # run counter
+    print('The run index is ' + str(index) + '.') # run counter
 
-    empty_directory('outputs')                                      # clear run histories
+    empty_directory('outputs') # clear run histories
 
     # write input files as csv columns
-    bearingIndex    = pd.DataFrame(inputVariables, columns=['variable'])        # relies on ordering from LHS.py
+    bearingIndex    = pd.DataFrame(inputVariables, columns=['variable']) # relies on ordering from LHS.py
     bearingValue    = pd.DataFrame(row, columns=['value'])
 
     bearingIndex    = bearingIndex.join(bearingValue)
@@ -102,7 +102,7 @@ for index, row in enumerate(inputValues):
         
     # move on to next set if bad friction coeffs encountered (handled in superStructDesign)
     try:
-        runStatus, Tfb, scaleFactor         = eq.runGM(filename, defFactor)             # perform analysis (superStructDesign and buildModel imported within)
+        runStatus, Tfb, scaleFactor = eq.runGM(filename, defFactor) # perform analysis (superStructDesign and buildModel imported within)
     except ValueError:
         print('Bearing solver returned negative friction coefficients. Skipping...')
         continue
@@ -113,7 +113,7 @@ for index, row in enumerate(inputValues):
         print('SCWB check failed, no shape exists for design. Skipping...')
         continue
 
-    resultsHeader, thisRun  = postprocessing.failurePostprocess(filename, scaleFactor, specAvg, runStatus, Tfb)     # add run results to holder df
+    resultsHeader, thisRun  = postprocessing.failurePostprocess(filename, scaleFactor, specAvg, runStatus, Tfb) # add run results to holder df
 
     # if initial run, start the dataframe with headers from postprocessing.py
     if resultsDf is None:

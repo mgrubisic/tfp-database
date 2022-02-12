@@ -89,7 +89,7 @@ def design():
 	Bm 		= np.interp(param['zetaM'], zetaRef, BmRef)
 
 	Ts 				= param['S1']/param['Ss']
-	param['Tm'] 	= param['TmRatio']*Ts
+	# param['Tm'] 	= param['TmRatio']*Ts
 
 	SaTm 	= param['S1']/param['Tm']
 

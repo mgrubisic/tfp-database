@@ -96,6 +96,7 @@ def build():
     # command: model('basic', '-ndm', ndm, '-ndf', ndf=ndm*(ndm+1)/2)
     model('basic', '-ndm', 3, '-ndf', 6)
 
+    # perform design and get all required element properties
     import superStructDesign as sd
     (mu1, mu2, mu3, R1, R2, R3, moatGap, selectedBeam, selectedRoofBeam, selectedCol) = sd.design()
 
@@ -341,9 +342,12 @@ def build():
 
     # column section: fiber wide flange section
     section('Fiber', colSecTag, '-GJ', Gs*J)
-    patch('rect', steelMatTag, 1, nff,  dCol/2-tfCol, -bfCol/2, dCol/2, bfCol/2)
-    patch('rect', steelMatTag, 1, nff, -dCol/2, -bfCol/2, -dCol/2+tfCol, bfCol/2)
-    patch('rect', steelMatTag, nfw, 1, -dCol/2+tfCol, -twCol, dCol/2-tfCol, twCol)
+    patch('rect', steelMatTag, 
+        1, nff,  dCol/2-tfCol, -bfCol/2, dCol/2, bfCol/2)
+    patch('rect', steelMatTag, 
+        1, nff, -dCol/2, -bfCol/2, -dCol/2+tfCol, bfCol/2)
+    patch('rect', steelMatTag, nfw, 
+        1, -dCol/2+tfCol, -twCol, dCol/2-tfCol, twCol)
 
     # # beam section: fiber wide flange section
     # section('Fiber', beamSecTag, '-GJ', Gs*J)
@@ -366,7 +370,8 @@ def build():
     bRoof           = b                         # strain-hardening ratio (ratio between post-yield tangent and initial elastic tangent)
     uniaxialMaterial('Steel01', roofMatFlexTag, MyRoof, EIRoof, bRoof)              # bilinear behavior for flexure
     uniaxialMaterial('Elastic', roofMatAxialTag, EARoof)                            # this is not used as a material, this is an axial-force-strain response
-    section('Aggregator', roofSecTag, roofMatAxialTag, 'P', roofMatFlexTag, 'Mz', torsionSecTag, 'T')   # combine axial and flexural behavior into one section (no P-M interaction here)
+    section('Aggregator', roofSecTag, 
+        roofMatAxialTag, 'P', roofMatFlexTag, 'Mz', torsionSecTag, 'T')   # combine axial and flexural behavior into one section (no P-M interaction here)
 
     # beam section: uniaxial section
     beamMatFlexTag  = 8
@@ -377,13 +382,15 @@ def build():
     bBeam           = b                     # strain-hardening ratio (ratio between post-yield tangent and initial elastic tangent)
     uniaxialMaterial('Steel01', beamMatFlexTag, MyBeam, EIBeam, bBeam)              # bilinear behavior for flexure
     uniaxialMaterial('Elastic', beamMatAxialTag, EABeam)                            # this is not used as a material, this is an axial-force-strain response
-    section('Aggregator', beamSecTag, beamMatAxialTag, 'P', beamMatFlexTag, 'Mz', torsionSecTag, 'T')   # combine axial and flexural behavior into one section (no P-M interaction here)
+    section('Aggregator', beamSecTag, 
+        beamMatAxialTag, 'P', beamMatFlexTag, 'Mz', torsionSecTag, 'T')   # combine axial and flexural behavior into one section (no P-M interaction here)
 
     # General elastic section
     # command: section('Elastic', secTag, E, A, Iz, Iy, G, J, alphaY=0.0, alphaZ=0.0)
     section('Elastic', elasticColSecTag, Es, AgCol, IzCol, IyCol, Gs, J)
     section('Elastic', elasticBeamSecTag, Es, AgBeam, IzBeam, IyBeam, Gs, J)
-    section('Elastic', elasticRoofBeamSecTag, Es, AgRoofBeam, IzRoofBeam, IyRoofBeam, Gs, J)
+    section('Elastic', elasticRoofBeamSecTag, 
+        Es, AgRoofBeam, IzRoofBeam, IyRoofBeam, Gs, J)
 
     # Frame link
     ARigid = 1000.0         # define area of truss section (make much larger than A of frame elements)
@@ -446,9 +453,12 @@ def build():
 
     LpBeam = 0.1*LBeam
     LpCol = 0.1*LCol
-    beamIntegration('HingeRadau', hingeColTag, colSecTag, LpCol, colSecTag, LpCol, elasticColSecTag)
-    beamIntegration('HingeRadau', hingeBeamTag, beamSecTag, LpBeam, beamSecTag, LpBeam, elasticBeamSecTag)
-    beamIntegration('HingeRadau', hingeRoofTag, roofSecTag, LpBeam, roofSecTag, LpBeam, elasticRoofBeamSecTag)
+    beamIntegration('HingeRadau', hingeColTag, 
+        colSecTag, LpCol, colSecTag, LpCol, elasticColSecTag)
+    beamIntegration('HingeRadau', hingeBeamTag, 
+        beamSecTag, LpBeam, beamSecTag, LpBeam, elasticBeamSecTag)
+    beamIntegration('HingeRadau', hingeRoofTag, 
+        roofSecTag, LpBeam, roofSecTag, LpBeam, elasticRoofBeamSecTag)
 
     # create force-based beam-column elements, with BeamWithHinges integration tags
     # command:  element('forceBeamColumn', eleTag, iNode, jNode, transfTag, integrationTag, '-iter', maxIter=10, tol=1e-12, '-mass', mass=0.0)
@@ -527,7 +537,8 @@ def build():
     # command: element('zeroLength', eleTag, *eleNodes, '-mat', *matTags, '-dir', *dirs[, '-doRayleigh', rFlag=0][, '-orient', *vecx, *vecyp])
     # command: equalDOF(retained, constrained, DOF_1, DOF_2)
     def rotLeaningCol(eleID, nodeI, nodeJ):
-        element('zeroLength', eleID, nodeI, nodeJ, '-mat', LCSpringMatTag, '-dir', 5)           # Create zero length element (spring), rotations allowed about Y axis
+        element('zeroLength', eleID, 
+            nodeI, nodeJ, '-mat', LCSpringMatTag, '-dir', 5)           # Create zero length element (spring), rotations allowed about Y axis
         equalDOF(nodeI, nodeJ, 1, 2, 3, 4, 6)                                                   # Constrain the translational DOFs and out-of-plane rotations
 
     rotLeaningCol(33, 24, 23)
@@ -562,7 +573,7 @@ def build():
     K2          = kEffWall - EImpact/((1-a)*delM**2)                    # secondary impact stiffness
 
     dirWall     = 1                             # 1 for out-normal vector pointing towards +X direction
-    moatGap     = float(moatGap)                # rounded up DmPrime
+    moatGap     = float(moatGap)                # DmPrime
     # moatGap   = 20*inch
     muWall      = 0.01                          # friction ratio in two tangential directions parallel to restrained+constrained planes
     KtWall      = 1e5*kip/inch                  # tangential stiffness (?)
