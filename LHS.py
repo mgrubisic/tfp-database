@@ -12,9 +12,8 @@
 
 ############################################################################
 
+from scipy.stats import qmc
 import numpy as np
-
-from smt.sampling_methods import LHS
 
 def generateInputs(num):
 
@@ -33,12 +32,16 @@ def generateInputs(num):
 
     # create array of limits, then run LHS
     paramNames      = list(inputDict.keys())                                    # variable names. IMPORTANT: Ordered by insertion
-    paramLimits     = np.asarray(list(inputDict.values()), dtype=np.float64)    # variable bounds
-
-    sampling        = LHS(xlimits=paramLimits)
-
-    sets            = num
-    paramSet        = sampling(sets)                                            # values sets
+    paramLimits     = np.asarray(list(inputDict.values()), dtype=np.float64).T  # variable bounds
+    
+    lBounds = paramLimits[0,]
+    uBounds = paramLimits[1,]
+    
+    dimVars = len(inputDict)
+    sampler = qmc.LatinHypercube(d=dimVars)
+    sample = sampler.random(n=num)
+    
+    paramSet = qmc.scale(sample, lBounds, uBounds)
 
     return(paramNames, paramSet)
 
