@@ -211,19 +211,6 @@ def build():
     node(31, 0*LBeam,   0.0*ft,     0*LCol+1.0*ft)
     node(32, 3*LBeam,   0.0*ft,     0*LCol+1.0*ft)
 
-    # Make 3DOF nodes for zeroLengthImpact3D
-    model('basic', '-ndm', 3, '-ndf', 3)
-
-    node(311, 0*LBeam,      0.0*ft,     0*LCol+1.0*ft)          # restrained/retained
-    node(312, 0*LBeam,      0.0*ft,     0*LCol+1.0*ft)          # constrained
-
-    node(321, 3*LBeam,  0.0*ft,     0*LCol+1.0*ft)          # constrained
-    node(322, 3*LBeam,  0.0*ft,     0*LCol+1.0*ft)          # restrained/retained
-
-    # return to 6DOF
-    model('basic', '-ndm', 3, '-ndf', 6)
-
-
     # assign masses, in direction of motion and stiffness
     # DOF list: X, Y, Z, rotX, rotY, rotZ
     mass(1,     m0Outer,    m0Outer,    0.0,    0.0,    0.0,    0.0)
@@ -314,6 +301,9 @@ def build():
     frn3ModelTag    = 43
     fpsMatPTag      = 44
     fpsMatMzTag     = 45
+
+    # Impact material tag
+    impactMatTag = 51
 
     # Plastic hinge model tags
     hingeColTag     = 90
@@ -574,27 +564,18 @@ def build():
 
     dirWall     = 1                             # 1 for out-normal vector pointing towards +X direction
     moatGap     = float(moatGap)                # DmPrime
-    # moatGap   = 20*inch
     muWall      = 0.01                          # friction ratio in two tangential directions parallel to restrained+constrained planes
     KtWall      = 1e5*kip/inch                  # tangential stiffness (?)
     cohesionTag = 0                             # 0 for no cohesion
 
-    # tie up 3DOF and 6DOF nodes
-    # command: equalDOF(rNodeTag, cNodeTag, *dofs)
-    equalDOF(1, 312, 1, 2, 3)
-    equalDOF(4, 321, 1, 2, 3)
-    equalDOF(31, 311, 1, 2, 3)
-    equalDOF(32, 322, 1, 2, 3)
-
-    # impact elements
-    # command: element zeroLengthImpact3D $tag $cNode $rNode $direction $initGap $frictionRatio $Kt $Kn $Kn2 $Delta_y $cohesion
-    # element('zeroLengthImpact3D', 51, 311, 312, dirWall, moatGap, muWall, KtWall, K1, K2, delY, cohesionTag)
-    # element('zeroLengthImpact3D', 52, 322, 321, dirWall, moatGap, muWall, KtWall, K1, K2, delY, cohesionTag)
-    element('zeroLengthImpact3D', 51, 312, 311, 
-        dirWall, moatGap, muWall, KtWall, K1, K2, delY, cohesionTag)
-    # element('zeroLengthImpact3D', 52, 321, 322, dirWall, moatGap, muWall, KtWall, K1, K2, delY, cohesionTag)
-    element('zeroLengthImpact3D', 52, 322, 321, 
-        dirWall, moatGap, muWall, KtWall, K1, K2, delY, cohesionTag)
+    uniaxialMaterial('ImpactMaterial', impactMatTag, K1, K2, -delY, -moatGap)
+    
+    # command: element('zeroLength', eleTag, *eleNodes, '-mat', *matTags, 
+    #   '-dir', *dirs, <'-doRayleigh', rFlag=0>, <'-orient', *vecx, *vecyp>)
+    element('zeroLength', 51, 31, 1, '-mat', impactMatTag, frameLinkTag,
+            '-dir', 1, 3, '-orient', 1, 0, 0, 0, 1, 0)
+    element('zeroLength', 52, 4, 32, '-mat', impactMatTag, frameLinkTag,
+            '-dir', 1, 3, '-orient', 1, 0, 0, 0, 1, 0)
 
 # if ran alone, build model and plot
 if __name__ == '__main__':

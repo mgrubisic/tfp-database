@@ -40,6 +40,13 @@ diaphragmForce1 = pd.read_csv('./outputs/diaphragmForce1.csv', sep = ' ', header
 diaphragmForce2 = pd.read_csv('./outputs/diaphragmForce2.csv', sep = ' ', header=None, names=forceColumns)
 diaphragmForce3 = pd.read_csv('./outputs/diaphragmForce3.csv', sep = ' ', header=None, names=forceColumns)
 
+impactColumns = ['time', 'dirX', 'dirZ']
+impactForceLeft = pd.read_csv('./outputs/impactForceLeft.csv', sep = ' ', header=None, names=impactColumns)
+impactForceRight = pd.read_csv('./outputs/impactForceRight.csv', sep = ' ', header=None, names=impactColumns)
+
+impactDispLeft = pd.read_csv('./outputs/impactDispLeft.csv', sep = ' ', header=None, names=impactColumns)
+impactDispRight = pd.read_csv('./outputs/impactDispRight.csv', sep = ' ', header=None, names=impactColumns)
+
 force1Normalize = -isol1Force['iShearX']/isol1Force['iAxial']
 force2Normalize = -isol2Force['iShearX']/isol2Force['iAxial']
 force3Normalize = -isol3Force['iShearX']/isol3Force['iAxial']
@@ -64,6 +71,19 @@ plt.xlabel('Time (s)')
 plt.ylabel('Axial force (kip)')
 plt.grid(True)
 
+fig = plt.figure()
+plt.plot(-impactDispLeft['dirX'], -impactForceLeft['dirX'])
+plt.title('Left impact element hysteresis')
+plt.xlabel('displacement (in)')
+plt.ylabel('force (kip)')
+plt.grid(True)
+
+fig = plt.figure()
+plt.plot(-impactDispRight['dirX'], -impactForceRight['dirX'])
+plt.title('Right impact element hysteresis')
+plt.xlabel('displacement (in)')
+plt.ylabel('force (kip)')
+plt.grid(True)
 
 # fig = plt.figure()
 # plt.plot(diaphragmForce1['time'], diaphragmForce1['iMomentZ'])

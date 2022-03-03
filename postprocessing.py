@@ -163,7 +163,6 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, runStatus, Tfb):
     if(any(abs(driftRatio) > collapseDriftLimit for driftRatio in story3DriftOuter) or any(abs(driftRatio) > collapseDriftLimit for driftRatio in story3DriftInner)):
         afterRun['collapseDrift3']  = 1
 
-
     serviceDriftLimit           = 0.015     # need to find ASCE 41 basis
 
     afterRun['serviceDrift1']   = 0
@@ -179,12 +178,36 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, runStatus, Tfb):
     if(any(abs(driftRatio) > serviceDriftLimit for driftRatio in story3DriftOuter) or any(abs(driftRatio) > serviceDriftLimit for driftRatio in story3DriftInner)):
         afterRun['serviceDrift3']   = 1
 
+    # residual drift: record each story's final drift
+    afterRun['resDrift1'] = max(abs(story1DriftOuter.iloc[-1]),
+        abs(story1DriftInner.iloc[-1]))
+    afterRun['resDrift2'] = max(abs(story2DriftOuter.iloc[-1]),
+        abs(story2DriftInner.iloc[-1]))
+    afterRun['resDrift3'] = max(abs(story3DriftOuter.iloc[-1]),
+        abs(story3DriftInner.iloc[-1]))
+
+    impactColumns = ['time', 'dirX', 'dirZ']
+    impactForceLeft = pd.read_csv('./outputs/impactForceLeft.csv',
+        sep = ' ', header=None, names=impactColumns)
+    impactForceRight = pd.read_csv('./outputs/impactForceRight.csv',
+        sep = ' ', header=None, names=impactColumns)
+
+    impactThreshold = 100   # kips
+    afterRun['impactedLeft'] = 0 
+    if(any(abs(impactForceLeft['dirX']) > impactThreshold)):
+        afterRun['impactedLeft'] = 1
+    afterRun['impactedRight'] = 0 
+    if(any(abs(impactForceRight['dirX']) > impactThreshold)):
+        afterRun['impactedRight'] = 1
+        
     # impact check
-    moatGap                 = float(moatGap)
     afterRun['impacted']    = 0
 
-    if(any(displacement >= moatGap for displacement in isolMaxDisp)):
-        afterRun['impacted']    = 1
+    if(afterRun['impactedLeft'] == 1 or afterRun['impactedLeft'] == 1):
+        afterRun['impacted'] = 1
+
+    # if(any(displacement >= moatGap for displacement in isolMaxDisp)):
+    #     afterRun['impacted']    = 1
 
     # uplift check
     minFv                   = 5.0           # kips

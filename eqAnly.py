@@ -182,6 +182,12 @@ def runGM(gmFilename, gmDefScale):
     recorder('Element', '-file', dataDir+'diaphragmForce2.csv', '-time', '-closeOnWrite', '-ele', 39, 'localForce')
     recorder('Element', '-file', dataDir+'diaphragmForce3.csv', '-time', '-closeOnWrite', '-ele', 40, 'localForce')
 
+    recorder('Element', '-file', dataDir+'impactForceLeft.csv', '-time', '-closeOnWrite', '-ele', 51, 'basicForce')
+    recorder('Element', '-file', dataDir+'impactForceRight.csv', '-time', '-closeOnWrite', '-ele', 52, 'basicForce')
+    
+    recorder('Element', '-file', dataDir+'impactDispLeft.csv', '-time', '-closeOnWrite', '-ele', 51, 'basicDeformation')
+    recorder('Element', '-file', dataDir+'impactDispRight.csv', '-time', '-closeOnWrite', '-ele', 52, 'basicDeformation')
+
     ############################################################################
     #                       Dynamic analysis
     ############################################################################
