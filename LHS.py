@@ -38,7 +38,7 @@ def generateInputs(num):
     uBounds = paramLimits[1,]
     
     dimVars = len(inputDict)
-    sampler = qmc.LatinHypercube(d=dimVars)
+    sampler = qmc.LatinHypercube(d=dimVars, seed=985)
     sample = sampler.random(n=num)
     
     paramSet = qmc.scale(sample, lBounds, uBounds)

@@ -71,6 +71,9 @@ databaseFile    = 'gmList.csv'
 # # troubleshooting with list of impact GMs
 # gmDatabase        = pd.read_csv('./groundMotions/gmList.csv')
 
+# set seed for reproducibility
+random.seed(985)
+
 # for each input sets, write input files
 for index, row in enumerate(inputValues):
 

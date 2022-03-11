@@ -163,7 +163,7 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, runStatus, Tfb):
     if(any(abs(driftRatio) > collapseDriftLimit for driftRatio in story3DriftOuter) or any(abs(driftRatio) > collapseDriftLimit for driftRatio in story3DriftInner)):
         afterRun['collapseDrift3']  = 1
 
-    serviceDriftLimit           = 0.015     # need to find ASCE 41 basis
+    serviceDriftLimit           = 0.025     # need to find ASCE 41 basis
 
     afterRun['serviceDrift1']   = 0
     afterRun['serviceDrift2']   = 0
@@ -177,6 +177,21 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, runStatus, Tfb):
 
     if(any(abs(driftRatio) > serviceDriftLimit for driftRatio in story3DriftOuter) or any(abs(driftRatio) > serviceDriftLimit for driftRatio in story3DriftInner)):
         afterRun['serviceDrift3']   = 1
+        
+    IODriftLimit           = 0.007     # need to find ASCE 41 basis
+
+    afterRun['occupancyDrift1']   = 0
+    afterRun['occupancyDrift2']   = 0
+    afterRun['occupancyDrift3']   = 0
+
+    if(any(abs(driftRatio) > IODriftLimit for driftRatio in story1DriftOuter) or any(abs(driftRatio) > IODriftLimit for driftRatio in story1DriftInner)):
+        afterRun['occupancyDrift1']   = 1
+
+    if(any(abs(driftRatio) > IODriftLimit for driftRatio in story2DriftOuter) or any(abs(driftRatio) > IODriftLimit for driftRatio in story2DriftInner)):
+        afterRun['occupancyDrift2']   = 1
+
+    if(any(abs(driftRatio) > IODriftLimit for driftRatio in story3DriftOuter) or any(abs(driftRatio) > IODriftLimit for driftRatio in story3DriftInner)):
+        afterRun['occupancyDrift3']   = 1
 
     # residual drift: record each story's final drift
     afterRun['resDrift1'] = max(abs(story1DriftOuter.iloc[-1]),
