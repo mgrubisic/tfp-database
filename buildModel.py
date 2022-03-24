@@ -358,7 +358,7 @@ def build():
     EARoof          = Es*AgRoofBeam             # EA, for axial-force-strain relationship
     MyRoof          = SxRoofBeam*Fy             # yield moment kip*in
     bRoof           = b                         # strain-hardening ratio (ratio between post-yield tangent and initial elastic tangent)
-    uniaxialMaterial('Steel01', roofMatFlexTag, MyRoof, EIRoof, bRoof)              # bilinear behavior for flexure
+    uniaxialMaterial('Steel02', roofMatFlexTag, MyRoof,  EIRoof, bRoof, R0, cR1, cR2)              # bilinear behavior for flexure
     uniaxialMaterial('Elastic', roofMatAxialTag, EARoof)                            # this is not used as a material, this is an axial-force-strain response
     section('Aggregator', roofSecTag, 
         roofMatAxialTag, 'P', roofMatFlexTag, 'Mz', torsionSecTag, 'T')   # combine axial and flexural behavior into one section (no P-M interaction here)
@@ -370,7 +370,7 @@ def build():
     EABeam          = Es*AgBeam             # EA, for axial-force-strain relationship
     MyBeam          = SxBeam*Fy             # yield moment kip*in
     bBeam           = b                     # strain-hardening ratio (ratio between post-yield tangent and initial elastic tangent)
-    uniaxialMaterial('Steel01', beamMatFlexTag, MyBeam, EIBeam, bBeam)              # bilinear behavior for flexure
+    uniaxialMaterial('Steel02', beamMatFlexTag, MyBeam, EIBeam, bBeam, R0, cR1, cR2)              # bilinear behavior for flexure
     uniaxialMaterial('Elastic', beamMatAxialTag, EABeam)                            # this is not used as a material, this is an axial-force-strain response
     section('Aggregator', beamSecTag, 
         beamMatAxialTag, 'P', beamMatFlexTag, 'Mz', torsionSecTag, 'T')   # combine axial and flexural behavior into one section (no P-M interaction here)
