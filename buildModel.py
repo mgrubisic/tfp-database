@@ -268,7 +268,8 @@ def build():
     colTransfTag    = 2
 
     geomTransf('Linear', beamTransfTag, 0, -1, 0) #beams
-    geomTransf('PDelta', colTransfTag, 0, -1, 0) #columns
+    # if using beam fibers, switch transf to 0 0 1 vecxz
+    geomTransf('Corotational', colTransfTag, 0, -1, 0) #columns
 
     # define elements and section
 
