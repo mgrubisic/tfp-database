@@ -115,9 +115,6 @@ for index, row in enumerate(inputValues):
     except ValueError:
         print('Bearing solver returned negative friction coefficients. Skipping...')
         continue
-    except TypeError:
-        print('Bearing solver returned complex friction coefficients. Skipping...')
-        continue
     except IndexError:
         print('SCWB check failed, no shape exists for design. Skipping...')
         continue

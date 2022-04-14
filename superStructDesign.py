@@ -139,7 +139,7 @@ def design():
     # Abort if there are nonsensical results
     if(any(coeff.real < 0 for coeff in muList) or any(np.iscomplex(muList))):
         # sys.exit('Bearing solver incorrectly output friction coefficients...')
-        muList  = [math.sqrt(coeff) for coeff in muList]    # invoke the ValueError or TypeError
+        raise ValueError('There was a negative or complex friction coeff returned.')
 
     else:
         muList      = [coeff.real for coeff in muList]
