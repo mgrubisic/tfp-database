@@ -105,7 +105,13 @@ for index, row in enumerate(inputValues):
         
     # move on to next set if bad friction coeffs encountered (handled in superStructDesign)
     try:
-        runStatus, Tfb, scaleFactor = eq.runGM(filename, defFactor) # perform analysis (superStructDesign and buildModel imported within)
+        runStatus, Tfb, scaleFactor = eq.runGM(filename, defFactor, 0.005, True) # perform analysis (superStructDesign and buildModel imported within)
+    except Exception:
+        print('Lowering time step...')
+        try:
+            runStatus, Tfb, scaleFactor = eq.runGM(filename, defFactor, 0.001, False) # perform analysis (superStructDesign and buildModel imported within)
+        except Exception:
+            continue
     except ValueError:
         print('Bearing solver returned negative friction coefficients. Skipping...')
         continue
