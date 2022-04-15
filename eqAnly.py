@@ -23,7 +23,7 @@ import openseespy.opensees as ops
 
 import buildModel as bm
 
-def runGM(gmFilename, gmDefScale, dtTransient, tryFlag):
+def runGM(gmFilename, gmDefScale, dtTransient):
 
     # build model
     bm.build()
@@ -220,7 +220,7 @@ def runGM(gmFilename, gmDefScale, dtTransient, tryFlag):
 
     # set up ground-motion-analysis parameters
     sec             = 1.0                      
-    TmaxAnalysis    = 30.0*sec
+    TmaxAnalysis    = 60.0*sec
 
     Nsteps          = floor(TmaxAnalysis/dtTransient)
     ok              = ops.analyze(Nsteps, dtTransient)   # actually perform analysis; returns ok=0 if analysis was successful
@@ -251,9 +251,5 @@ def runGM(gmFilename, gmDefScale, dtTransient, tryFlag):
     print('Ground motion done. End time:', ops.getTime())
 
     ops.wipe()
-    
-    # if tryFlag is True, we give it another shot
-    if (ok != 0) and tryFlag:
-        raise Exception('Convergence issue in OpenSees. Retrying.')
 
     return(ok, Tfb, GMFactor)

@@ -105,19 +105,21 @@ for index, row in enumerate(inputValues):
         
     # move on to next set if bad friction coeffs encountered (handled in superStructDesign)
     try:
-        runStatus, Tfb, scaleFactor = eq.runGM(filename, defFactor, 0.005, True) # perform analysis (superStructDesign and buildModel imported within)
-    except Exception:
-        print('Lowering time step...')
-        try:
-            runStatus, Tfb, scaleFactor = eq.runGM(filename, defFactor, 0.001, False) # perform analysis (superStructDesign and buildModel imported within)
-        except Exception:
-            continue
+        runStatus, Tfb, scaleFactor = eq.runGM(filename, defFactor, 0.005) # perform analysis (superStructDesign and buildModel imported within)
     except ValueError:
         print('Bearing solver returned negative friction coefficients. Skipping...')
         continue
     except IndexError:
         print('SCWB check failed, no shape exists for design. Skipping...')
         continue
+    if runStatus != 0:
+        print('Lowering time step...')
+        runStatus, Tfb, scaleFactor = eq.runGM(filename, defFactor, 0.001)
+    if runStatus != 0:
+        print('Lowering time step last time...')
+        runStatus, Tfb, scaleFactor = eq.runGM(filename, defFactor, 0.0005)
+    if runStatus != 0:
+        print('Recording run and moving on.')
 
     resultsHeader, thisRun  = postprocessing.failurePostprocess(filename, scaleFactor, specAvg, runStatus, Tfb) # add run results to holder df
 
