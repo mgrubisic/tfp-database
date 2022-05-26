@@ -136,6 +136,10 @@ def runGM(gmFilename, gmDefScale, dtTransient):
     ops.recorder('Node', '-file', dataDir+'story1Disp.csv', '-time', '-closeOnWrite', '-node', 21, 22, 23, 24, 25, '-dof', 1, 'disp')
     ops.recorder('Node', '-file', dataDir+'story2Disp.csv', '-time', '-closeOnWrite', '-node', 31, 32, 33, 34, 35, '-dof', 1, 'disp')
     ops.recorder('Node', '-file', dataDir+'story3Disp.csv', '-time', '-closeOnWrite', '-node', 41, 42, 43, 44, 45, '-dof', 1, 'disp')
+    
+    ops.recorder('Node', '-file', dataDir+'story1Acc.csv', '-time', '-closeOnWrite', '-node', 21, 22, 23, 24, 25, '-dof', 1, 'accel')
+    ops.recorder('Node', '-file', dataDir+'story2Acc.csv', '-time', '-closeOnWrite', '-node', 31, 32, 33, 34, 35, '-dof', 1, 'accel')
+    ops.recorder('Node', '-file', dataDir+'story3Acc.csv', '-time', '-closeOnWrite', '-node', 41, 42, 43, 44, 45, '-dof', 1, 'accel')
 
     ops.recorder('Element', '-file', dataDir+'isol1Force.csv', '-time', '-closeOnWrite', '-ele', 51, 'localForce')
     ops.recorder('Element', '-file', dataDir+'isol2Force.csv', '-time', '-closeOnWrite', '-ele', 52, 'localForce')

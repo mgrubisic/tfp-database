@@ -108,6 +108,13 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, runStatus, Tfb):
     story3Disp = pd.read_csv('./outputs/story3Disp.csv', sep=' ',
         header=None, names=dispColumns)
 
+    story1Acc = pd.read_csv('./outputs/story1Acc.csv', sep=' ',
+        header=None, names=dispColumns)
+    story2Acc = pd.read_csv('./outputs/story2Acc.csv', sep=' ',
+        header=None, names=dispColumns)
+    story3Acc = pd.read_csv('./outputs/story3Acc.csv', sep=' ',
+        header=None, names=dispColumns)
+
     forceColumns = ['time', 'iAxial', 'iShearX', 'iShearY', 'iMomentX','iMomentY', 'iMomentZ', 'jAxial', 'jShearX', 'jShearY', 'jMomentX', 'jMomentY', 'jMomentZ']
 
     isol1Force = pd.read_csv('./outputs/isol1Force.csv', sep = ' ',
@@ -138,6 +145,24 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, runStatus, Tfb):
 
     story3DriftOuter    = (story3Disp['isol1'] - story2Disp['isol1'])/(13*ft)
     story3DriftInner    = (story3Disp['isol2'] - story2Disp['isol2'])/(13*ft)
+
+    # maximum story acceleration
+    g = 386.4
+    story1AccOuter    = (story1Acc['isol1'])/(g)
+    story1AccInner    = (story1Acc['isol2'])/(g)
+
+    story2AccOuter    = (story2Acc['isol1'])/(g)
+    story2AccInner    = (story2Acc['isol2'])/(g)
+
+    story3AccOuter    = (story3Acc['isol1'])/(g)
+    story3AccInner    = (story3Acc['isol2'])/(g)
+
+    afterRun['accMax1']   = max(np.maximum(abs(story1AccOuter),
+        abs(story1AccInner)))
+    afterRun['accMax2']   = max(np.maximum(abs(story2AccOuter),
+        abs(story2AccInner)))
+    afterRun['accMax3']   = max(np.maximum(abs(story3AccOuter),
+        abs(story3AccInner)))
 
     # drift failure check
     # collapse limit state
