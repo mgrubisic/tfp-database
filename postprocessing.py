@@ -101,6 +101,8 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, runStatus, Tfb):
     isolDisp = pd.read_csv('./outputs/isolDisp.csv', sep=' ',
         header=None, names=dispColumns)
 
+    story0Disp = pd.read_csv('./outputs/story0Disp.csv', sep=' ',
+        header=None, names=dispColumns)
     story1Disp = pd.read_csv('./outputs/story1Disp.csv', sep=' ',
         header=None, names=dispColumns)
     story2Disp = pd.read_csv('./outputs/story2Disp.csv', sep=' ',
@@ -108,6 +110,8 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, runStatus, Tfb):
     story3Disp = pd.read_csv('./outputs/story3Disp.csv', sep=' ',
         header=None, names=dispColumns)
 
+    story0Acc = pd.read_csv('./outputs/story0Acc.csv', sep=' ',
+        header=None, names=dispColumns)
     story1Acc = pd.read_csv('./outputs/story1Acc.csv', sep=' ',
         header=None, names=dispColumns)
     story2Acc = pd.read_csv('./outputs/story2Acc.csv', sep=' ',
@@ -148,6 +152,10 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, runStatus, Tfb):
 
     # maximum story acceleration
     g = 386.4
+
+    story0AccOuter    = (story0Acc['isol1'])/(g)
+    story0AccInner    = (story0Acc['isol2'])/(g)
+
     story1AccOuter    = (story1Acc['isol1'])/(g)
     story1AccInner    = (story1Acc['isol2'])/(g)
 
@@ -157,6 +165,8 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, runStatus, Tfb):
     story3AccOuter    = (story3Acc['isol1'])/(g)
     story3AccInner    = (story3Acc['isol2'])/(g)
 
+    afterRun['accMax0']   = max(np.maximum(abs(story0AccOuter),
+        abs(story0AccInner)))
     afterRun['accMax1']   = max(np.maximum(abs(story1AccOuter),
         abs(story1AccInner)))
     afterRun['accMax2']   = max(np.maximum(abs(story2AccOuter),

@@ -56,7 +56,8 @@ import random
 resultsDf           = None
 
 # generate LHS input sets
-numRuns                         = 300
+numRuns = 500
+desired_pts = 300
 inputVariables, inputValues     = LHS.generateInputs(numRuns)
 
 # filter GMs, then get ground motion database list
@@ -75,6 +76,7 @@ databaseFile    = 'gmList.csv'
 random.seed(985)
 
 # for each input sets, write input files
+pt_counter = 0
 for index, row in enumerate(inputValues):
 
     print('The run index is ' + str(index) + '.') # run counter
@@ -121,6 +123,7 @@ for index, row in enumerate(inputValues):
     if runStatus != 0:
         print('Recording run and moving on.')
 
+    pt_counter += 1
     resultsHeader, thisRun  = postprocessing.failurePostprocess(filename, scaleFactor, specAvg, runStatus, Tfb) # add run results to holder df
 
     # if initial run, start the dataframe with headers from postprocessing.py
@@ -130,5 +133,8 @@ for index, row in enumerate(inputValues):
     # add results onto the dataframe
     resultsDf               = pd.concat([thisRun,resultsDf], sort=False)
 
+    if (pt_counter == desired_pts):
+        break
+
 gmDatabase.to_csv(gmPath+databaseFile, index=False)
-resultsDf.to_csv('./sessionOut/sessionSummary.csv', index=False)
+resultsDf.to_csv('./sessionOut/sessionSummary_PID-PFA.csv', index=False)

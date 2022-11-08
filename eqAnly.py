@@ -137,6 +137,7 @@ def runGM(gmFilename, gmDefScale, dtTransient):
     ops.recorder('Node', '-file', dataDir+'story2Disp.csv', '-time', '-closeOnWrite', '-node', 31, 32, 33, 34, 35, '-dof', 1, 'disp')
     ops.recorder('Node', '-file', dataDir+'story3Disp.csv', '-time', '-closeOnWrite', '-node', 41, 42, 43, 44, 45, '-dof', 1, 'disp')
     
+    ops.recorder('Node', '-file', dataDir+'story0Acc.csv', '-time', '-closeOnWrite', '-node', 11, 12, 13, 14, 15, '-dof', 1, 'accel')
     ops.recorder('Node', '-file', dataDir+'story1Acc.csv', '-time', '-closeOnWrite', '-node', 21, 22, 23, 24, 25, '-dof', 1, 'accel')
     ops.recorder('Node', '-file', dataDir+'story2Acc.csv', '-time', '-closeOnWrite', '-node', 31, 32, 33, 34, 35, '-dof', 1, 'accel')
     ops.recorder('Node', '-file', dataDir+'story3Acc.csv', '-time', '-closeOnWrite', '-node', 41, 42, 43, 44, 45, '-dof', 1, 'accel')
@@ -152,22 +153,22 @@ def runGM(gmFilename, gmDefScale, dtTransient):
     ops.recorder('Element', '-file', dataDir+'colForce3.csv', '-time', '-closeOnWrite', '-ele', 113, 'localForce')
     ops.recorder('Element', '-file', dataDir+'colForce4.csv', '-time', '-closeOnWrite', '-ele', 114, 'localForce')
 
-    ops.recorder('Element', '-file', dataDir+'colForce5.csv', '-time', '-closeOnWrite', '-ele', 121, 'localForce')
-    ops.recorder('Element', '-file', dataDir+'colForce6.csv', '-time', '-closeOnWrite', '-ele', 122, 'localForce')
-    ops.recorder('Element', '-file', dataDir+'colForce7.csv', '-time', '-closeOnWrite', '-ele', 123, 'localForce')
-    ops.recorder('Element', '-file', dataDir+'colForce8.csv', '-time', '-closeOnWrite', '-ele', 124, 'localForce')
+    # ops.recorder('Element', '-file', dataDir+'colForce5.csv', '-time', '-closeOnWrite', '-ele', 121, 'localForce')
+    # ops.recorder('Element', '-file', dataDir+'colForce6.csv', '-time', '-closeOnWrite', '-ele', 122, 'localForce')
+    # ops.recorder('Element', '-file', dataDir+'colForce7.csv', '-time', '-closeOnWrite', '-ele', 123, 'localForce')
+    # ops.recorder('Element', '-file', dataDir+'colForce8.csv', '-time', '-closeOnWrite', '-ele', 124, 'localForce')
 
-    ops.recorder('Element', '-file', dataDir+'beamForce1.csv', '-time', '-closeOnWrite', '-ele', 221, 'localForce')
-    ops.recorder('Element', '-file', dataDir+'beamForce2.csv', '-time', '-closeOnWrite', '-ele', 222, 'localForce')
-    ops.recorder('Element', '-file', dataDir+'beamForce3.csv', '-time', '-closeOnWrite', '-ele', 223, 'localForce')
+    # ops.recorder('Element', '-file', dataDir+'beamForce1.csv', '-time', '-closeOnWrite', '-ele', 221, 'localForce')
+    # ops.recorder('Element', '-file', dataDir+'beamForce2.csv', '-time', '-closeOnWrite', '-ele', 222, 'localForce')
+    # ops.recorder('Element', '-file', dataDir+'beamForce3.csv', '-time', '-closeOnWrite', '-ele', 223, 'localForce')
 
-    ops.recorder('Element', '-file', dataDir+'beamForce4.csv', '-time', '-closeOnWrite', '-ele', 231, 'localForce')
-    ops.recorder('Element', '-file', dataDir+'beamForce5.csv', '-time', '-closeOnWrite', '-ele', 232, 'localForce')
-    ops.recorder('Element', '-file', dataDir+'beamForce6.csv', '-time', '-closeOnWrite', '-ele', 233, 'localForce')
+    # ops.recorder('Element', '-file', dataDir+'beamForce4.csv', '-time', '-closeOnWrite', '-ele', 231, 'localForce')
+    # ops.recorder('Element', '-file', dataDir+'beamForce5.csv', '-time', '-closeOnWrite', '-ele', 232, 'localForce')
+    # ops.recorder('Element', '-file', dataDir+'beamForce6.csv', '-time', '-closeOnWrite', '-ele', 233, 'localForce')
 
-    ops.recorder('Element', '-file', dataDir+'diaphragmForce1.csv', '-time', '-closeOnWrite', '-ele', 611, 'localForce')
-    ops.recorder('Element', '-file', dataDir+'diaphragmForce2.csv', '-time', '-closeOnWrite', '-ele', 612, 'localForce')
-    ops.recorder('Element', '-file', dataDir+'diaphragmForce3.csv', '-time', '-closeOnWrite', '-ele', 613, 'localForce')
+    # ops.recorder('Element', '-file', dataDir+'diaphragmForce1.csv', '-time', '-closeOnWrite', '-ele', 611, 'localForce')
+    # ops.recorder('Element', '-file', dataDir+'diaphragmForce2.csv', '-time', '-closeOnWrite', '-ele', 612, 'localForce')
+    # ops.recorder('Element', '-file', dataDir+'diaphragmForce3.csv', '-time', '-closeOnWrite', '-ele', 613, 'localForce')
 
     ops.recorder('Element', '-file', dataDir+'impactForceLeft.csv', '-time', '-closeOnWrite', '-ele', 881, 'basicForce')
     ops.recorder('Element', '-file', dataDir+'impactForceRight.csv', '-time', '-closeOnWrite', '-ele', 884, 'basicForce')
