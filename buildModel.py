@@ -783,7 +783,7 @@ if __name__ == '__main__':
     build()
     print('Model built!')
     
-    import openseespy.postprocessing.ops_vis as opsv
+    import opsvis as opsv
     
     opsv.plot_model()
     # fix base for Tfb
