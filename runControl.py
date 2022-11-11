@@ -11,7 +11,7 @@
 #               Calls LHS -> design -> buildModel -> eqAnly -> postprocessing
 #               Writes results in final csv file
 
-# Open issues:  (1) progress saving
+# Open issues:  (1) 
 
 ############################################################################
 

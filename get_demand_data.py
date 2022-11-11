@@ -27,6 +27,7 @@ def get_demand_data(isol_data):
     return(EDP_data)
 
 import pandas as pd
-data = pd.read_csv('./isol_data.csv', sep=',')
+data = pd.read_csv('./sessionOut/sessionSummary_PID-PFA.csv', sep=',')
 data = data[data.runFailed == 0]
 edp = get_demand_data(data)
+edp.to_csv('./sessionOut/engineering_demands_TFP.csv', index=False)

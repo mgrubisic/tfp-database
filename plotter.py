@@ -27,6 +27,11 @@ story1Disp = pd.read_csv(dataDir+'story1Disp.csv', sep=' ', header=None, names=d
 story2Disp = pd.read_csv(dataDir+'story2Disp.csv', sep=' ', header=None, names=dispColumns)
 story3Disp = pd.read_csv(dataDir+'story3Disp.csv', sep=' ', header=None, names=dispColumns)
 
+story0Acc = pd.read_csv(dataDir+'story0Acc.csv', sep=' ', header=None, names=dispColumns)
+story1Acc = pd.read_csv(dataDir+'story1Acc.csv', sep=' ', header=None, names=dispColumns)
+story2Acc = pd.read_csv(dataDir+'story2Acc.csv', sep=' ', header=None, names=dispColumns)
+story3Acc = pd.read_csv(dataDir+'story3Acc.csv', sep=' ', header=None, names=dispColumns)
+
 # forceColumns = ['time', 'iFx', 'iFy', 'iFz', 'iMx', 'iMy', 'iMz', 'jFx', 'jFy', 'jFz', 'jMx', 'jMy', 'jMz']
 forceColumns = ['time', 'iFx', 'iFy', 'iFz', 'iMx', 'iMy', 'iMz', 'jFx', 'jFy', 'jFz', 'jMx', 'jMy', 'jMz']
 
@@ -174,6 +179,20 @@ plt.plot(isolDisp['time'], isolDisp['isol1'])
 plt.title('Bearing 1 disp history')
 plt.xlabel('Time (s)')
 plt.ylabel('Displ (in)')
+plt.grid(True)
+
+fig = plt.figure()
+plt.plot(story0Acc['time'], story0Acc['isol1'])
+plt.title('Isol layer accel history')
+plt.xlabel('Time (s)')
+plt.ylabel('Accel (in/s2)')
+plt.grid(True)
+
+fig = plt.figure()
+plt.plot(story1Acc['time'], story1Acc['isol1'])
+plt.title('Story 1 accel history')
+plt.xlabel('Time (s)')
+plt.ylabel('Accel (in/s2)')
 plt.grid(True)
 
 # # Displacement history

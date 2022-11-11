@@ -129,29 +129,39 @@ def runGM(gmFilename, gmDefScale, dtTransient):
     #file mkdir $dataDir; # create output folder
 
     ops.printModel('-file', dataDir+'model.out')
-    ops.recorder('Node', '-file', dataDir+'isolDisp.csv', '-time', '-closeOnWrite', '-node', 11, 12, 13, 14, 15, '-dof', 1, 'disp')
-    ops.recorder('Node', '-file', dataDir+'isolVert.csv', '-time', '-closeOnWrite', '-node', 11, 12, 13, 14, 15, '-dof', 3, 'disp')
-    ops.recorder('Node', '-file', dataDir+'isolRot.csv', '-time', '-closeOnWrite', '-node', 11, 12, 13, 14, 15, '-dof', 5, 'disp')
+    ops.recorder('Node', '-file', dataDir+'isolDisp.csv', '-time',
+        '-closeOnWrite', '-node', 11, 12, 13, 14, 15, '-dof', 1, 'disp')
+    ops.recorder('Node', '-file', dataDir+'isolVert.csv', '-time',
+        '-closeOnWrite', '-node', 11, 12, 13, 14, 15, '-dof', 3, 'disp')
+    ops.recorder('Node', '-file', dataDir+'isolRot.csv', '-time',
+        '-closeOnWrite', '-node', 11, 12, 13, 14, 15, '-dof', 5, 'disp')
 
-    ops.recorder('Node', '-file', dataDir+'story1Disp.csv', '-time', '-closeOnWrite', '-node', 21, 22, 23, 24, 25, '-dof', 1, 'disp')
-    ops.recorder('Node', '-file', dataDir+'story2Disp.csv', '-time', '-closeOnWrite', '-node', 31, 32, 33, 34, 35, '-dof', 1, 'disp')
-    ops.recorder('Node', '-file', dataDir+'story3Disp.csv', '-time', '-closeOnWrite', '-node', 41, 42, 43, 44, 45, '-dof', 1, 'disp')
-    
-    ops.recorder('Node', '-file', dataDir+'story0Acc.csv', '-time', '-closeOnWrite', '-node', 11, 12, 13, 14, 15, '-dof', 1, 'accel')
-    ops.recorder('Node', '-file', dataDir+'story1Acc.csv', '-time', '-closeOnWrite', '-node', 21, 22, 23, 24, 25, '-dof', 1, 'accel')
-    ops.recorder('Node', '-file', dataDir+'story2Acc.csv', '-time', '-closeOnWrite', '-node', 31, 32, 33, 34, 35, '-dof', 1, 'accel')
-    ops.recorder('Node', '-file', dataDir+'story3Acc.csv', '-time', '-closeOnWrite', '-node', 41, 42, 43, 44, 45, '-dof', 1, 'accel')
+    ops.recorder('Node', '-file', dataDir+'story1Disp.csv','-time',
+        '-closeOnWrite', '-node', 21, 22, 23, 24, 25, '-dof', 1, 'disp')
+    ops.recorder('Node', '-file', dataDir+'story2Disp.csv', '-time',
+        '-closeOnWrite', '-node', 31, 32, 33, 34, 35, '-dof', 1, 'disp')
+    ops.recorder('Node', '-file', dataDir+'story3Disp.csv', '-time',
+        '-closeOnWrite', '-node', 41, 42, 43, 44, 45, '-dof', 1, 'disp')
 
-    ops.recorder('Element', '-file', dataDir+'isol1Force.csv', '-time', '-closeOnWrite', '-ele', 51, 'localForce')
-    ops.recorder('Element', '-file', dataDir+'isol2Force.csv', '-time', '-closeOnWrite', '-ele', 52, 'localForce')
-    ops.recorder('Element', '-file', dataDir+'isol3Force.csv', '-time', '-closeOnWrite', '-ele', 53, 'localForce')
-    ops.recorder('Element', '-file', dataDir+'isol4Force.csv', '-time', '-closeOnWrite', '-ele', 54, 'localForce')
-    ops.recorder('Element', '-file', dataDir+'isolLCForce.csv', '-time', '-closeOnWrite', '-ele', 55, 'localForce')
+    ops.recorder('Element', '-file', dataDir+'isol1Force.csv',
+        '-time', '-closeOnWrite', '-ele', 51, 'localForce')
+    ops.recorder('Element', '-file', dataDir+'isol2Force.csv',
+        '-time', '-closeOnWrite', '-ele', 52, 'localForce')
+    ops.recorder('Element', '-file', dataDir+'isol3Force.csv',
+        '-time', '-closeOnWrite', '-ele', 53, 'localForce')
+    ops.recorder('Element', '-file', dataDir+'isol4Force.csv',
+        '-time', '-closeOnWrite', '-ele', 54, 'localForce')
+    ops.recorder('Element', '-file', dataDir+'isolLCForce.csv',
+        '-time', '-closeOnWrite', '-ele', 55, 'localForce')
 
-    ops.recorder('Element', '-file', dataDir+'colForce1.csv', '-time', '-closeOnWrite', '-ele', 111, 'localForce')
-    ops.recorder('Element', '-file', dataDir+'colForce2.csv', '-time', '-closeOnWrite', '-ele', 112, 'localForce')
-    ops.recorder('Element', '-file', dataDir+'colForce3.csv', '-time', '-closeOnWrite', '-ele', 113, 'localForce')
-    ops.recorder('Element', '-file', dataDir+'colForce4.csv', '-time', '-closeOnWrite', '-ele', 114, 'localForce')
+    ops.recorder('Element', '-file', dataDir+'colForce1.csv',
+        '-time', '-closeOnWrite', '-ele', 111, 'localForce')
+    ops.recorder('Element', '-file', dataDir+'colForce2.csv',
+        '-time', '-closeOnWrite', '-ele', 112, 'localForce')
+    ops.recorder('Element', '-file', dataDir+'colForce3.csv',
+        '-time', '-closeOnWrite', '-ele', 113, 'localForce')
+    ops.recorder('Element', '-file', dataDir+'colForce4.csv',
+        '-time', '-closeOnWrite', '-ele', 114, 'localForce')
 
     # ops.recorder('Element', '-file', dataDir+'colForce5.csv', '-time', '-closeOnWrite', '-ele', 121, 'localForce')
     # ops.recorder('Element', '-file', dataDir+'colForce6.csv', '-time', '-closeOnWrite', '-ele', 122, 'localForce')
@@ -166,9 +176,9 @@ def runGM(gmFilename, gmDefScale, dtTransient):
     # ops.recorder('Element', '-file', dataDir+'beamForce5.csv', '-time', '-closeOnWrite', '-ele', 232, 'localForce')
     # ops.recorder('Element', '-file', dataDir+'beamForce6.csv', '-time', '-closeOnWrite', '-ele', 233, 'localForce')
 
-    # ops.recorder('Element', '-file', dataDir+'diaphragmForce1.csv', '-time', '-closeOnWrite', '-ele', 611, 'localForce')
-    # ops.recorder('Element', '-file', dataDir+'diaphragmForce2.csv', '-time', '-closeOnWrite', '-ele', 612, 'localForce')
-    # ops.recorder('Element', '-file', dataDir+'diaphragmForce3.csv', '-time', '-closeOnWrite', '-ele', 613, 'localForce')
+    ops.recorder('Element', '-file', dataDir+'diaphragmForce1.csv', '-time', '-closeOnWrite', '-ele', 611, 'localForce')
+    ops.recorder('Element', '-file', dataDir+'diaphragmForce2.csv', '-time', '-closeOnWrite', '-ele', 612, 'localForce')
+    ops.recorder('Element', '-file', dataDir+'diaphragmForce3.csv', '-time', '-closeOnWrite', '-ele', 613, 'localForce')
 
     ops.recorder('Element', '-file', dataDir+'impactForceLeft.csv', '-time', '-closeOnWrite', '-ele', 881, 'basicForce')
     ops.recorder('Element', '-file', dataDir+'impactForceRight.csv', '-time', '-closeOnWrite', '-ele', 884, 'basicForce')
@@ -222,6 +232,20 @@ def runGM(gmFilename, gmDefScale, dtTransient):
 
     ops.timeSeries('Path', eqSeriesTag, '-dt', dt, '-filePath', outFile, '-factor', GMfatt)     # time series information
     ops.pattern('UniformExcitation', eqPatternTag, GMDirection, '-accel', eqSeriesTag)          # create uniform excitation
+
+    # set recorder for absolute acceleration (requires time series defined)
+    ops.recorder('Node', '-file', dataDir+'story0Acc.csv',
+        '-timeSeries', eqSeriesTag, '-time', '-closeOnWrite',
+        '-node', 11, 12, 13, 14, 15, '-dof', 1, 'accel')
+    ops.recorder('Node', '-file', dataDir+'story1Acc.csv',
+        '-timeSeries', eqSeriesTag, '-time', '-closeOnWrite',
+        '-node', 21, 22, 23, 24, 25, '-dof', 1, 'accel')
+    ops.recorder('Node', '-file', dataDir+'story2Acc.csv',
+        '-timeSeries', eqSeriesTag, '-time', '-closeOnWrite',
+        '-node', 31, 32, 33, 34, 35, '-dof', 1, 'accel')
+    ops.recorder('Node', '-file', dataDir+'story3Acc.csv',
+        '-timeSeries', eqSeriesTag, '-time', '-closeOnWrite',
+        '-node', 41, 42, 43, 44, 45, '-dof', 1, 'accel')
 
     # set up ground-motion-analysis parameters
     sec             = 1.0                      
