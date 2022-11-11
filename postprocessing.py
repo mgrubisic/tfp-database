@@ -101,8 +101,6 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, runStatus, Tfb):
     isolDisp = pd.read_csv('./outputs/isolDisp.csv', sep=' ',
         header=None, names=dispColumns)
 
-    story0Disp = pd.read_csv('./outputs/story0Disp.csv', sep=' ',
-        header=None, names=dispColumns)
     story1Disp = pd.read_csv('./outputs/story1Disp.csv', sep=' ',
         header=None, names=dispColumns)
     story2Disp = pd.read_csv('./outputs/story2Disp.csv', sep=' ',
