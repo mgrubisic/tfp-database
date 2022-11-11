@@ -11,7 +11,7 @@
 #               Calls LHS -> design -> buildModel -> eqAnly -> postprocessing
 #               Writes results in final csv file
 
-# Open issues:  (1) 
+# Open issues:  (1) progress saving
 
 ############################################################################
 
@@ -122,8 +122,9 @@ for index, row in enumerate(inputValues):
         runStatus, Tfb, scaleFactor = eq.runGM(filename, defFactor, 0.0005)
     if runStatus != 0:
         print('Recording run and moving on.')
-
-    pt_counter += 1
+    else:
+        pt_counter += 1
+    
     resultsHeader, thisRun  = postprocessing.failurePostprocess(filename, scaleFactor, specAvg, runStatus, Tfb) # add run results to holder df
 
     # if initial run, start the dataframe with headers from postprocessing.py
@@ -135,6 +136,10 @@ for index, row in enumerate(inputValues):
 
     if (pt_counter == desired_pts):
         break
+    
+    # saving mechanism
+    if (index % 10) == 0:
+        resultsDf.to_csv('./sessionOut/sessionSummary_temp_save.csv', index=False)
 
 gmDatabase.to_csv(gmPath+databaseFile, index=False)
 resultsDf.to_csv('./sessionOut/sessionSummary_PID-PFA.csv', index=False)

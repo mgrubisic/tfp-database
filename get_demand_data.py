@@ -8,6 +8,9 @@
 
 # Description:  Utility used to generate demand files (EDP) in the PBE framework
 
+# Open issues:  (1) requires expansion to generalized multifloor
+#               (2) check acceleration units
+
 ############################################################################
 
 
