@@ -117,9 +117,15 @@ for index, row in enumerate(inputValues):
     if runStatus != 0:
         print('Lowering time step...')
         runStatus, Tfb, scaleFactor = eq.runGM(filename, defFactor, 0.001)
+    else:
+        pt_counter += 1
+        
     if runStatus != 0:
         print('Lowering time step last time...')
         runStatus, Tfb, scaleFactor = eq.runGM(filename, defFactor, 0.0005)
+    else:
+        pt_counter += 1
+        
     if runStatus != 0:
         print('Recording run and moving on.')
     else:
