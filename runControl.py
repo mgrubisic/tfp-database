@@ -114,6 +114,7 @@ for index, row in enumerate(inputValues):
     except IndexError:
         print('SCWB check failed, no shape exists for design. Skipping...')
         continue
+    
     if runStatus != 0:
         print('Lowering time step...')
         runStatus, Tfb, scaleFactor = eq.runGM(filename, defFactor, 0.001)
