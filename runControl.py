@@ -106,6 +106,10 @@ for index, row in enumerate(inputValues):
     # gmS1                  = float(gmDatabase['scaledSa1'][ind])               # scaled pSa at T = 1s, w.r.t. method above
         
     # move on to next set if bad friction coeffs encountered (handled in superStructDesign)
+    if defFactor >= 20.0:
+        print('Ground motion scaled excessively. Skipping...')
+        continue
+
     try:
         runStatus, Tfb, scaleFactor = eq.runGM(filename, defFactor, 0.005) # perform analysis (superStructDesign and buildModel imported within)
     except ValueError:
@@ -118,22 +122,18 @@ for index, row in enumerate(inputValues):
     if runStatus != 0:
         print('Lowering time step...')
         runStatus, Tfb, scaleFactor = eq.runGM(filename, defFactor, 0.001)
-    else:
-        pt_counter += 1
         
     if runStatus != 0:
         print('Lowering time step last time...')
         runStatus, Tfb, scaleFactor = eq.runGM(filename, defFactor, 0.0005)
-    else:
-        pt_counter += 1
         
     if runStatus != 0:
         print('Recording run and moving on.')
-    else:
-        pt_counter += 1
     
     resultsHeader, thisRun  = postprocessing.failurePostprocess(filename, scaleFactor, specAvg, runStatus, Tfb) # add run results to holder df
-
+    if runStatus == 0:
+        pt_counter += 1
+        
     # if initial run, start the dataframe with headers from postprocessing.py
     if resultsDf is None:
         resultsDf           = pd.DataFrame(columns=resultsHeader)
