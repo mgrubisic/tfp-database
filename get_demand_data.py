@@ -18,11 +18,15 @@
 def get_demand_data(isol_data):
 
     EDP_data = isol_data[['accMax1', 'accMax2', 'accMax3', 
+        'driftMax1', 'driftMax2', 'driftMax3',
+        'accMax1', 'accMax2', 'accMax3', 
         'driftMax1', 'driftMax2', 'driftMax3']]
 
     #1-type-floor-direction
     EDP_data.columns = ['1-PFA-1-1', '1-PFA-2-1', '1-PFA-3-1',
-        '1-PID-1-1', '1-PID-2-1', '1-PID-3-1']
+        '1-PID-1-1', '1-PID-2-1', '1-PID-3-1',
+        '1-PFA-1-2', '1-PFA-2-2', '1-PFA-3-2',
+        '1-PID-1-2', '1-PID-2-2', '1-PID-3-2']
 
     return(EDP_data)
 
