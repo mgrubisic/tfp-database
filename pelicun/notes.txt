@@ -1,0 +1,5 @@
+Generated 11/18 for 400+ points (filtered to 400 successful runs)
+Components assume floor 1 is ground, floor 4 is roof.
+Assumes ground floor is 80-20 retail/office. The rest is 100% office.
+Normative quantity estimation tool used for components, but some judgments used
+	to remove components that would be unnaturally located.
