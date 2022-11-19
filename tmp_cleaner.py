@@ -44,8 +44,8 @@ def cleanDat(oldDf):
 
     return(newDf)
 
-databasePath = './data/'
-databaseFile = 'pid_pfa_full.csv'
+databasePath = './sessionOut/'
+databaseFile = 'sessionSummary_PID-PFA.csv'
 
 unfilteredData = pd.read_csv(databasePath+databaseFile)
 
