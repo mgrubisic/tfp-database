@@ -248,17 +248,13 @@ def runGM(gmFilename, gmDefScale, dtTransient):
         '-node', 41, 42, 43, 44, 45, '-dof', 1, 'accel')
 
     ops.recorder('Node', '-file', dataDir+'story0Vel.csv',
-        '-timeSeries', eqSeriesTag, '-time', '-closeOnWrite',
-        '-node', 11, 12, 13, 14, 15, '-dof', 1, 'vel')
+        '-time', '-closeOnWrite', '-node', 11, 12, 13, 14, 15, '-dof', 1, 'vel')
     ops.recorder('Node', '-file', dataDir+'story1Vel.csv',
-        '-timeSeries', eqSeriesTag, '-time', '-closeOnWrite',
-        '-node', 21, 22, 23, 24, 25, '-dof', 1, 'vel')
+        '-time', '-closeOnWrite', '-node', 21, 22, 23, 24, 25, '-dof', 1, 'vel')
     ops.recorder('Node', '-file', dataDir+'story2Vel.csv',
-        '-timeSeries', eqSeriesTag, '-time', '-closeOnWrite',
-        '-node', 31, 32, 33, 34, 35, '-dof', 1, 'vel')
+        '-time', '-closeOnWrite', '-node', 31, 32, 33, 34, 35, '-dof', 1, 'vel')
     ops.recorder('Node', '-file', dataDir+'story3Vel.csv',
-        '-timeSeries', eqSeriesTag, '-time', '-closeOnWrite',
-        '-node', 41, 42, 43, 44, 45, '-dof', 1, 'vel')
+        '-time', '-closeOnWrite', '-node', 41, 42, 43, 44, 45, '-dof', 1, 'vel')
 
     # set up ground-motion-analysis parameters
     sec             = 1.0                      

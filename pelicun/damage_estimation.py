@@ -45,7 +45,7 @@ all_demands.columns = all_demands.columns.fillna('EDP')
 all_demands = all_demands.set_index('EDP', drop=True)
 
 
-run_idx = 6
+run_idx = 3
 raw_demands = all_demands[['Units', str(run_idx)]]
 raw_demands.columns = ['Units', 'Value']
 raw_demands = convert_to_MultiIndex(raw_demands, axis=0)
