@@ -117,6 +117,15 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, runStatus, Tfb):
     story3Acc = pd.read_csv('./outputs/story3Acc.csv', sep=' ',
         header=None, names=dispColumns)
 
+    story0Vel = pd.read_csv('./outputs/story0Vel.csv', sep=' ',
+        header=None, names=dispColumns)
+    story1Vel = pd.read_csv('./outputs/story1Vel.csv', sep=' ',
+        header=None, names=dispColumns)
+    story2Vel = pd.read_csv('./outputs/story2Vel.csv', sep=' ',
+        header=None, names=dispColumns)
+    story3Vel = pd.read_csv('./outputs/story3Vel.csv', sep=' ',
+        header=None, names=dispColumns)
+
     forceColumns = ['time', 'iAxial', 'iShearX', 'iShearY', 'iMomentX','iMomentY', 'iMomentZ', 'jAxial', 'jShearX', 'jShearY', 'jMomentX', 'jMomentY', 'jMomentZ']
 
     isol1Force = pd.read_csv('./outputs/isol1Force.csv', sep = ' ',
@@ -171,6 +180,27 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, runStatus, Tfb):
         abs(story2AccInner)))
     afterRun['accMax3']   = max(np.maximum(abs(story3AccOuter),
         abs(story3AccInner)))
+
+    story0VelOuter    = (story0Vel['isol1'])
+    story0VelInner    = (story0Vel['isol2'])
+
+    story1VelOuter    = (story1Vel['isol1'])
+    story1VelInner    = (story1Vel['isol2'])
+
+    story2VelOuter    = (story2Vel['isol1'])
+    story2VelInner    = (story2Vel['isol2'])
+
+    story3VelOuter    = (story3Vel['isol1'])
+    story3VelInner    = (story3Vel['isol2'])
+
+    afterRun['velMax0']   = max(np.maximum(abs(story0VelOuter),
+        abs(story0VelInner)))
+    afterRun['velMax1']   = max(np.maximum(abs(story1VelOuter),
+        abs(story1VelInner)))
+    afterRun['velMax2']   = max(np.maximum(abs(story2VelOuter),
+        abs(story2VelInner)))
+    afterRun['velMax3']   = max(np.maximum(abs(story3VelOuter),
+        abs(story3VelInner)))
 
     # drift failure check
     # collapse limit state

@@ -101,7 +101,7 @@ demand_sample = PAL.demand.save_sample()
 
 
 # get residual drift estimates 
-delta_y = 0.01 # sample value for ductile steel MRF, FEMA P-58 T. C-2
+delta_y = 0.0075 # found from typical pushover curve for structure
 PID = demand_sample['PID']
 
 RID = PAL.demand.estimate_RID(PID, {'yield_drift': delta_y}) 
