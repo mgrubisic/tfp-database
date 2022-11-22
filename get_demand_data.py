@@ -22,15 +22,26 @@ def get_demand_data(isol_data):
         'accMax0', 'accMax1', 'accMax2', 'accMax3', 
         'driftMax1', 'driftMax2', 'driftMax3']]
 
-    #1-type-floor-direction
-    EDP_data.columns = ['1-PFA-1-1', '1-PFA-2-1', '1-PFA-3-1', '1-PFA-4-1',
-        '1-PID-1-1', '1-PID-2-1', '1-PID-3-1',
-        '1-PFA-1-2', '1-PFA-2-2', '1-PFA-3-2', '1-PFA-4-2',
-        '1-PID-1-2', '1-PID-2-2', '1-PID-3-2']
+    #type-floor-direction
+    EDP_data.columns = ['PFA-0-1', 'PFA-1-1', 'PFA-2-1', 'PFA-3-1',
+        'PID-1-1', 'PID-2-1', 'PID-3-1',
+        'PFA-0-2', 'PFA-1-2', 'PFA-2-2', 'PFA-3-2',
+        'PID-1-2', 'PID-2-2', 'PID-3-2']
+    # EDP_data.columns = ['PFA-1-1', 'PFA-2-1', 'PFA-3-1', 'PFA-4-1',
+    #     'PID-1-1', 'PID-2-1', 'PID-3-1',
+    #     'PFA-1-2', 'PFA-2-2', 'PFA-3-2', 'PFA-4-2',
+    #     'PID-1-2', 'PID-2-2', 'PID-3-2']
+    
+    EDP_data.loc['Units'] = ['g','g','g','g','rad','rad','rad',
+                             'g','g','g','g','rad','rad','rad']
+
+    EDP_data["new"] = range(1,len(EDP_data)+1)
+    EDP_data.loc[EDP_data.index=='Units', 'new'] = 0
+    EDP_data = EDP_data.sort_values("new").drop('new', axis=1)
 
     return(EDP_data)
 
 import pandas as pd
 data = pd.read_csv('./sessionOut/sessionSummary_PID-PFA.csv', sep=',')
 edp = get_demand_data(data)
-edp.to_csv('./sessionOut/engineering_demands_TFP.csv', index=False)
+edp.to_csv('./pelicun/demand_data.csv', index=True)
