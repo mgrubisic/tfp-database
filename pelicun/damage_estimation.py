@@ -45,7 +45,7 @@ all_demands.columns = all_demands.columns.fillna('EDP')
 all_demands = all_demands.set_index('EDP', drop=True)
 
 
-run_idx = 3
+run_idx = 324
 raw_demands = all_demands[['Units', str(run_idx)]]
 raw_demands.columns = ['Units', 'Value']
 raw_demands = convert_to_MultiIndex(raw_demands, axis=0)
@@ -199,20 +199,20 @@ additional_fragility_db.loc[
 additional_fragility_db.loc[
     'excessiveRID', [('LS1','Family'),
                     ('LS1','Theta_0'),
-                    ('LS1','Theta_1')]] = ['lognormal', 0.017, 0.01]   
+                    ('LS1','Theta_1')]] = ['lognormal', 0.017, 0.3]   
 
 additional_fragility_db.loc[
     'irreparable', [('Demand','Directional'),
                     ('Demand','Offset'),
                     ('Demand','Type'), 
-                    ('Demand','Unit')]] = [1, 0, 'Peak Interstory Drift Ratio', 'rad']   
+                    ('Demand','Unit')]] = [1, 0, 'Residual Interstory Drift Ratio', 'rad']   
 
 
 # a very high capacity is assigned to avoid damage from demands
 additional_fragility_db.loc[
     'irreparable', [('LS1','Family'),
                     ('LS1','Theta_0'),
-                    ('LS1','Theta_1')]] = ['lognormal', 0.02, 0.01]   
+                    ('LS1','Theta_1')]] = ['lognormal', 0.02, 0.3]   
 
 # collapse
 # capacity is assigned based on the example in the FEMA P58 background documentation
@@ -226,7 +226,7 @@ additional_fragility_db.loc[
 additional_fragility_db.loc[
     'collapse', [('LS1','Family'),
                  ('LS1','Theta_0'),
-                 ('LS1','Theta_1')]] = ['lognormal', 0.05, 0.01]  
+                 ('LS1','Theta_1')]] = ['lognormal', 0.05, 0.3]  
 
 # We set the incomplete flag to 0 for the additional components
 additional_fragility_db['Incomplete'] = 0
@@ -243,7 +243,22 @@ PAL.damage.load_damage_model([
 
 #%%
 
-# damage process: see example file
+# damage process: see example file# 
+
+### 3.3.5 Damage Process
+# 
+# Damage processes are a powerful new feature in Pelicun 3. 
+# They are used to connect damages of different components in the performance model 
+# and they can be used to create complex cascading damage models.
+# 
+# The default FEMA P-58 damage process is farily simple. The process below can be interpreted as follows:
+# * If Damage State 1 (DS1) of the collapse component is triggered (i.e., the building collapsed), 
+# then damage for all other components should be cleared from the results. 
+# This considers that component damages (and their consequences) in FEMA P-58 are conditioned on no collapse.
+
+# * If Damage State 1 (DS1) of any of the excessiveRID components is triggered 
+# (i.e., the residual drifts are larger than the prescribed capacity on at least one floor),
+# then the irreparable component should be set to DS1.
 
 # FEMA P58 uses the following process:
 dmg_process = {
@@ -259,8 +274,8 @@ dmg_process = {
 #%%
 
 # Now we can run the calculation
-PAL.damage.calculate(dmg_process=dmg_process)#, block_batch_size=100) #- for large calculations
-
+#PAL.damage.calculate(dmg_process=dmg_process)#, block_batch_size=100) #- for large calculations
+PAL.damage.calculate()#, block_batch_size=100)
 #%%
 
 # Damage estimates
@@ -292,7 +307,7 @@ px.bar(x=dmg_plot.index.get_level_values(1), y=dmg_plot.mean(axis=1),
 dmg_plot = (damage_sample.loc[:, component].loc[:,idx[:,:,'2']] / 
             damage_sample.loc[:, component].groupby(level=[0,1], axis=1).sum()).T
 
-px.bar(x=dmg_plot.index.get_level_values(0), y=(dmg_plot>0.5).mean(axis=1), 
+px.bar(x=dmg_plot.index.get_level_values(0), y=(dmg_plot>0.2).mean(axis=1), 
        color=dmg_plot.index.get_level_values(1),
        barmode='group',
        labels={
@@ -300,7 +315,7 @@ px.bar(x=dmg_plot.index.get_level_values(0), y=(dmg_plot>0.5).mean(axis=1),
            'y':'Probability',
            'color': 'Direction'
        },
-       title=f'Probability of having more than 50% of component {component} in DS2',
+       title=f'Probability of having more than 20% of component {component} in DS2',
        height=500
       )
 #%%
@@ -311,14 +326,14 @@ px.bar(x=dmg_plot.index.get_level_values(0), y=(dmg_plot>0.5).mean(axis=1),
 
 # we need to prepend 'DMG-' to the component names to tell pelicun to look for the damage of these components
 drivers = [f'DMG-{cmp}' for cmp in cmp_marginals.index.unique()]
-drivers = drivers[:-3]+drivers[-2:]
+drivers = drivers[:-3]+drivers[-3:]
 
 # we are looking at repair consequences in this example
 # the components in P58 have consequence models under the same name
 loss_models = cmp_marginals.index.unique().tolist()[:-3]
 
 # We will define the replacement consequence in the following cell.
-loss_models+=['replacement',]*2
+loss_models+=['replacement',]*3
 
 # Assemble the DataFrame with the mapping information
 # The column name identifies the type of the consequence model.
@@ -332,7 +347,7 @@ loss_map
 P58_data = PAL.get_default_data('bldg_repair_DB_FEMA_P58_2nd')
 
 # get the consequences used by this assessment
-P58_data_for_this_assessment = P58_data.loc[loss_map['BldgRepair'].values[:-2],:]
+P58_data_for_this_assessment = P58_data.loc[loss_map['BldgRepair'].values[:-3],:]
 
 print(P58_data_for_this_assessment['Incomplete'].sum(), ' components have incomplete consequence models assigned.')
 

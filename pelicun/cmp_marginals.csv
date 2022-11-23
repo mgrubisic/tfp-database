@@ -37,5 +37,5 @@ D.50.12.021a,AP,roof,0,4.9,0.4,lognormal,,D5012.021a    Low Voltage Switchgear -
 D.50.12.021a,AP,2--3,0,4.9,0.4,lognormal,,D5012.021a    Low Voltage Switchgear - Capacity: 100 to <350 Amp - Unanchored equipment that is not vibration isolated - Equipment fragility only
 D.50.12.021a,AP,1,0,4.9,0.4,lognormal,,D5012.021a    Low Voltage Switchgear - Capacity: 100 to <350 Amp - Unanchored equipment that is not vibration isolated - Equipment fragility only
 excessiveRID,ea,all,"1,2",1,,,,Excessive residual drift
-collapse,ea,1,1,1,,,,Collapsed building
-irreparable,ea,1,1,1,,,,Irreparable building
+collapse,ea,all,"1,2",1,,,,Collapsed building
+irreparable,ea,all,"1,2",1,,,,Irreparable building
