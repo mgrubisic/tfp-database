@@ -14,3 +14,6 @@ category E requires peak floor velocity, not yet collected
 Dotted naming system
 Remove duplicates, summing mean and variance
 Added blocks based on previous examples
+
+11/28
+Using PFV set of data for PFV components

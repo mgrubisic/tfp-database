@@ -44,8 +44,8 @@ all_demands.columns = all_demands.columns.fillna('EDP')
 
 all_demands = all_demands.set_index('EDP', drop=True)
 
-
-run_idx = 324
+run_idx = 11
+#run_idx = 324
 raw_demands = all_demands[['Units', str(run_idx)]]
 raw_demands.columns = ['Units', 'Value']
 raw_demands = convert_to_MultiIndex(raw_demands, axis=0)
@@ -225,8 +225,20 @@ additional_fragility_db.loc[
 
 additional_fragility_db.loc[
     'collapse', [('LS1','Family'),
-                 ('LS1','Theta_0'),
-                 ('LS1','Theta_1')]] = ['lognormal', 0.05, 0.3]  
+                  ('LS1','Theta_0'),
+                  ('LS1','Theta_1')]] = ['lognormal', 0.05, 0.3]  
+
+# additional_fragility_db.loc[
+#     'collapse', [('Demand','Directional'),
+#                     ('Demand','Offset'),
+#                     ('Demand','Type'), 
+#                     ('Demand','Unit')]] = [1, 0, 'Peak Floor Acceleration', 'g']
+
+
+# additional_fragility_db.loc[
+#     'collapse', [('LS1','Family'),
+#                  ('LS1','Theta_0'),
+#                  ('LS1','Theta_1')]] = ['lognormal', 1.6, 0.5] 
 
 # We set the incomplete flag to 0 for the additional components
 additional_fragility_db['Incomplete'] = 0
@@ -307,7 +319,7 @@ px.bar(x=dmg_plot.index.get_level_values(1), y=dmg_plot.mean(axis=1),
 dmg_plot = (damage_sample.loc[:, component].loc[:,idx[:,:,'2']] / 
             damage_sample.loc[:, component].groupby(level=[0,1], axis=1).sum()).T
 
-px.bar(x=dmg_plot.index.get_level_values(0), y=(dmg_plot>0.2).mean(axis=1), 
+px.bar(x=dmg_plot.index.get_level_values(0), y=(dmg_plot>0.5).mean(axis=1), 
        color=dmg_plot.index.get_level_values(1),
        barmode='group',
        labels={
@@ -315,7 +327,7 @@ px.bar(x=dmg_plot.index.get_level_values(0), y=(dmg_plot>0.2).mean(axis=1),
            'y':'Probability',
            'color': 'Direction'
        },
-       title=f'Probability of having more than 20% of component {component} in DS2',
+       title=f'Probability of having more than 50% of component {component} in DS2',
        height=500
       )
 #%%
@@ -344,10 +356,11 @@ loss_map
 #%%
 
 # load the consequence models
+# Q: no group E?
 P58_data = PAL.get_default_data('bldg_repair_DB_FEMA_P58_2nd')
 
 # get the consequences used by this assessment
-P58_data_for_this_assessment = P58_data.loc[loss_map['BldgRepair'].values[:-3],:]
+P58_data_for_this_assessment = P58_data.loc[loss_map['BldgRepair'].values[:-5],:]
 
 print(P58_data_for_this_assessment['Incomplete'].sum(), ' components have incomplete consequence models assigned.')
 
@@ -394,7 +407,7 @@ loss_plot = loss_sample.groupby(level=[0, 2], axis=1).sum()['COST'].iloc[:, :-2]
 # we add 100 to the loss values to avoid having issues with zeros when creating a log plot
 loss_plot += 100
 
-px.box(y=np.tile(loss_plot.columns, loss_plot.shape[0]), 
+fig = px.box(y=np.tile(loss_plot.columns, loss_plot.shape[0]), 
        x=loss_plot.values.flatten(), 
        color = [c[0] for c in loss_plot.columns]*loss_plot.shape[0],
        orientation = 'h',
@@ -407,7 +420,11 @@ px.box(y=np.tile(loss_plot.columns, loss_plot.shape[0]),
        log_x=True,
        height=1500)
 
+fig.update_layout( # customize font and legend orientation & position
+    font=dict(size=28)
+    )
 
+fig.show()
 #%%
 
 
