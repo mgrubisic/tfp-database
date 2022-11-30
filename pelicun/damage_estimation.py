@@ -356,8 +356,27 @@ loss_map
 #%%
 
 # load the consequence models
-# Q: no group E?
 P58_data = PAL.get_default_data('bldg_repair_DB_FEMA_P58_2nd')
+
+# group E
+missing_cmp = pd.DataFrame(
+    columns = pd.MultiIndex.from_tuples([('Incomplete',''), 
+                                         ('Quantity','Unit'), 
+                                         ('DV', 'Unit'), 
+                                         ('DS1','Theta_0'),
+                                         ('DS1','Theta_1'),
+                                         ('DS1','Family'),]),
+    index=pd.MultiIndex.from_tuples([('E.20.22.102a','Cost'), 
+                                     ('E.20.22.102a','Time'),
+                                     ('E.20.22.112a','Cost'), 
+                                     ('E.20.22.112a','Time')])
+)
+
+missing_cmp.loc[('E.20.22.102a', 'Cost')] = [0, '1 EA', 'USD_2011', 190.0, 70.0, 'lognormal']
+missing_cmp.loc[('E.20.22.102a', 'Time')] = [0, '1 EA', 'USD_2011', 0.02, 0.01, 'lognormal']
+
+missing_cmp.loc[('E.20.22.112a', 'Cost')] = [0, '1 EA', 'USD_2011', 110.0, 40.0, 'lognormal']
+missing_cmp.loc[('E.20.22.112a', 'Time')] = [0, '1 EA', 'USD_2011', 0.02, 0.01, 'lognormal']
 
 # get the consequences used by this assessment
 P58_data_for_this_assessment = P58_data.loc[loss_map['BldgRepair'].values[:-5],:]
@@ -374,6 +393,11 @@ additional_consequences = pd.DataFrame(
                                      ('replacement','Time')])
 )
 
+
+
+# additional_consequences.loc['E.20.22.112a',('DS1','Theta_0')] = 1.229*0.0254 # pfv
+# additional_consequences.loc['E.20.22.112a',('DS1','Theta_1')] = 0.5*0.0254
+
 # add the data about replacement cost and time
 additional_consequences.loc[('replacement', 'Cost')] = [0, '1 EA', 'USD_2011', 21600000]
 additional_consequences.loc[('replacement', 'Time')] = [0, '1 EA', 'worker_day', 12500]  
@@ -384,7 +408,7 @@ additional_consequences
 
 # Load the loss model to pelicun
 PAL.bldg_repair.load_model(
-    [additional_consequences,
+    [additional_consequences, missing_cmp,
      "PelicunDefault/bldg_repair_DB_FEMA_P58_2nd.csv"], 
     loss_map)
 
@@ -424,7 +448,7 @@ fig.update_layout( # customize font and legend orientation & position
     font=dict(size=28)
     )
 
-fig.show()
+# fig.show()
 #%%
 
 

@@ -25,11 +25,11 @@ def get_demand_data(isol_data):
         'driftMax1', 'driftMax2', 'driftMax3']]
 
     #type-floor-direction
-    EDP_data.columns = ['PFA-0-1', 'PFA-1-1', 'PFA-2-1', 'PFA-3-1',
-                        'PFV-0-1', 'PFV-1-1', 'PFV-2-1', 'PFV-3-1',
+    EDP_data.columns = ['PFA-1-1', 'PFA-2-1', 'PFA-3-1', 'PFA-4-1',
+                        'PFV-1-1', 'PFV-2-1', 'PFV-3-1', 'PFV-4-1',
         'PID-1-1', 'PID-2-1', 'PID-3-1',
-        'PFA-0-2', 'PFA-1-2', 'PFA-2-2', 'PFA-3-2',
-        'PFV-0-2', 'PFV-1-2', 'PFV-2-2', 'PFV-3-2',
+        'PFA-1-2', 'PFA-2-2', 'PFA-3-2', 'PFA-4-2',
+        'PFV-1-2', 'PFV-2-2', 'PFV-3-2', 'PFV-4-2',
         'PID-1-2', 'PID-2-2', 'PID-3-2']
     # EDP_data.columns = ['PFA-1-1', 'PFA-2-1', 'PFA-3-1', 'PFA-4-1',
     #     'PID-1-1', 'PID-2-1', 'PID-3-1',

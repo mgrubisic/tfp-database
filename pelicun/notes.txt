@@ -17,3 +17,8 @@ Added blocks based on previous examples
 
 11/28
 Using PFV set of data for PFV components
+
+11/29
+Changed pelicun config to Offset = 0
+Works with EDP system PFA: 1-4, PID: 1-3
+Checked components with PACT (correctly placed components considering EDP offset)
