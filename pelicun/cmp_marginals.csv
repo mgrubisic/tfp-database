@@ -33,5 +33,5 @@ E.20.22.102a,ea,1,0,3.2,0.6,lognormal,3,"E2022.102a    Bookcase, 2 shelves, unan
 E.20.22.112a,ea,2--3,0,6.5,0.6,lognormal,7,"E2022.112a    Vertical Filing Cabinet, 2 drawer, unanchored laterally"
 E.20.22.112a,ea,1,0,1.3,0.6,lognormal,2,"E2022.112a    Vertical Filing Cabinet, 2 drawer, unanchored laterally"
 excessiveRID,ea,all,"1,2",1,,,,Excessive residual drift
-collapse,ea,all,"1,2",1,,,,Collapsed building
+collapse,ea,0,1,1,,,,Collapsed building
 irreparable,ea,all,"1,2",1,,,,Irreparable building

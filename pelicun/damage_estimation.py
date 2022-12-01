@@ -44,12 +44,16 @@ all_demands.columns = all_demands.columns.fillna('EDP')
 
 all_demands = all_demands.set_index('EDP', drop=True)
 
-run_idx = 11
+run_idx = 8
 #run_idx = 324
 raw_demands = all_demands[['Units', str(run_idx)]]
 raw_demands.columns = ['Units', 'Value']
 raw_demands = convert_to_MultiIndex(raw_demands, axis=0)
 raw_demands.index.names = ['type','loc','dir']
+
+full_isolation_data = pd.read_csv('full_isolation_data.csv', index_col=None)
+run_data = full_isolation_data.loc[run_idx]
+
 #%%
 
 # initialize a pelicun Assessment
@@ -57,6 +61,7 @@ PAL = Assessment({
     "PrintLog": True, 
     "Seed": 985,
     "Verbose": False,
+    "DemandOffset": {"PFA": 0, "PFV": 0}
 })
 
 #%%
@@ -109,14 +114,23 @@ RID = PAL.demand.estimate_RID(PID, {'yield_drift': delta_y})
 # and join them with the demand_sample
 demand_sample_ext = pd.concat([demand_sample, RID], axis=1)
 
+# add spectral acceleration at fundamental period (BEARING EFFECTIVE PERIOD)
+# does Sa(T) characterize this well considering impact? for now, try using peak acceleration
+# demand_sample_ext[('SA_Tm',0,1)] = max(run_data['accMax0'],
+#                                        run_data['accMax1'],
+#                                        run_data['accMax2'],
+#                                        run_data['accMax3'])
+
+demand_sample_ext[('SA_Tm',0,1)] = run_data['GMSTm']
 #%%
 
 # add units to the data 
 demand_sample_ext.T.insert(0, 'Units',"")
 
 # PFA and SA are in "g" in this example, while PID and RID are "rad"
-demand_sample_ext.loc['Units', ['PFA']] = 'g'
+demand_sample_ext.loc['Units', ['PFA', 'SA_Tm']] = 'g'
 demand_sample_ext.loc['Units',['PID', 'RID']] = 'rad'
+demand_sample_ext.loc['Units',['PFV']] = 'inps'
 
 
 PAL.demand.load_sample(demand_sample_ext)
@@ -178,13 +192,13 @@ pprint.pprint(P58_metadata['C.20.11.001a'])
 # stringers, steel or concrete filled pan treads
 # placeholders
 additional_fragility_db.loc['C.20.11.001a',('LS1','Theta_0')] = 0.017 # rads
-additional_fragility_db.loc['C.20.11.001a',('LS1','Theta_1')] = 0.01
+additional_fragility_db.loc['C.20.11.001a',('LS1','Theta_1')] = 0.5
 
 additional_fragility_db.loc['C.20.11.001a',('LS2','Theta_0')] = 0.02 # rads
-additional_fragility_db.loc['C.20.11.001a',('LS2','Theta_1')] = 0.01
+additional_fragility_db.loc['C.20.11.001a',('LS2','Theta_1')] = 0.5
 
 additional_fragility_db.loc['C.20.11.001a',('LS3','Theta_0')] = 0.05 # rads
-additional_fragility_db.loc['C.20.11.001a',('LS3','Theta_1')] = 0.01
+additional_fragility_db.loc['C.20.11.001a',('LS3','Theta_1')] = 0.5
 
 #%%
 
@@ -199,7 +213,7 @@ additional_fragility_db.loc[
 additional_fragility_db.loc[
     'excessiveRID', [('LS1','Family'),
                     ('LS1','Theta_0'),
-                    ('LS1','Theta_1')]] = ['lognormal', 0.017, 0.3]   
+                    ('LS1','Theta_1')]] = ['lognormal', 0.01, 0.3]   
 
 additional_fragility_db.loc[
     'irreparable', [('Demand','Directional'),
@@ -210,35 +224,43 @@ additional_fragility_db.loc[
 
 # a very high capacity is assigned to avoid damage from demands
 additional_fragility_db.loc[
-    'irreparable', [('LS1','Family'),
-                    ('LS1','Theta_0'),
-                    ('LS1','Theta_1')]] = ['lognormal', 0.02, 0.3]   
+    'irreparable', ('LS1','Theta_0')] = 1e10 
+
+# additional_fragility_db.loc[
+#     'irreparable', [('LS1','Family'),
+#                     ('LS1','Theta_0'),
+#                     ('LS1','Theta_1')]] = ['lognormal', 0.02, 0.3]   
 
 # collapse
+def calculate_collapse_SaT1(run_series):
+    
+    # method described in FEMA P-58 Ch. 6.4
+    # problem is we're working with Tm and not fundamental period
+    Dm = run_series['DesignDm']
+    Tm = run_series['Tm']
+    R = run_series['RI']
+    kM = (1/386.4)*(2*3.14159/Tm)**2
+    
+    Vb = Dm * kM
+    
+    # assumes that structure has identical property in each direction
+    Sa_D = Vb*R
+    return(4*Sa_D)
+
+sa_judg = calculate_collapse_SaT1(run_data)
+
 # capacity is assigned based on the example in the FEMA P58 background documentation
 additional_fragility_db.loc[
     'collapse', [('Demand','Directional'),
                     ('Demand','Offset'),
                     ('Demand','Type'), 
-                    ('Demand','Unit')]] = [1, 0, 'Peak Interstory Drift Ratio', 'rad']
+                    ('Demand','Unit')]] = [1, 0, 'Peak Spectral Acceleration|Tm', 'g']   
 
-
+# use judgment method, apply 0.6 variance (FEMA P58 ch. 6)
 additional_fragility_db.loc[
     'collapse', [('LS1','Family'),
                   ('LS1','Theta_0'),
-                  ('LS1','Theta_1')]] = ['lognormal', 0.05, 0.3]  
-
-# additional_fragility_db.loc[
-#     'collapse', [('Demand','Directional'),
-#                     ('Demand','Offset'),
-#                     ('Demand','Type'), 
-#                     ('Demand','Unit')]] = [1, 0, 'Peak Floor Acceleration', 'g']
-
-
-# additional_fragility_db.loc[
-#     'collapse', [('LS1','Family'),
-#                  ('LS1','Theta_0'),
-#                  ('LS1','Theta_1')]] = ['lognormal', 1.6, 0.5] 
+                  ('LS1','Theta_1')]] = ['lognormal', sa_judg, 0.6]  
 
 # We set the incomplete flag to 0 for the additional components
 additional_fragility_db['Incomplete'] = 0
@@ -281,6 +303,12 @@ dmg_process = {
         "DS1": "irreparable_DS1"
     }
 }
+
+# dmg_process = {
+#     "1_collapse": {
+#         "DS1": "ALL_NA"
+#     }
+# }
 
 
 #%%
@@ -359,7 +387,7 @@ loss_map
 P58_data = PAL.get_default_data('bldg_repair_DB_FEMA_P58_2nd')
 
 # group E
-missing_cmp = pd.DataFrame(
+incomplete_cmp = pd.DataFrame(
     columns = pd.MultiIndex.from_tuples([('Incomplete',''), 
                                          ('Quantity','Unit'), 
                                          ('DV', 'Unit'), 
@@ -372,11 +400,15 @@ missing_cmp = pd.DataFrame(
                                      ('E.20.22.112a','Time')])
 )
 
-missing_cmp.loc[('E.20.22.102a', 'Cost')] = [0, '1 EA', 'USD_2011', 190.0, 70.0, 'lognormal']
-missing_cmp.loc[('E.20.22.102a', 'Time')] = [0, '1 EA', 'USD_2011', 0.02, 0.01, 'lognormal']
+incomplete_cmp.loc[('E.20.22.102a', 'Cost')] = [0, '1 EA', 'USD_2011',
+                                             '190.0, 150.0|1,5', 0.35, 'lognormal']
+incomplete_cmp.loc[('E.20.22.102a', 'Time')] = [0, '1 EA', 'worker_day',
+                                             0.02, 0.5, 'lognormal']
 
-missing_cmp.loc[('E.20.22.112a', 'Cost')] = [0, '1 EA', 'USD_2011', 110.0, 40.0, 'lognormal']
-missing_cmp.loc[('E.20.22.112a', 'Time')] = [0, '1 EA', 'USD_2011', 0.02, 0.01, 'lognormal']
+incomplete_cmp.loc[('E.20.22.112a', 'Cost')] = [0, '1 EA', 'USD_2011',
+                                             '110.0, 70.0|1,5', 0.35, 'lognormal']
+incomplete_cmp.loc[('E.20.22.112a', 'Time')] = [0, '1 EA', 'worker_day',
+                                             0.02, 0.5, 'lognormal']
 
 # get the consequences used by this assessment
 P58_data_for_this_assessment = P58_data.loc[loss_map['BldgRepair'].values[:-5],:]
@@ -408,9 +440,14 @@ additional_consequences
 
 # Load the loss model to pelicun
 PAL.bldg_repair.load_model(
-    [additional_consequences, missing_cmp,
-     "PelicunDefault/bldg_repair_DB_FEMA_P58_2nd.csv"], 
+    [additional_consequences, incomplete_cmp,
+      "PelicunDefault/bldg_repair_DB_FEMA_P58_2nd.csv"], 
     loss_map)
+
+# PAL.bldg_repair.load_model(
+#     [additional_consequences,
+#       "PelicunDefault/bldg_repair_DB_FEMA_P58_2nd.csv"], 
+#     loss_map)
 
 #%%
 
