@@ -44,7 +44,7 @@ all_demands.columns = all_demands.columns.fillna('EDP')
 
 all_demands = all_demands.set_index('EDP', drop=True)
 
-run_idx = 8
+run_idx = 2
 #run_idx = 324
 raw_demands = all_demands[['Units', str(run_idx)]]
 raw_demands.columns = ['Units', 'Value']
@@ -219,7 +219,7 @@ additional_fragility_db.loc[
     'irreparable', [('Demand','Directional'),
                     ('Demand','Offset'),
                     ('Demand','Type'), 
-                    ('Demand','Unit')]] = [1, 0, 'Residual Interstory Drift Ratio', 'rad']   
+                    ('Demand','Unit')]] = [1, 0, 'Peak Spectral Acceleration|Tm', 'g']   
 
 
 # a very high capacity is assigned to avoid damage from demands
@@ -315,7 +315,7 @@ dmg_process = {
 
 # Now we can run the calculation
 #PAL.damage.calculate(dmg_process=dmg_process)#, block_batch_size=100) #- for large calculations
-PAL.damage.calculate()#, block_batch_size=100)
+PAL.damage.calculate(dmg_process=dmg_process)#, block_batch_size=100)
 #%%
 
 # Damage estimates
@@ -344,21 +344,6 @@ px.bar(x=dmg_plot.index.get_level_values(1), y=dmg_plot.mean(axis=1),
       )
 
 #%%
-dmg_plot = (damage_sample.loc[:, component].loc[:,idx[:,:,'2']] / 
-            damage_sample.loc[:, component].groupby(level=[0,1], axis=1).sum()).T
-
-px.bar(x=dmg_plot.index.get_level_values(0), y=(dmg_plot>0.5).mean(axis=1), 
-       color=dmg_plot.index.get_level_values(1),
-       barmode='group',
-       labels={
-           'x':'Floor',
-           'y':'Probability',
-           'color': 'Direction'
-       },
-       title=f'Probability of having more than 50% of component {component} in DS2',
-       height=500
-      )
-#%%
 
 # losses - map consequences to damage
 
@@ -366,14 +351,14 @@ px.bar(x=dmg_plot.index.get_level_values(0), y=(dmg_plot>0.5).mean(axis=1),
 
 # we need to prepend 'DMG-' to the component names to tell pelicun to look for the damage of these components
 drivers = [f'DMG-{cmp}' for cmp in cmp_marginals.index.unique()]
-drivers = drivers[:-3]+drivers[-3:]
+drivers = drivers[:-3]+drivers[-2:]
 
 # we are looking at repair consequences in this example
 # the components in P58 have consequence models under the same name
 loss_models = cmp_marginals.index.unique().tolist()[:-3]
 
 # We will define the replacement consequence in the following cell.
-loss_models+=['replacement',]*3
+loss_models+=['replacement',]*2
 
 # Assemble the DataFrame with the mapping information
 # The column name identifies the type of the consequence model.
@@ -460,7 +445,7 @@ loss_sample = PAL.bldg_repair.sample
 
 print("Size of repair cost & time results: ", sys.getsizeof(loss_sample)/1024/1024, "MB")
 
-loss_sample['COST']['B.20.22.001'].groupby(level=[0,2,3],axis=1).sum().describe([0.1, 0.5, 0.9]).T
+# loss_sample['COST']['B.20.22.001'].groupby(level=[0,2,3],axis=1).sum().describe([0.1, 0.5, 0.9]).T
 
 #%%
 loss_plot = loss_sample.groupby(level=[0, 2], axis=1).sum()['COST'].iloc[:, :-2]
@@ -540,6 +525,7 @@ agg_DF.describe([0.1, 0.5, 0.9])
 
 # filter only the repairable cases
 agg_DF_plot = agg_DF.loc[agg_DF['repair_cost'] < 2e7]
+
 px.scatter(x=agg_DF_plot[('repair_time','sequential')],
            y=agg_DF_plot[('repair_time','parallel')], 
            opacity=0.1,
