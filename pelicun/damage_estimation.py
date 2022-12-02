@@ -34,6 +34,9 @@ pio.renderers.default='browser'
 from pelicun.base import convert_to_MultiIndex
 from pelicun.assessment import Assessment
 
+import warnings
+warnings.filterwarnings('ignore')
+
 #%%
 
 # Prepare demand data set to match format
@@ -44,7 +47,7 @@ all_demands.columns = all_demands.columns.fillna('EDP')
 
 all_demands = all_demands.set_index('EDP', drop=True)
 
-run_idx = 2
+run_idx = 45
 #run_idx = 324
 raw_demands = all_demands[['Units', str(run_idx)]]
 raw_demands.columns = ['Units', 'Value']
@@ -58,7 +61,7 @@ run_data = full_isolation_data.loc[run_idx]
 
 # initialize a pelicun Assessment
 PAL = Assessment({
-    "PrintLog": True, 
+    "PrintLog": False, 
     "Seed": 985,
     "Verbose": False,
     "DemandOffset": {"PFA": 0, "PFV": 0}
@@ -170,7 +173,7 @@ cmp_sample.describe()
 P58_data = PAL.get_default_data('fragility_DB_FEMA_P58_2nd')
 
 
-print(P58_data['Incomplete'].sum(),' incomplete component fragility definitions')
+# print(P58_data['Incomplete'].sum(),' incomplete component fragility definitions')
 
 # note that we drop the last three components here (excessiveRID, irreparable, and collapse) 
 # because they are not part of P58
@@ -185,8 +188,8 @@ additional_fragility_db
 
 P58_metadata = PAL.get_default_metadata('fragility_DB_FEMA_P58_2nd')
 
-# add missing components
-pprint.pprint(P58_metadata['C.20.11.001a'])
+# # add missing components
+# pprint.pprint(P58_metadata['C.20.11.001a'])
 
 # C.20.11.001a - Flexible stair with seismic interstory slip joint.  Steel prefab,
 # stringers, steel or concrete filled pan treads
@@ -265,7 +268,6 @@ additional_fragility_db.loc[
 # We set the incomplete flag to 0 for the additional components
 additional_fragility_db['Incomplete'] = 0
 
-additional_fragility_db.tail(3)
 
 #%%
 
@@ -398,7 +400,7 @@ incomplete_cmp.loc[('E.20.22.112a', 'Time')] = [0, '1 EA', 'worker_day',
 # get the consequences used by this assessment
 P58_data_for_this_assessment = P58_data.loc[loss_map['BldgRepair'].values[:-5],:]
 
-print(P58_data_for_this_assessment['Incomplete'].sum(), ' components have incomplete consequence models assigned.')
+# print(P58_data_for_this_assessment['Incomplete'].sum(), ' components have incomplete consequence models assigned.')
 
 # initialize the dataframe
 additional_consequences = pd.DataFrame(
@@ -416,8 +418,14 @@ additional_consequences = pd.DataFrame(
 # additional_consequences.loc['E.20.22.112a',('DS1','Theta_1')] = 0.5*0.0254
 
 # add the data about replacement cost and time
-additional_consequences.loc[('replacement', 'Cost')] = [0, '1 EA', 'USD_2011', 21600000]
-additional_consequences.loc[('replacement', 'Time')] = [0, '1 EA', 'worker_day', 12500]  
+
+# use PACT
+# assume $250/sf
+# assume 40% of replacement cost is labor, $680/worker-day for SF Bay Area
+replacement_cost = 250.0*90.0*90.0*4
+replacement_time = replacement_cost*0.4/680.0
+additional_consequences.loc[('replacement', 'Cost')] = [0, '1 EA', 'USD_2011', replacement_cost]
+additional_consequences.loc[('replacement', 'Time')] = [0, '1 EA', 'worker_day', replacement_time]  
 
 additional_consequences
 
@@ -524,7 +532,7 @@ agg_DF.describe([0.1, 0.5, 0.9])
 #%%
 
 # filter only the repairable cases
-agg_DF_plot = agg_DF.loc[agg_DF['repair_cost'] < 2e7]
+agg_DF_plot = agg_DF.loc[agg_DF['repair_cost'] < 8e6]
 
 px.scatter(x=agg_DF_plot[('repair_time','sequential')],
            y=agg_DF_plot[('repair_time','parallel')], 
@@ -535,4 +543,15 @@ px.scatter(x=agg_DF_plot[('repair_time','sequential')],
                'y':'Parallel repair time [worker-days]',
            },
            title=f'Two bounds of repair time conditioned on repairable damage',
+           height=750, width=750)
+
+px.scatter(x=agg_DF_plot[('repair_time','sequential')],
+           y=agg_DF_plot['repair_cost'], 
+           opacity=0.1,
+           marginal_x ='histogram', marginal_y='histogram',
+           labels={
+               'x':'Sequential repair time [worker-days]',
+               'y':'Repair cost [USD]',
+           },
+           title=f'Repair time and cost',
            height=750, width=750)
