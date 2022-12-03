@@ -4,6 +4,9 @@ import numpy as np
 def cleanDat(oldDf):
     # remove excessive scaling
     newDf = oldDf[oldDf.GMScale <= 20]
+    
+    # remove failed runs
+    newDf = newDf[newDf.runFailed == 0]
 
     # collapsed
     newDf['collapsed'] = (newDf['collapseDrift1'] | newDf['collapseDrift2']) | \
@@ -53,4 +56,4 @@ unfilteredData = pd.read_csv(databasePath+databaseFile)
 # make sure to write new cleanDat for the original data set
 # modified definitions of gapRatio and moatAmpli
 filteredData = cleanDat(unfilteredData)
-filteredData.to_csv(databasePath+'pfa_pid_clean.csv', index=False)
+filteredData.to_csv(databasePath+'isol_data_okay.csv', index=False)

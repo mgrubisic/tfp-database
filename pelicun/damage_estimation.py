@@ -184,24 +184,24 @@ P58_data_for_this_assessment = P58_data.loc[cmp_list,:].sort_values('Incomplete'
 additional_fragility_db = P58_data_for_this_assessment.loc[
     P58_data_for_this_assessment['Incomplete'] == 1].sort_index() 
 
-additional_fragility_db
+# additional_fragility_db
 
-P58_metadata = PAL.get_default_metadata('fragility_DB_FEMA_P58_2nd')
+# P58_metadata = PAL.get_default_metadata('fragility_DB_FEMA_P58_2nd')
 
-# # add missing components
-# pprint.pprint(P58_metadata['C.20.11.001a'])
+# # # add missing components
+# # pprint.pprint(P58_metadata['C.20.11.001a'])
 
-# C.20.11.001a - Flexible stair with seismic interstory slip joint.  Steel prefab,
-# stringers, steel or concrete filled pan treads
-# placeholders
-additional_fragility_db.loc['C.20.11.001a',('LS1','Theta_0')] = 0.017 # rads
-additional_fragility_db.loc['C.20.11.001a',('LS1','Theta_1')] = 0.5
+# # C.20.11.001a - Flexible stair with seismic interstory slip joint.  Steel prefab,
+# # stringers, steel or concrete filled pan treads
+# # placeholders
+# additional_fragility_db.loc['C.20.11.001b',('LS1','Theta_0')] = 0.017 # rads
+# additional_fragility_db.loc['C.20.11.001b',('LS1','Theta_1')] = 0.5
 
-additional_fragility_db.loc['C.20.11.001a',('LS2','Theta_0')] = 0.02 # rads
-additional_fragility_db.loc['C.20.11.001a',('LS2','Theta_1')] = 0.5
+# additional_fragility_db.loc['C.20.11.001b',('LS2','Theta_0')] = 0.02 # rads
+# additional_fragility_db.loc['C.20.11.001b',('LS2','Theta_1')] = 0.5
 
-additional_fragility_db.loc['C.20.11.001a',('LS3','Theta_0')] = 0.05 # rads
-additional_fragility_db.loc['C.20.11.001a',('LS3','Theta_1')] = 0.5
+# additional_fragility_db.loc['C.20.11.001b',('LS3','Theta_0')] = 0.05 # rads
+# additional_fragility_db.loc['C.20.11.001b',('LS3','Theta_1')] = 0.5
 
 #%%
 
