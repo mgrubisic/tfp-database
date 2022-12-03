@@ -329,14 +329,14 @@ def estimate_damage(raw_demands, run_data, cmp_marginals):
 
 #%% prepare whole set of runs
 
-full_isolation_data = pd.read_csv('full_isolation_data_okay.csv', index_col=None)
+full_isolation_data = pd.read_csv('full_isolation_data.csv', index_col=None)
 
 
 # load the component configuration
 cmp_marginals = pd.read_csv('cmp_marginals.csv', index_col=0)
 
 # Prepare demand data set to match format
-all_demands = pd.read_csv('demand_data_okay.csv', index_col=None,header=None).transpose()
+all_demands = pd.read_csv('demand_data.csv', index_col=None,header=None).transpose()
 
 all_demands.columns = all_demands.loc[0]
 all_demands = all_demands.iloc[1:, :]
@@ -377,4 +377,4 @@ for run_idx in range(len(full_isolation_data)):
     print('Mean upper bound repair time: ', f'{time_u:,.2f}', 'worker-days')
     all_losses.append(loss_summary)
     
-pd.concat(all_losses).to_csv('loss_estimate.csv')
+pd.concat(all_losses).to_csv('./results/loss_estimate.csv')
