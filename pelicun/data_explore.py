@@ -31,7 +31,7 @@ plt.close('all')
 # df_plot = df[df['cost_90%'] < 8e6]
 df_plot = df[df['impacted'] == 1]
 fig = plt.figure()
-ax = plt.scatter(df_plot['gapRatio'], df_plot['cost_std'])
+ax = plt.scatter(df_plot['gapRatio'], df_plot['cost_mean'])
 plt.title('Repair cost scatter')
 plt.xlabel('Gap ratio')
 plt.ylabel('Repair cost')

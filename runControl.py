@@ -57,7 +57,7 @@ resultsDf           = None
 
 # generate LHS input sets
 numRuns = 800
-desired_pts = 400
+desired_pts = 100
 inputVariables, inputValues     = LHS.generateInputs(numRuns)
 
 # filter GMs, then get ground motion database list
@@ -149,4 +149,4 @@ for index, row in enumerate(inputValues):
         resultsDf.to_csv('./sessionOut/sessionSummary_temp_save.csv', index=False)
 
 gmDatabase.to_csv(gmPath+databaseFile, index=False)
-resultsDf.to_csv('./sessionOut/sessionSummary_PID-PFA-PFV.csv', index=False)
+resultsDf.to_csv('./sessionOut/sessionSummary.csv', index=False)
