@@ -356,7 +356,7 @@ all_demands = all_demands.set_index('EDP', drop=True)
 #%% estimate loss for set
 
 all_losses = []
-for run_idx in range(len(full_isolation_data)):
+for run_idx in range(2):
     run_data = full_isolation_data.loc[run_idx]
     
     raw_demands = all_demands[['Units', str(run_idx)]]
