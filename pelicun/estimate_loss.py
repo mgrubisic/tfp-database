@@ -378,3 +378,33 @@ for run_idx in range(2):
     all_losses.append(loss_summary)
     
 pd.concat(all_losses).to_csv('./results/loss_estimate.csv')
+
+#%% flatten data
+
+loss_df = pd.read_csv('./results/loss_estimate.csv', header=[0,1])
+
+loss_header = ['cost_mean', 'cost_std', 'cost_min',
+               'cost_10%', 'cost_50%', 'cost_90%', 'cost_max',
+               'time_l_mean', 'time_l_std', 'time_l_min',
+               'time_l_10%', 'time_l_50%', 'time_l_90%', 'time_l_max',
+               'time_u_mean', 'time_u_std', 'time_u_min',
+               'time_u_10%', 'time_u_50%', 'time_u_90%', 'time_u_max']
+
+all_rows = []
+
+for row_idx in range(len()):
+    if row_idx % 8 == 0:
+        # get the block with current run, drop the 'Count'
+        run_df = loss_df[row_idx:row_idx+8]
+        run_df = run_df.transpose()
+        run_df.columns = run_df.iloc[0]
+        run_df = run_df.drop(run_df.index[0])
+        new_row = pd.concat([run_df.iloc[0], run_df.iloc[1], run_df.iloc[2]])
+        new_row = new_row.drop(new_row.index[0])
+        
+        all_rows.append(new_row)
+        
+loss_df_data = pd.concat(all_rows, axis=1).T
+loss_df_data.columns = loss_header
+
+loss_df_data.to_csv('./results/loss_estimate_data.csv', index=False)
