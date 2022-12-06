@@ -25,21 +25,21 @@ from pelicun.assessment import Assessment
 import warnings
 warnings.filterwarnings('ignore')
 
-# collapse
-def calculate_collapse_SaT1(run_series):
+# # collapse
+# def calculate_collapse_SaT1(run_series):
     
-    # method described in FEMA P-58 Ch. 6.4
-    # problem is we're working with Tm and not fundamental period
-    Dm = run_series['DesignDm']
-    Tm = run_series['Tm']
-    R = run_series['RI']
-    kM = (1/386.4)*(2*3.14159/Tm)**2
+#     # method described in FEMA P-58 Ch. 6.4
+#     # problem is we're working with Tm and not fundamental period
+#     Dm = run_series['DesignDm']
+#     Tm = run_series['Tm']
+#     R = run_series['RI']
+#     kM = (1/386.4)*(2*3.14159/Tm)**2
     
-    Vb = Dm * kM
+#     Vb = Dm * kM
     
-    # assumes that structure has identical property in each direction
-    Sa_D = Vb*R
-    return(4*Sa_D)
+#     # assumes that structure has identical property in each direction
+#     Sa_D = Vb*R
+#     return(4*Sa_D)
 
 def estimate_damage(raw_demands, run_data, cmp_marginals):
     
@@ -100,12 +100,16 @@ def estimate_damage(raw_demands, run_data, cmp_marginals):
 
     demand_sample_ext[('SA_Tm',0,1)] = run_data['GMSTm']
     
+    demand_sample_ext[('PID_all',0,1)] = demand_sample_ext[[('PID','1','1'),
+                                                            ('PID','2','1'),
+                                                            ('PID','3','1')]].max(axis=1)
+    
     # add units to the data 
     demand_sample_ext.T.insert(0, 'Units',"")
 
     # PFA and SA are in "g" in this example, while PID and RID are "rad"
     demand_sample_ext.loc['Units', ['PFA', 'SA_Tm']] = 'g'
-    demand_sample_ext.loc['Units',['PID', 'RID']] = 'rad'
+    demand_sample_ext.loc['Units',['PID', 'PID_all', 'RID']] = 'rad'
     demand_sample_ext.loc['Units',['PFV']] = 'inps'
 
 
@@ -174,23 +178,35 @@ def estimate_damage(raw_demands, run_data, cmp_marginals):
 
     
 
-    sa_judg = calculate_collapse_SaT1(run_data)
+    # sa_judg = calculate_collapse_SaT1(run_data)
 
     # capacity is assigned based on the example in the FEMA P58 background documentation
+    # additional_fragility_db.loc[
+    #     'collapse', [('Demand','Directional'),
+    #                     ('Demand','Offset'),
+    #                     ('Demand','Type'), 
+    #                     ('Demand','Unit')]] = [1, 0, 'Peak Spectral Acceleration|Tm', 'g']   
+
+    # # use judgment method, apply 0.6 variance (FEMA P58 ch. 6)
+    # additional_fragility_db.loc[
+    #     'collapse', [('LS1','Family'),
+    #                   ('LS1','Theta_0'),
+    #                   ('LS1','Theta_1')]] = ['lognormal', sa_judg, 0.6]  
+
+    # collapse capacity is assumed 5% interstory drift across any floor
+    # Mean provided by Masroor and Mosqueda
+    # Std from Yun and Hamburger (2002)
     additional_fragility_db.loc[
         'collapse', [('Demand','Directional'),
                         ('Demand','Offset'),
                         ('Demand','Type'), 
-                        ('Demand','Unit')]] = [1,
-                                               0,
-                                               'Peak Spectral Acceleration|Tm',
-                                               'g']   
+                        ('Demand','Unit')]] = [1, 0, 'Peak Interstory Drift Ratio|all', 'rad']   
 
     # use judgment method, apply 0.6 variance (FEMA P58 ch. 6)
     additional_fragility_db.loc[
         'collapse', [('LS1','Family'),
                       ('LS1','Theta_0'),
-                      ('LS1','Theta_1')]] = ['lognormal', sa_judg, 0.6]  
+                      ('LS1','Theta_1')]] = ['lognormal', 0.05, 0.3]
 
     # We set the incomplete flag to 0 for the additional components
     additional_fragility_db['Incomplete'] = 0

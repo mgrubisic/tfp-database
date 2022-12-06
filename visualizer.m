@@ -12,7 +12,7 @@
 
 clear; close all; clc;
 
-isolDat     = readtable('../pastRuns/random200withTfb.csv');
+isolDat     = readtable('./sessionOut/isol_data_low_impact.csv');
 g           = 386.4;
 
 % scaling Sa(Tm) for damping, ASCE Ch. 17
@@ -27,7 +27,6 @@ gapRatio    = isolDat.moatGap./(g.*(isolDat.GMSTm./isolDat.Bm).*isolDat.Tm.^2);
 T2Ratio     = isolDat.T2./isolDat.Tm;
 Ry          = isolDat.RI;
 zeta        = isolDat.zetaM;
-A_S1        = isolDat.S1Ampli;
 Tshort      = isolDat.S1/2.282;
 TmRatio     = isolDat.Tm./Tshort;
 
