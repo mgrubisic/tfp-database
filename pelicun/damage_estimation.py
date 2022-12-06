@@ -47,7 +47,7 @@ all_demands.columns = all_demands.columns.fillna('EDP')
 
 all_demands = all_demands.set_index('EDP', drop=True)
 
-run_idx = 45
+run_idx = 14
 #run_idx = 324
 raw_demands = all_demands[['Units', str(run_idx)]]
 raw_demands.columns = ['Units', 'Value']
@@ -61,7 +61,7 @@ run_data = full_isolation_data.loc[run_idx]
 
 # initialize a pelicun Assessment
 PAL = Assessment({
-    "PrintLog": False, 
+    "PrintLog": True, 
     "Seed": 985,
     "Verbose": False,
     "DemandOffset": {"PFA": 0, "PFV": 0}
