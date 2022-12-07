@@ -8,11 +8,19 @@
 # R history
 *.Rhistory
 
+# python cache
+__pycache__/
+
 # outputs
-./outputs/*
-./sessionOut/*
-./validation/outputs/*
-./validation/sessionOut/*
+outputs/
+groundMotions/
+validation/outputs/
+validation/sessionOut/
+validation/__pycache__/
+
+# databases
+*beamShapes.csv
+*colShapes.csv
 
 # matlab saves
 *.asv
