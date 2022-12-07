@@ -766,6 +766,7 @@ def build():
     VWall = (12*inch)*(1*ft)*(45*ft)
     RWall = (3/4/pi*VWall)**(1/3)
     
+    # concrete slab and wall properties
     Ec = 3645*ksi
     nu_c = 0.2
     h_impact = (1-nu_c**2)/(pi*Ec)
