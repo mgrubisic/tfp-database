@@ -756,8 +756,22 @@ def build():
 
     # define impact moat as ZeroLengthImpact3D elements
     # https://opensees.berkeley.edu/wiki/index.php/Impact_Material
-    khWall      = 4004*kip*inch                                        # impact stiffness parameter from Muthukumar, 2006
-                                                                        # reduced to correspond to 4400 MN/m^(3/2)
+    # assume slab of base layer is 6 in
+    # model half of slab
+    VSlab = (6*inch)*(45*ft)*(90*ft)
+    pi = 3.14159
+    RSlab = (3/4/pi*VSlab)**(1/3)
+    
+    # assume wall extends 9 ft up to isolation layer and is 12 in thick
+    VWall = (12*inch)*(1*ft)*(45*ft)
+    RWall = (3/4/pi*VWall)**(1/3)
+    
+    Ec = 3645*ksi
+    nu_c = 0.2
+    h_impact = (1-nu_c**2)/(pi*Ec)
+    
+    # impact stiffness parameter from Muthukumar, 2006
+    khWall = 4/(3*pi*(h_impact + h_impact))*((RSlab*RWall)/(RSlab + RWall))**(0.5)
     e           = 0.7                                                   # coeff of restitution (1.0 = perfectly elastic collision)
     delM        = 0.025*inch                                            # maximum penetration during pounding event, from Hughes paper
     kEffWall    = khWall*((delM)**(0.5))                                # effective stiffness
