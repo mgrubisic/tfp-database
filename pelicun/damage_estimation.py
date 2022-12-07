@@ -150,6 +150,100 @@ cmp_marginals = pd.read_csv('cmp_marginals.csv', index_col=0)
 print("...")
 cmp_marginals.tail(10)
 
+
+
+#%% get the structural contents for the moment frame
+
+P58_data = PAL.get_default_data('fragility_DB_FEMA_P58_2nd')
+P58_metadata = PAL.get_default_metadata('fragility_DB_FEMA_P58_2nd')
+
+def get_structural_cmp_MF(run_info, metadata):
+    cmp_strct = pd.DataFrame()
+
+    beam_str = run_info['beam']
+    col_str = run_info['col']
+    
+    col_wt = float(col_str.split('X',1)[1])
+    beam_depth = float(beam_str.split('X',1)[0].split('W',1)[1])
+    
+    # bolted shear tab gravity, assume 1 per every 10 ft span in one direction
+    cur_cmp = 'B.10.31.001'
+    cmp_strct.loc[
+        cur_cmp, ['Units', 'Location', 'Direction',
+                        'Theta_0', 'Theta_1', 'Family',
+                        'Blocks', 'Comment']] = ['ea', '1--3', '0',
+                                                 9*6, np.nan, np.nan,
+                                                 9*6, metadata[cur_cmp]['Description']]
+    # column base plates
+    if col_wt < 150.0:
+        cur_cmp = 'B.10.31.011a'
+    elif col_wt > 300.0:
+        cur_cmp = 'B.10.31.011c'
+    else:
+        cur_cmp = 'B.10.31.011b'
+    
+    cmp_strct.loc[
+        cur_cmp, ['Units', 'Location', 'Direction',
+                        'Theta_0', 'Theta_1', 'Family',
+                        'Blocks', 'Comment']] = ['ea', '1', '1,2',
+                                                 4*4, np.nan, np.nan,
+                                                 4*4, metadata[cur_cmp]['Description']]
+    # assume no splice needed in column (39 ft)
+    
+    # moment connection, one beam (all roof beams are < 27.0)
+    if beam_depth <= 27.0:
+        cur_cmp = 'B.10.35.021'
+        cmp_strct.loc[
+            cur_cmp, ['Units', 'Location', 'Direction',
+                            'Theta_0', 'Theta_1', 'Family',
+                            'Blocks', 'Comment']] = ['ea', '1--3', '1,2',
+                                                     8, np.nan, np.nan,
+                                                     8, metadata[cur_cmp]['Description']]
+    else:
+        cur_cmp = 'B.10.35.022'
+        cmp_strct.loc[
+            cur_cmp, ['Units', 'Location', 'Direction',
+                            'Theta_0', 'Theta_1', 'Family',
+                            'Blocks', 'Comment']] = ['ea', '1--2', '1,2',
+                                                     8, np.nan, np.nan,
+                                                     8, metadata[cur_cmp]['Description']]
+        cur_cmp = 'B.10.35.021'
+        cmp_strct.loc[
+            cur_cmp, ['Units', 'Location', 'Direction',
+                            'Theta_0', 'Theta_1', 'Family',
+                            'Blocks', 'Comment']] = ['ea', '3', '1,2',
+                                                     8, np.nan, np.nan,
+                                                     8, metadata[cur_cmp]['Description']]
+                                                     
+    # moment connection, two beams (all roof beams are < 27.0)
+    if beam_depth <= 27.0:
+        cur_cmp = 'B.10.35.031'
+        cmp_strct.loc[
+            cur_cmp, ['Units', 'Location', 'Direction',
+                            'Theta_0', 'Theta_1', 'Family',
+                            'Blocks', 'Comment']] = ['ea', '1--3', '1,2',
+                                                     8, np.nan, np.nan,
+                                                     8, metadata[cur_cmp]['Description']]
+    else:
+        cur_cmp = 'B.10.35.032'
+        cmp_strct.loc[
+            cur_cmp, ['Units', 'Location', 'Direction',
+                            'Theta_0', 'Theta_1', 'Family',
+                            'Blocks', 'Comment']] = ['ea', '1--2', '1,2',
+                                                     8, np.nan, np.nan,
+                                                     8, metadata[cur_cmp]['Description']]
+        cur_cmp = 'B.10.35.031'
+        cmp_strct.loc[
+            cur_cmp, ['Units', 'Location', 'Direction',
+                            'Theta_0', 'Theta_1', 'Family',
+                            'Blocks', 'Comment']] = ['ea', '3', '1,2',
+                                                     8, np.nan, np.nan,
+                                                     8, metadata[cur_cmp]['Description']]
+        
+    return(cmp_strct)
+
+structural_components = get_structural_cmp_MF(run_data, P58_metadata)
+cmp_marginals = pd.concat([structural_components, cmp_marginals], axis=0)
 #%%
 # to make the convenience keywords work in the model, 
 # we need to specify the number of stories
