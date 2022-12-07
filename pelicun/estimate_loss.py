@@ -372,7 +372,7 @@ all_demands = all_demands.set_index('EDP', drop=True)
 #%% estimate loss for set
 
 all_losses = []
-for run_idx in range(2):
+for run_idx in range(len(full_isolation_data)):
     run_data = full_isolation_data.loc[run_idx]
     
     raw_demands = all_demands[['Units', str(run_idx)]]
@@ -393,11 +393,12 @@ for run_idx in range(2):
     print('Mean upper bound repair time: ', f'{time_u:,.2f}', 'worker-days')
     all_losses.append(loss_summary)
     
-pd.concat(all_losses).to_csv('./results/loss_estimate.csv')
+loss_file = './results/loss_estimate_test.csv'
+pd.concat(all_losses).to_csv(loss_file)
 
 #%% flatten data
 
-loss_df = pd.read_csv('./results/loss_estimate.csv', header=[0,1])
+loss_df = pd.read_csv(loss_file, header=[0,1])
 
 loss_header = ['cost_mean', 'cost_std', 'cost_min',
                'cost_10%', 'cost_50%', 'cost_90%', 'cost_max',
@@ -408,7 +409,7 @@ loss_header = ['cost_mean', 'cost_std', 'cost_min',
 
 all_rows = []
 
-for row_idx in range(len()):
+for row_idx in range(len(loss_df)):
     if row_idx % 8 == 0:
         # get the block with current run, drop the 'Count'
         run_df = loss_df[row_idx:row_idx+8]
@@ -423,4 +424,4 @@ for row_idx in range(len()):
 loss_df_data = pd.concat(all_rows, axis=1).T
 loss_df_data.columns = loss_header
 
-loss_df_data.to_csv('./results/loss_estimate_data.csv', index=False)
+loss_df_data.to_csv(loss_file, index=False)

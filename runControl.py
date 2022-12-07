@@ -57,7 +57,7 @@ resultsDf           = None
 
 # generate LHS input sets
 numRuns = 800
-desired_pts = 50
+desired_pts = 400
 inputVariables, inputValues     = LHS.generateInputs(numRuns)
 
 # filter GMs, then get ground motion database list
@@ -150,3 +150,18 @@ for index, row in enumerate(inputValues):
 
 gmDatabase.to_csv(gmPath+databaseFile, index=False)
 resultsDf.to_csv('./sessionOut/sessionSummary.csv', index=False)
+
+#%% 
+import tmp_cleaner
+import get_demand_data
+databasePath = './sessionOut/'
+databaseFile = 'sessionSummary.csv'
+
+# clean data and add additional variables
+data = tmp_cleaner.cleanDat(resultsDf)
+pelicunPath = './pelicun/'
+data.to_csv(pelicunPath+'full_isolation_data.csv', index=False)
+
+# write into pelicun style EDP
+edp = get_demand_data(data)
+edp.to_csv('./pelicun/demand_data.csv', index=True)
