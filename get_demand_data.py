@@ -50,6 +50,6 @@ def get_demand_data(isol_data):
     return(EDP_data)
 
 import pandas as pd
-data = pd.read_csv('./pelicun/full_isolation_data_okay.csv', sep=',')
+data = pd.read_csv('./pelicun/full_isolation_data.csv', sep=',')
 edp = get_demand_data(data)
-edp.to_csv('./pelicun/demand_data_okay.csv', index=True)
+edp.to_csv('./pelicun/demand_data.csv', index=True)
