@@ -9,9 +9,9 @@ C.30.11.001a,ft,2--3,"1,2",61.2,0.7,lognormal,2,"C3011.001a    Wall Partition, T
 C.30.11.001a,ft,1,"1,2",82.2,0.9,lognormal,3,"C3011.001a    Wall Partition, Type: Gypsum + Wallpaper, Full Height, Fixed Below, Fixed Above"
 C.30.27.001,ft2,2--3,0,6075,0.2,lognormal,,"C3027.001    Raised Access Floor, non seismically rated."
 C.30.27.001,ft2,1,0,1215,0.2,lognormal,,"C3027.001    Raised Access Floor, non seismically rated."
-C.30.32.001a,ft2,3,0,8100,0,lognormal,13,"C3032.001a    Suspended Ceiling, SDC A,B,C, Area (A): A < 250, Vert support only"
-C.30.32.001a,ft2,2,0,8100,0,lognormal,13,"C3032.001a    Suspended Ceiling, SDC A,B,C, Area (A): A < 250, Vert support only"
-C.30.32.001a,ft2,1,0,8100,0,lognormal,13,"C3032.001a    Suspended Ceiling, SDC A,B,C, Area (A): A < 250, Vert support only"
+C.30.32.001a,ft2,3,0,8100,0.1,lognormal,13,"C3032.001a    Suspended Ceiling, SDC A,B,C, Area (A): A < 250, Vert support only"
+C.30.32.001a,ft2,2,0,8100,0.1,lognormal,13,"C3032.001a    Suspended Ceiling, SDC A,B,C, Area (A): A < 250, Vert support only"
+C.30.32.001a,ft2,1,0,8100,0.1,lognormal,13,"C3032.001a    Suspended Ceiling, SDC A,B,C, Area (A): A < 250, Vert support only"
 C.30.34.001,ea,1--2,0,243,0.6,lognormal,9,C3034.001    Independent Pendant Lighting - non seismic
 C.30.34.001,ea,3,0,243,0.6,lognormal,9,C3034.001    Independent Pendant Lighting - non seismic
 D.10.14.011,ea,1,0,1,,,,"D1014.011    Traction Elevator – Applies to most California Installations 1976 or later, most western states installations 1982 or later and most other U.S installations 1998 or later."

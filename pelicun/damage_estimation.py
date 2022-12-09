@@ -47,8 +47,7 @@ all_demands.columns = all_demands.columns.fillna('EDP')
 
 all_demands = all_demands.set_index('EDP', drop=True)
 
-run_idx = 14
-#run_idx = 324
+run_idx = 1
 raw_demands = all_demands[['Units', str(run_idx)]]
 raw_demands.columns = ['Units', 'Value']
 raw_demands = convert_to_MultiIndex(raw_demands, axis=0)
@@ -271,7 +270,7 @@ cmp_sample.describe()
 P58_data = PAL.get_default_data('fragility_DB_FEMA_P58_2nd')
 
 
-# print(P58_data['Incomplete'].sum(),' incomplete component fragility definitions')
+print(P58_data['Incomplete'].sum(),' incomplete component fragility definitions')
 
 # note that we drop the last three components here (excessiveRID, irreparable, and collapse) 
 # because they are not part of P58
@@ -571,8 +570,43 @@ print("Size of repair cost & time results: ", sys.getsizeof(loss_sample)/1024/10
 #%%
 loss_plot = loss_sample.groupby(level=[0, 2], axis=1).sum()['COST'].iloc[:, :-2]
 
+loss_grouped = loss_sample.groupby(level=[0, 2], axis=1).sum()['COST']
+
+replacement_instances = pd.DataFrame()
+try:
+    replacement_instances['collapse'] = loss_grouped['collapse']/replacement_cost
+except KeyError:
+    replacement_instances['collapse'] = pd.DataFrame(np.zeros((10000, 1)))
+    
+try:
+    replacement_instances['irreparable'] = loss_grouped['irreparable']/replacement_cost
+except KeyError:
+    replacement_instances['irreparable'] = pd.DataFrame(np.zeros((10000, 1)))
+        
+replacement_instances = replacement_instances.astype(int)
+
+loss_groups = pd.DataFrame()
+loss_groups['B_group'] = loss_plot[[col for col in loss_plot.columns if col.startswith('B')]].sum(axis=1)
+loss_groups['C_group'] = loss_plot[[col for col in loss_plot.columns if col.startswith('C')]].sum(axis=1)
+loss_groups['D_group'] = loss_plot[[col for col in loss_plot.columns if col.startswith('D')]].sum(axis=1)
+loss_groups['E_group'] = loss_plot[[col for col in loss_plot.columns if col.startswith('E')]].sum(axis=1)
+
+smr = loss_groups.describe()
+loss_groups = loss_groups.loc[
+    (replacement_instances['collapse'] == 0) & (replacement_instances['irreparable'] == 0)]
+
+loss_groups = pd.concat([loss_groups, replacement_instances], axis=1)
+
+for cmp_grp in list(cmp_list):
+    if cmp_grp not in list(loss_plot.columns):
+        loss_plot[cmp_grp] = 0
+        
+
+        
 # we add 100 to the loss values to avoid having issues with zeros when creating a log plot
 loss_plot += 100
+
+test = loss_plot.describe()
 
 fig = px.box(y=np.tile(loss_plot.columns, loss_plot.shape[0]), 
        x=loss_plot.values.flatten(), 
@@ -591,7 +625,7 @@ fig.update_layout( # customize font and legend orientation & position
     font=dict(size=28)
     )
 
-# fig.show()
+fig.show()
 #%%
 
 

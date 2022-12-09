@@ -146,7 +146,8 @@ def estimate_damage(raw_demands, run_data, cmp_marginals):
                            'correlation': perfect_CORR})
 
     # generate demand sample
-    PAL.demand.generate_sample({"SampleSize": 10000})
+    n_sample = 10000
+    PAL.demand.generate_sample({"SampleSize": n_sample})
 
     # extract the generated sample
     # Note that calling the save_sample() method is better than directly pulling the 
@@ -417,9 +418,52 @@ def estimate_damage(raw_demands, run_data, cmp_marginals):
     # loss estimates
     loss_sample = PAL.bldg_repair.sample
     
+    # group by components and make sure all are present
+    # TODO: handle case where no collapse/irreparable is present
+    loss_by_cmp = loss_sample.groupby(level=[0, 2], axis=1).sum()['COST'].iloc[:, :-2]
+    for cmp_grp in list(cmp_list):
+        if cmp_grp not in list(loss_by_cmp.columns):
+            loss_by_cmp[cmp_grp] = 0
+            
+    # summarize by groups
+    loss_groups = pd.DataFrame()
+    loss_groups['B'] = loss_by_cmp[[
+        col for col in loss_by_cmp.columns if col.startswith('B')]].sum(axis=1)
+    loss_groups['C'] = loss_by_cmp[[
+        col for col in loss_by_cmp.columns if col.startswith('C')]].sum(axis=1)
+    loss_groups['D'] = loss_by_cmp[[
+        col for col in loss_by_cmp.columns if col.startswith('D')]].sum(axis=1)
+    loss_groups['E'] = loss_by_cmp[[
+        col for col in loss_by_cmp.columns if col.startswith('E')]].sum(axis=1)
+    
+    # get collapse cases (handle cases where Pelicun records no collapse)
+    loss_grouped = loss_sample.groupby(level=[0, 2], axis=1).sum()['COST']
+    replacement_instances = pd.DataFrame()
+    try:
+        replacement_instances['collapse'] = loss_grouped['collapse']/replacement_cost
+    except KeyError:
+        replacement_instances['collapse'] = pd.DataFrame(np.zeros((n_sample, 1)))
+    try:
+        replacement_instances['irreparable'] = loss_grouped['irreparable']/replacement_cost
+    except KeyError:
+        replacement_instances['irreparable'] = pd.DataFrame(np.zeros((n_sample, 1)))
+    replacement_instances = replacement_instances.astype(int)
+    
+    loss_groups = loss_groups.loc[
+        (replacement_instances['collapse'] == 0) & (replacement_instances['irreparable'] == 0)]
+    
+    # TODO: these two conditions are mutually exclusive
+    collapse_freq = replacement_instances['collapse'].sum(axis=0)/n_sample
+    irreparable_freq = replacement_instances['irreparable'].sum(axis=0)/n_sample
+    
+    # this returns NaN if collapse/irreparable is 100%
+    loss_groups = loss_groups.describe()
+    
+    # aggregate
     agg_DF = PAL.bldg_repair.aggregate_losses()
     
-    return(cmp_sample, damage_sample, loss_sample, agg_DF)
+    return(cmp_sample, damage_sample, loss_sample, loss_groups, agg_DF,
+           collapse_freq, irreparable_freq)
 
 #%% prepare whole set of runs
 
@@ -450,7 +494,10 @@ all_demands = all_demands.set_index('EDP', drop=True)
 #%% estimate loss for set
 
 all_losses = []
-for run_idx in range(len(full_isolation_data)):
+loss_cmp_group = []
+
+for run_idx in range(3):
+# for run_idx in range(len(full_isolation_data)):
     run_data = full_isolation_data.loc[run_idx]
     
     raw_demands = all_demands[['Units', str(run_idx)]]
@@ -461,7 +508,7 @@ for run_idx in range(len(full_isolation_data)):
     print('========================================')
     print('Estimating loss for run index', run_idx)
     
-    cmp, dmg, loss, agg = estimate_damage(raw_demands, run_data, cmp_marginals)
+    cmp, dmg, loss, loss_cmp, agg, collapse_rate, irr_rate = estimate_damage(raw_demands, run_data, cmp_marginals)
     loss_summary = agg.describe([0.1, 0.5, 0.9])
     cost = loss_summary['repair_cost']['mean']
     time_l = loss_summary[('repair_time', 'parallel')]['mean']
@@ -470,9 +517,12 @@ for run_idx in range(len(full_isolation_data)):
     print('Mean lower bound repair time: ', f'{time_l:,.2f}', 'worker-days')
     print('Mean upper bound repair time: ', f'{time_u:,.2f}', 'worker-days')
     all_losses.append(loss_summary)
+    loss_cmp_group.append(loss_cmp)
     
 loss_file = './results/loss_estimate_test.csv'
+by_cmp_file = './results/loss_estimate_by_groups.csv'
 pd.concat(all_losses).to_csv(loss_file)
+pd.concat(loss_cmp_group).to_csv(by_cmp_file)
 
 #%% flatten data
 
