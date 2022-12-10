@@ -275,17 +275,25 @@ def estimate_damage(raw_demands, run_data, cmp_marginals):
     # collapse capacity is assumed 5% interstory drift across any floor
     # Mean provided by Masroor and Mosqueda
     # Std from Yun and Hamburger (2002)
+    
+    # TODO: stats validation, find justification for this 
+    # we can define a lognormal distribution that results in a PID of 5% having
+    # 90% collapse rate
+    # Yun and Hamburger has beta (logarithmic stdev) value of 0.3 for 
+    # 3-story global collapse drift, lowered by 0.05 if nonlin dynamic anly
+    from math import log, exp
+    beta_drift = 0.25
+    mean_log_drift = exp(log(0.05) - beta_drift*1.2816) # 1.2816 is inverse normCDF of 0.90
     additional_fragility_db.loc[
         'collapse', [('Demand','Directional'),
                         ('Demand','Offset'),
                         ('Demand','Type'), 
                         ('Demand','Unit')]] = [1, 0, 'Peak Interstory Drift Ratio|all', 'rad']   
 
-    # use judgment method, apply 0.6 variance (FEMA P58 ch. 6)
     additional_fragility_db.loc[
         'collapse', [('LS1','Family'),
                       ('LS1','Theta_0'),
-                      ('LS1','Theta_1')]] = ['lognormal', 0.05, 0.3]
+                      ('LS1','Theta_1')]] = ['lognormal', mean_log_drift, beta_drift]
 
     # We set the incomplete flag to 0 for the additional components
     additional_fragility_db['Incomplete'] = 0
@@ -418,12 +426,25 @@ def estimate_damage(raw_demands, run_data, cmp_marginals):
     # loss estimates
     loss_sample = PAL.bldg_repair.sample
     
-    # group by components and make sure all are present
-    # TODO: handle case where no collapse/irreparable is present
-    loss_by_cmp = loss_sample.groupby(level=[0, 2], axis=1).sum()['COST'].iloc[:, :-2]
+    # group components and ensure that all components and replacement are present
+    loss_by_cmp = loss_sample.groupby(level=[0, 2], axis=1).sum()['COST']
     for cmp_grp in list(cmp_list):
         if cmp_grp not in list(loss_by_cmp.columns):
             loss_by_cmp[cmp_grp] = 0
+            
+    # grab replacement cost and convert to instances, fill with zeros if needed
+    replacement_instances = pd.DataFrame()
+    try:
+        replacement_instances['collapse'] = loss_by_cmp['collapse']/replacement_cost
+    except KeyError:
+        loss_by_cmp['collapse'] = 0
+        replacement_instances['collapse'] = pd.DataFrame(np.zeros((10000, 1)))
+    try:
+        replacement_instances['irreparable'] = loss_by_cmp['irreparable']/replacement_cost
+    except KeyError:
+        loss_by_cmp['irreparable'] = 0
+        replacement_instances['irreparable'] = pd.DataFrame(np.zeros((10000, 1)))
+    replacement_instances = replacement_instances.astype(int)
             
     # summarize by groups
     loss_groups = pd.DataFrame()
@@ -436,19 +457,7 @@ def estimate_damage(raw_demands, run_data, cmp_marginals):
     loss_groups['E'] = loss_by_cmp[[
         col for col in loss_by_cmp.columns if col.startswith('E')]].sum(axis=1)
     
-    # get collapse cases (handle cases where Pelicun records no collapse)
-    loss_grouped = loss_sample.groupby(level=[0, 2], axis=1).sum()['COST']
-    replacement_instances = pd.DataFrame()
-    try:
-        replacement_instances['collapse'] = loss_grouped['collapse']/replacement_cost
-    except KeyError:
-        replacement_instances['collapse'] = pd.DataFrame(np.zeros((n_sample, 1)))
-    try:
-        replacement_instances['irreparable'] = loss_grouped['irreparable']/replacement_cost
-    except KeyError:
-        replacement_instances['irreparable'] = pd.DataFrame(np.zeros((n_sample, 1)))
-    replacement_instances = replacement_instances.astype(int)
-    
+    # only summarize repair cost from non-replacement cases
     loss_groups = loss_groups.loc[
         (replacement_instances['collapse'] == 0) & (replacement_instances['irreparable'] == 0)]
     
@@ -495,6 +504,8 @@ all_demands = all_demands.set_index('EDP', drop=True)
 
 all_losses = []
 loss_cmp_group = []
+col_list = []
+irr_list = []
 
 for run_idx in range(3):
 # for run_idx in range(len(full_isolation_data)):
@@ -508,16 +519,25 @@ for run_idx in range(3):
     print('========================================')
     print('Estimating loss for run index', run_idx)
     
-    cmp, dmg, loss, loss_cmp, agg, collapse_rate, irr_rate = estimate_damage(raw_demands, run_data, cmp_marginals)
+    [cmp, dmg, loss, loss_cmp, agg, 
+         collapse_rate, irr_rate] = estimate_damage(raw_demands,
+                                                run_data,
+                                                cmp_marginals)
     loss_summary = agg.describe([0.1, 0.5, 0.9])
     cost = loss_summary['repair_cost']['mean']
     time_l = loss_summary[('repair_time', 'parallel')]['mean']
     time_u = loss_summary[('repair_time', 'sequential')]['mean']
+    
     print('Mean repair cost: ', f'${cost:,.2f}')
     print('Mean lower bound repair time: ', f'{time_l:,.2f}', 'worker-days')
     print('Mean upper bound repair time: ', f'{time_u:,.2f}', 'worker-days')
+    print('Collapse frequency: ', f'{collapse_rate:.2%}')
+    print('Irreparable RID frequency: ', f'{irr_rate:.2%}')
+    print('Replacement frequency: ', f'{collapse_rate+irr_rate:.2%}')
     all_losses.append(loss_summary)
     loss_cmp_group.append(loss_cmp)
+    col_list.append(collapse_rate)
+    irr_list.append(irr_rate)
     
 loss_file = './results/loss_estimate_test.csv'
 by_cmp_file = './results/loss_estimate_by_groups.csv'
@@ -551,5 +571,9 @@ for row_idx in range(len(loss_df)):
         
 loss_df_data = pd.concat(all_rows, axis=1).T
 loss_df_data.columns = loss_header
+
+loss_df_data['collapse_freq'] = col_list
+loss_df_data['irreparable_freq'] = irr_list
+loss_df_data['replacement_freq'] = [x + y for x, y in zip(col_list, irr_list)]
 
 loss_df_data.to_csv(loss_file, index=False)

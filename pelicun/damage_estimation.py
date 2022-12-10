@@ -568,22 +568,29 @@ print("Size of repair cost & time results: ", sys.getsizeof(loss_sample)/1024/10
 # loss_sample['COST']['B.20.22.001'].groupby(level=[0,2,3],axis=1).sum().describe([0.1, 0.5, 0.9]).T
 
 #%%
-loss_plot = loss_sample.groupby(level=[0, 2], axis=1).sum()['COST'].iloc[:, :-2]
 
 loss_grouped = loss_sample.groupby(level=[0, 2], axis=1).sum()['COST']
 
+for cmp_grp in list(cmp_list):
+    if cmp_grp not in list(loss_grouped.columns):
+        loss_grouped[cmp_grp] = 0
+        
 replacement_instances = pd.DataFrame()
 try:
     replacement_instances['collapse'] = loss_grouped['collapse']/replacement_cost
 except KeyError:
+    loss_grouped['collapse'] = 0
     replacement_instances['collapse'] = pd.DataFrame(np.zeros((10000, 1)))
     
 try:
     replacement_instances['irreparable'] = loss_grouped['irreparable']/replacement_cost
 except KeyError:
+    loss_grouped['irreparable'] = 0
     replacement_instances['irreparable'] = pd.DataFrame(np.zeros((10000, 1)))
         
 replacement_instances = replacement_instances.astype(int)
+
+loss_plot = loss_grouped.iloc[:, :-2]
 
 loss_groups = pd.DataFrame()
 loss_groups['B_group'] = loss_plot[[col for col in loss_plot.columns if col.startswith('B')]].sum(axis=1)
@@ -594,13 +601,6 @@ loss_groups['E_group'] = loss_plot[[col for col in loss_plot.columns if col.star
 smr = loss_groups.describe()
 loss_groups = loss_groups.loc[
     (replacement_instances['collapse'] == 0) & (replacement_instances['irreparable'] == 0)]
-
-loss_groups = pd.concat([loss_groups, replacement_instances], axis=1)
-
-for cmp_grp in list(cmp_list):
-    if cmp_grp not in list(loss_plot.columns):
-        loss_plot[cmp_grp] = 0
-        
 
         
 # we add 100 to the loss values to avoid having issues with zeros when creating a log plot
