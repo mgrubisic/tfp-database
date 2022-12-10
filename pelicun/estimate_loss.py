@@ -507,8 +507,8 @@ loss_cmp_group = []
 col_list = []
 irr_list = []
 
-for run_idx in range(3):
-# for run_idx in range(len(full_isolation_data)):
+# for run_idx in range(3):
+for run_idx in range(len(full_isolation_data)):
     run_data = full_isolation_data.loc[run_idx]
     
     raw_demands = all_demands[['Units', str(run_idx)]]
@@ -539,7 +539,7 @@ for run_idx in range(3):
     col_list.append(collapse_rate)
     irr_list.append(irr_rate)
     
-loss_file = './results/loss_estimate_test.csv'
+loss_file = './results/loss_estimate_data.csv'
 by_cmp_file = './results/loss_estimate_by_groups.csv'
 pd.concat(all_losses).to_csv(loss_file)
 pd.concat(loss_cmp_group).to_csv(by_cmp_file)
