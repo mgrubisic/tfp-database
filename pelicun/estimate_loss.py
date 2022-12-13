@@ -576,4 +576,34 @@ loss_df_data['collapse_freq'] = col_list
 loss_df_data['irreparable_freq'] = irr_list
 loss_df_data['replacement_freq'] = [x + y for x, y in zip(col_list, irr_list)]
 
-loss_df_data.to_csv(loss_file, index=False)
+# loss_df_data.to_csv(loss_file, index=False)
+#%%
+group_df = pd.read_csv(by_cmp_file, header=0)
+group_header = ['B_mean', 'B_std', 'B_min',
+               'B_25%', 'B_50%', 'B_75%', 'B_max',
+               'C_mean', 'C_std', 'C_min',
+               'C_25%', 'C_50%', 'C_75%', 'C_max',
+               'D_mean', 'D_std', 'D_min',
+               'D_25%', 'D_50%', 'D_75%', 'D_max',
+               'E_mean', 'E_std', 'E_min',
+               'E_25%', 'E_50%', 'E_75%', 'E_max']
+
+all_rows = []
+
+for row_idx in range(len(group_df)):
+    if row_idx % 8 == 0:
+        # get the block with current run, drop the 'Count'
+        run_df = group_df[row_idx:row_idx+8]
+        run_df = run_df.transpose()
+        run_df.columns = run_df.iloc[0]
+        run_df = run_df.drop(run_df.index[0])
+        new_row = pd.concat([run_df.iloc[0], run_df.iloc[1], run_df.iloc[2], run_df.iloc[3]])
+        new_row = new_row.drop(new_row.index[0])
+        
+        all_rows.append(new_row)
+        
+group_df_data = pd.concat(all_rows, axis=1).T
+group_df_data.columns = group_header
+
+all_data = pd.concat([loss_df_data, group_df_data], axis=1)
+all_data.to_csv(loss_file, index=False)
