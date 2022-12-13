@@ -203,6 +203,7 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, runStatus, Tfb):
         abs(story3VelInner)))
 
     # drift failure check
+    # TODO: remove all binary classification from postprocessing
     # collapse limit state
     collapseDriftLimit          = 0.05
 

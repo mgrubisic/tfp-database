@@ -272,18 +272,18 @@ def estimate_damage(raw_demands, run_data, cmp_marginals):
     #                   ('LS1','Theta_0'),
     #                   ('LS1','Theta_1')]] = ['lognormal', sa_judg, 0.6]  
 
-    # collapse capacity is assumed 5% interstory drift across any floor
-    # Mean provided by Masroor and Mosqueda
+    # collapse capacity is assumed 10% interstory drift across any floor
+    # Mean provided by Lee and Foutch (2001) for SMRF
     # Std from Yun and Hamburger (2002)
     
     # TODO: stats validation, find justification for this 
-    # we can define a lognormal distribution that results in a PID of 5% having
-    # 90% collapse rate
+    # we can define a lognormal distribution that results in a PID of 10% having
+    # 95% collapse rate
     # Yun and Hamburger has beta (logarithmic stdev) value of 0.3 for 
     # 3-story global collapse drift, lowered by 0.05 if nonlin dynamic anly
     from math import log, exp
     beta_drift = 0.25
-    mean_log_drift = exp(log(0.05) - beta_drift*1.2816) # 1.2816 is inverse normCDF of 0.90
+    mean_log_drift = exp(log(0.1) - beta_drift*1.6449) # 1.6449 is inverse normCDF of 0.95
     additional_fragility_db.loc[
         'collapse', [('Demand','Directional'),
                         ('Demand','Offset'),
