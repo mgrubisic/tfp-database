@@ -53,14 +53,6 @@ plt.yscale('log')
 plt.grid(True)
 
 fig = plt.figure()
-ax = plt.scatter(df_plot['Tm'], df_plot['cost_50%'], alpha=0.5)
-plt.title('Tm and repair cost | no impact')
-plt.xlabel('Bearing design period (s)')
-plt.ylabel('Median repair cost ($)')
-plt.yscale('log')
-plt.grid(True)
-
-fig = plt.figure()
 ax = plt.scatter(df_plot['max_accel'], df_plot['cost_50%'], alpha=0.5)
 plt.title('Acceleration and repair cost | no impact')
 plt.xlabel('Max floor acceleration (g)')
@@ -118,21 +110,6 @@ ax = plt.scatter(df_plot['RI'], df_plot['replacement_freq'], alpha=0.5)
 plt.title('Structure strength and collapse frequency')
 plt.xlabel('RI')
 plt.ylabel('MC replacement frequency')
-plt.grid(True)
-
-
-#%%
-
-df_plot = df[df['replacement_freq'] < 1.0]
-
-plt.close('all')
-
-fig = plt.figure()
-ax = plt.scatter(df_plot['gapRatio'], df_plot['max_accel'], alpha=0.5)
-plt.title('Acceleration and structural costs')
-plt.xlabel('Max floor acceleration (g)')
-plt.ylabel('Median group B cost ($)')
-plt.yscale('log')
 plt.grid(True)
 
 #%%
