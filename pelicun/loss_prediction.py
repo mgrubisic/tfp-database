@@ -86,15 +86,18 @@ class Prediction:
             # training score
             # testing score
      
-    def fit_svc(self):
+    def fit_svc(self, neg_wt=1.0):
         from sklearn.pipeline import Pipeline
         from sklearn.preprocessing import StandardScaler
         from sklearn.svm import SVC
         from sklearn.model_selection import GridSearchCV
         
         # pipeline to scale -> SVC
+        wts = {0: neg_wt, 1:1.0}
         sv_pipe = Pipeline([('scaler', StandardScaler()),
-                            ('svc', SVC(kernel='rbf', gamma='auto'))])
+                            ('svc', SVC(kernel='rbf', gamma='auto',
+                                        probability=True,
+                                        class_weight=wts))])
         
         # cross-validate several parameters
         parameters = [
@@ -111,14 +114,32 @@ class Prediction:
         print("The best parameters are %s with a score of %0.2f"
               % (svc_cv.best_params_, svc_cv.best_score_))
         
+        self.svc = sv_pipe
+        
     # TODO: kernel ridge
         
 # TODO: fit impact
 
 #%% fit impact
+# prepare the problem
 mdl = Prediction(df, 'impacted')
 mdl.test_train_split(0.2)
-mdl.fit_svc()
+
+# fit SVM classification for impact
+mdl.fit_svc(neg_wt=0.6)
+
+# predict the entire dataset
+preds_imp = mdl.svc.predict(mdl.X)
+probs_imp = mdl.svc.predict_proba(mdl.X)
+
+comparison = np.array([df['impacted'], preds_imp]).transpose()
+
+from sklearn.metrics import confusion_matrix
+
+tn, fp, fn, tp = confusion_matrix(mdl.y, preds_imp).ravel()
+print('False negatives: ', fn)
+print('False positives: ', fp)
+
 #%% perform fits
 
 mdl = Prediction(df, 'cost_50%')
