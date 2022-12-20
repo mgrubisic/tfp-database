@@ -50,7 +50,11 @@ class Prediction:
         
         xx = self.xx
         yy = self.yy
-        Z = mdl_clf.decision_function(self.X_plot)
+        if 'gpc' in mdl_clf.named_steps.keys():
+            Z = mdl_clf.predict_proba(self.X_plot)[:, 1]
+        else:
+            Z = mdl_clf.decision_function(self.X_plot)
+            
         Z = Z.reshape(xx.shape)
         
         plt.figure()
@@ -66,7 +70,12 @@ class Prediction:
             
         plt_density = 100
         
-        plt.contour(xx, yy, Z, levels=[0], linewidths=2, linestyles="dashed")
+        if 'gpc' in mdl_clf.named_steps.keys():
+            plt.contour(xx, yy, Z, levels=[0.5],
+                        linewidths=2, linestyles="dashed")
+        else:
+            plt.contour(xx, yy, Z, levels=[0],
+                        linewidths=2, linestyles="dashed")
         plt.scatter(self.X_train['gapRatio'][:plt_density],
                     self.X_train['RI'][:plt_density],
                     s=30, c=self.y_train[:plt_density],
@@ -77,6 +86,8 @@ class Prediction:
             plt.title('Impact classification (SVC)')
         elif 'log_reg' in mdl_clf.named_steps.keys():
             plt.title('Impact classification (logistic)')
+        elif 'gpc' in mdl_clf.named_steps.keys():
+            plt.title('Impact classification (GP)')
         plt.show()
         
     # make a generalized 2D plotting grid, defaulted to gap and Ry
@@ -104,8 +115,6 @@ class Prediction:
                              
         return(self.X_plot)
         
-    # TODO: consider method that cleans data based on prediction outcome
-        
     # train test split to be done before any learning 
     def test_train_split(self, percentage):
         from sklearn.model_selection import train_test_split
@@ -119,7 +128,53 @@ class Prediction:
         self.X_test = X_test
         self.y_train = ravel(y_train)
         self.y_test = ravel(y_test)
+ 
+###############################################################################
+    # Classification models
+###############################################################################       
+    
+    # Train GP classifier
+    def fit_gpc(self, kernel_name):
+        from sklearn.pipeline import Pipeline
+        from sklearn.preprocessing import StandardScaler
+        from sklearn.gaussian_process import GaussianProcessClassifier
+        import sklearn.gaussian_process.kernels as krn
         
+        if kernel_name=='rbf_ard':
+            kernel = 1.0 * krn.RBF([1.0, 1.0, 1.0, 1.0])
+        elif kernel_name=='rbf_iso':
+            kernel = 1.0 * krn.RBF(1.0)
+        elif kernel_name=='rq':
+            kernel = 0.5**2 * krn.RationalQuadratic(length_scale=1.0,
+                                                    alpha=1.0)
+        elif kernel_name == 'matern_iso':
+            kernel = 1.0 * krn.Matern(
+                    length_scale=1.0, 
+                    nu=1.5)
+        elif kernel_name == 'matern_ard':
+            kernel = 1.0 * krn.Matern(
+                    length_scale=[1.0, 1.0, 1.0, 1.0], 
+                    nu=1.5)
+
+        kernel = kernel + krn.WhiteKernel(noise_level=0.5)
+        # pipeline to scale -> GPC
+        gp_pipe = Pipeline([
+                ('scaler', StandardScaler()),
+                ('gpc', GaussianProcessClassifier(kernel=kernel,
+                                                  warm_start=True,
+                                                  random_state=985,
+                                                  max_iter_predict=250))
+                ])
+    
+        gp_pipe.fit(self.X_train, self.y_train)
+        tr_scr = gp_pipe.score(self.X_train, self.y_train)
+        print("The GP training score is %0.2f"
+              %tr_scr)
+        
+        te_scr = gp_pipe.score(self.X_test, self.y_test)
+        print('GP testing score: %0.2f' %te_scr)
+        self.gpc = gp_pipe
+    
     # Train SVM regression
     def fit_svr(self):
         from sklearn.pipeline import Pipeline
@@ -141,7 +196,7 @@ class Prediction:
         svr_cv = GridSearchCV(sv_pipe, param_grid=parameters)
         svr_cv.fit(self.X_train, self.y_train)
         
-        print("The best parameters are %s"
+        print("The best SVR parameters are %s"
               % (svr_cv.best_params_))
         
         # set pipeline to use CV params
@@ -151,6 +206,7 @@ class Prediction:
         self.svr = sv_pipe
         
     # Train logistic classification
+    # TODO: kernelize
     def fit_log_reg(self, neg_wt=1.0):
         from sklearn.pipeline import Pipeline
         from sklearn.preprocessing import StandardScaler
@@ -169,11 +225,11 @@ class Prediction:
         C = log_reg_pipe._final_estimator.C_
         tr_scr = log_reg_pipe.score(self.X_train, self.y_train)
         
-        print('The best C value is %f with a training score of %0.2f'
+        print('The best logistic C value is %f with a training score of %0.2f'
               % (C, tr_scr))
         
         te_scr = log_reg_pipe.score(self.X_test, self.y_test)
-        print('Testing score: %0.2f'
+        print('Logistic testing score: %0.2f'
               %te_scr)
         
         self.log_reg = log_reg_pipe
@@ -204,15 +260,18 @@ class Prediction:
         sv_pipe.set_params(**svc_cv.best_params_)
         sv_pipe.fit(self.X_train, self.y_train)
         
-        print("The best parameters are %s with a training score of %0.2f"
+        print("The best SVC parameters are %s with a training score of %0.2f"
               % (svc_cv.best_params_, svc_cv.best_score_))
         
         te_scr = sv_pipe.score(self.X_test, self.y_test)
-        print('Testing score: %0.2f' %te_scr)
+        print('SVC testing score: %0.2f' %te_scr)
         self.svc = sv_pipe
         
     # TODO: if params passed, don't do CV
-    
+
+###############################################################################
+    # Regression models
+###############################################################################
     # Train kernel ridge regression
     def fit_kernel_ridge(self, kernel_name='rbf'):
         from sklearn.pipeline import Pipeline
@@ -233,12 +292,47 @@ class Prediction:
         kr_cv.fit(self.X_train, self.y_train)
         
         # set pipeline to use CV params
-        print("The best parameters are %s"
+        print("The best kernel ridge parameters are %s"
               % (kr_cv.best_params_))
         kr_pipe.set_params(**kr_cv.best_params_)
         kr_pipe.fit(self.X_train, self.y_train)
         
         self.kr = kr_pipe
+        
+    # Train GP regression
+    def fit_gpr(self, kernel_name):
+        from sklearn.pipeline import Pipeline
+        from sklearn.preprocessing import StandardScaler
+        from sklearn.gaussian_process import GaussianProcessRegressor
+        import sklearn.gaussian_process.kernels as krn
+        
+        if kernel_name=='rbf_ard':
+            kernel = 1.0 * krn.RBF([1.0, 1.0, 1.0, 1.0])
+        elif kernel_name=='rbf_iso':
+            kernel = 1.0 * krn.RBF(1.0)
+        elif kernel_name=='rq':
+            kernel = 0.5**2 * krn.RationalQuadratic(length_scale=1.0,
+                                                    alpha=1.0)
+        elif kernel_name == 'matern_iso':
+            kernel = 1.0 * krn.Matern(
+                    length_scale=1.0, 
+                    nu=1.5)
+        elif kernel_name == 'matern_ard':
+            kernel = 1.0 * krn.Matern(
+                    length_scale=[1.0, 1.0, 1.0, 1.0], 
+                    nu=1.5)
+            
+        # pipeline to scale -> GPR
+        gp_pipe = Pipeline([
+                ('scaler', StandardScaler()),
+                ('gpr', GaussianProcessRegressor(kernel=kernel,
+                                                 random_state=985,
+                                                 n_restarts_optimizer=10))
+                ])
+    
+        gp_pipe.fit(self.X_train, self.y_train)
+        
+        self.gpr = gp_pipe
         
     # Train regular ridge regression
     def fit_ols_ridge(self):
@@ -254,6 +348,10 @@ class Prediction:
         
         self.o_ridge = or_pipe
         
+###############################################################################
+    # Full prediction models
+###############################################################################
+    
     # assumes that problem is already created
     def predict_loss(self, impact_pred_mdl, hit_loss_mdl, miss_loss_mdl):
         
@@ -280,7 +378,7 @@ class Prediction:
         # run SVR_hit model on this dataset
         loss_pred_hit = pd.DataFrame(
                 {'median_loss_pred':np.multiply(
-                        hit_loss_mdl.svr.predict(self.X),
+                        hit_loss_mdl.predict(self.X),
                         hit_prob)},
                     index=self.X.index)
                 
@@ -291,7 +389,7 @@ class Prediction:
         # run SVR_miss model on this dataset
         loss_pred_miss = pd.DataFrame(
                 {'median_loss_pred':np.multiply(
-                        miss_loss_mdl.svr.predict(self.X),
+                        miss_loss_mdl.predict(self.X),
                         miss_prob)},
                     index=self.X.index)
         
@@ -300,7 +398,7 @@ class Prediction:
         # self.median_loss_pred = pd.concat([loss_pred_hit,loss_pred_miss], 
         #                                   axis=0).sort_index(ascending=True)
         
-    # TODO: GP Regression model
+
  
 # make prediction objects for impacted and non-impacted datasets
 df_hit = df[df['impacted'] == 1]
@@ -313,12 +411,12 @@ mdl_miss = Prediction(df_miss)
 mdl_miss.set_outcome('cost_50%')
 mdl_miss.test_train_split(0.2)
 
-#%% fit impact (SVC)
 # prepare the problem
 mdl = Prediction(df)
 mdl.set_outcome('impacted')
 mdl.test_train_split(0.2)
 
+#%% fit impact (SVC)
 # fit SVM classification for impact
 mdl.fit_svc(neg_wt=0.6)
 
@@ -361,6 +459,25 @@ print('False positives: ', fp)
 X_plot = mdl.make_2D_plotting_space(100)
 mdl.plot_classification(mdl.log_reg)
 
+#%% fit impact (gp classification)
+
+mdl.fit_gpc(kernel_name='rbf_iso')
+
+# predict the entire dataset
+preds_imp = mdl.gpc.predict(mdl.X)
+probs_imp = mdl.gpc.predict_proba(mdl.X)
+
+# we've done manual CV to pick the hyperparams that trades some accuracy
+# in order to lower false negatives
+from sklearn.metrics import confusion_matrix
+
+tn, fp, fn, tp = confusion_matrix(mdl.y, preds_imp).ravel()
+print('False negatives: ', fn)
+print('False positives: ', fp)
+
+# make grid and plot classification predictions
+X_plot = mdl.make_2D_plotting_space(100)
+mdl.plot_classification(mdl.gpc)
 #%% Fit costs (SVR)
 
 # fit impacted set
@@ -400,6 +517,7 @@ ax.set_zlim([0, 1e5])
 plt.show()
 
 #%% Fit costs (kernel ridge)
+
 kernel_type = 'polynomial'
 
 # fit impacted set
@@ -438,6 +556,46 @@ ax.set_title('Median cost predictions given no impact (Polynomial kernel ridge)'
 ax.set_zlim([0, 1e6])
 plt.show()
 
+#%% Fit costs (GP regression)
+
+#kernel_type = 'rbf_iso'
+#
+## fit impacted set
+#mdl_hit.fit_gpr(kernel_name=kernel_type)
+#cost_pred_hit = mdl_hit.gpr.predict(mdl_hit.X_test)
+#comparison_cost_hit = np.array([mdl_hit.y_test, 
+#                                      cost_pred_hit]).transpose()
+#        
+## fit no impact set
+#mdl_miss.fit_gpr(kernel_name=kernel_type)
+#cost_pred_miss = mdl_miss.gpr.predict(mdl_miss.X_test)
+#comparison_cost_miss = np.array([mdl_miss.y_test, 
+#                                      cost_pred_miss]).transpose()
+#        
+#scr = mdl_miss.gpr.score(mdl_miss.X_test, mdl_miss.y_test)
+#
+#mdl_miss.make_2D_plotting_space(100)
+#
+#xx = mdl_miss.xx
+#yy = mdl_miss.yy
+#Z = mdl_miss.gpr.predict(mdl_miss.X_plot)
+#Z = Z.reshape(xx.shape)
+#
+#fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+## Plot the surface.
+#surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
+#                       linewidth=0, antialiased=False)
+#
+#ax.scatter(df_miss['gapRatio'], df_miss['RI'], df_miss['cost_50%'],
+#           edgecolors='k')
+#
+#ax.set_xlabel('Gap ratio')
+#ax.set_ylabel('Ry')
+#ax.set_zlabel('Median loss ($)')
+#ax.set_title('Median cost predictions given no impact (GP regression)')
+#ax.set_zlim([0, 1e6])
+#plt.show()
+
 #%% Fit costs (regular ridge)
 
 # sensitive to alpha. keep alpha > 1e-2 since smaller alphas will result in 
@@ -460,7 +618,7 @@ comparison_cost_miss = np.array([mdl_miss.y_test,
 scr = mdl_miss.o_ridge.score(mdl_miss.X_test, mdl_miss.y_test)
 
 #%% aggregate the two models
-mdl.predict_loss(mdl.svc, mdl_hit, mdl_miss)
+mdl.predict_loss(mdl.log_reg, mdl_hit.svr, mdl_miss.svr)
 comparison_cost = np.array([df['cost_50%'],
                             np.ravel(mdl.median_loss_pred)]).transpose()
 
@@ -469,7 +627,7 @@ comparison_cost = np.array([df['cost_50%'],
 X_plot = mdl.make_2D_plotting_space(100)
 
 grid_mdl = Prediction(X_plot)
-grid_mdl.predict_loss(mdl.svc, mdl_hit, mdl_miss)
+grid_mdl.predict_loss(mdl.svc, mdl_hit.svr, mdl_miss.svr)
 grid_mdl.make_2D_plotting_space(100)
 
 xx = grid_mdl.xx
@@ -480,10 +638,17 @@ Z = Z.reshape(xx.shape)
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 # Plot the surface.
 surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
-                       linewidth=0, antialiased=False)
+                       linewidth=0, antialiased=False, alpha=0.6)
 
 ax.scatter(df['gapRatio'], df['RI'], df['cost_50%'],
-           edgecolors='k')
+           edgecolors='k', alpha = 0.5)
+
+xlim = ax.get_xlim()
+ylim = ax.get_ylim()
+zlim = ax.get_zlim()
+cset = ax.contour(xx, yy, Z, zdir='z', offset=zlim[0], cmap=plt.cm.coolwarm)
+cset = ax.contour(xx, yy, Z, zdir='x', offset=xlim[0], cmap=plt.cm.coolwarm)
+cset = ax.contour(xx, yy, Z, zdir='y', offset=ylim[1], cmap=plt.cm.coolwarm)
 
 ax.set_xlabel('Gap ratio')
 ax.set_ylabel('Ry')
@@ -493,7 +658,7 @@ plt.show()
 
 #%% Big cost prediction plot (LR-SVR)
 
-grid_mdl.predict_loss(mdl.log_reg, mdl_hit, mdl_miss)
+grid_mdl.predict_loss(mdl.log_reg, mdl_hit.svr, mdl_miss.svr)
 grid_mdl.make_2D_plotting_space(100)
 
 xx = grid_mdl.xx
@@ -504,10 +669,17 @@ Z = Z.reshape(xx.shape)
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 # Plot the surface.
 surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
-                       linewidth=0, antialiased=False)
+                       linewidth=0, antialiased=False, alpha=0.6)
 
 ax.scatter(df['gapRatio'], df['RI'], df['cost_50%'],
-           edgecolors='k')
+           edgecolors='k', alpha = 0.5)
+
+xlim = ax.get_xlim()
+ylim = ax.get_ylim()
+zlim = ax.get_zlim()
+cset = ax.contour(xx, yy, Z, zdir='z', offset=zlim[0], cmap=plt.cm.coolwarm)
+cset = ax.contour(xx, yy, Z, zdir='x', offset=xlim[0], cmap=plt.cm.coolwarm)
+cset = ax.contour(xx, yy, Z, zdir='y', offset=ylim[1], cmap=plt.cm.coolwarm)
 
 ax.set_xlabel('Gap ratio')
 ax.set_ylabel('Ry')
@@ -515,6 +687,36 @@ ax.set_zlabel('Median loss ($)')
 ax.set_title('Median cost predictions: LR-impact, SVR-loss')
 plt.show()
 
+#%% Big cost prediction plot (GP-SVR)
+
+grid_mdl.predict_loss(mdl.gpc, mdl_hit.svr, mdl_miss.svr)
+grid_mdl.make_2D_plotting_space(100)
+
+xx = grid_mdl.xx
+yy = grid_mdl.yy
+Z = np.array(grid_mdl.median_loss_pred)
+Z = Z.reshape(xx.shape)
+
+fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+# Plot the surface.
+surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
+                       linewidth=0, antialiased=False, alpha=0.6)
+
+ax.scatter(df['gapRatio'], df['RI'], df['cost_50%'],
+           edgecolors='k', alpha = 0.5)
+
+xlim = ax.get_xlim()
+ylim = ax.get_ylim()
+zlim = ax.get_zlim()
+cset = ax.contour(xx, yy, Z, zdir='z', offset=zlim[0], cmap=plt.cm.coolwarm)
+cset = ax.contour(xx, yy, Z, zdir='x', offset=xlim[0], cmap=plt.cm.coolwarm)
+cset = ax.contour(xx, yy, Z, zdir='y', offset=ylim[1], cmap=plt.cm.coolwarm)
+
+ax.set_xlabel('Gap ratio')
+ax.set_ylabel('Ry')
+ax.set_zlabel('Median loss ($)')
+ax.set_title('Median cost predictions: GP-impact, SVR-loss')
+plt.show()
 #%% Fit costs (SVR, across all data)
 
 ## fit impacted set
@@ -547,14 +749,14 @@ plt.show()
 
 #%% dirty test prediction plots for cost
 
-#plt.close('all')
-plt.figure()
-plt.scatter(mdl_miss.X_test['RI'], mdl_miss.y_test)
-plt.scatter(mdl_miss.X_test['RI'], cost_pred_miss)
-
-plt.figure()
-plt.scatter(mdl_hit.X_test['RI'], mdl_hit.y_test)
-plt.scatter(mdl_hit.X_test['RI'], cost_pred_hit)
+##plt.close('all')
+#plt.figure()
+#plt.scatter(mdl_miss.X_test['RI'], mdl_miss.y_test)
+#plt.scatter(mdl_miss.X_test['RI'], cost_pred_miss)
+#
+#plt.figure()
+#plt.scatter(mdl_hit.X_test['RI'], mdl_hit.y_test)
+#plt.scatter(mdl_hit.X_test['RI'], cost_pred_hit)
 
 #%% Other plotting
 
