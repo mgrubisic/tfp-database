@@ -14,12 +14,14 @@
 
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+plt.close('all')
 idx = pd.IndexSlice
 pd.options.display.max_rows = 30
 
-# temporary spyder debugger error hack
-import collections
-collections.Callable = collections.abc.Callable
+## temporary spyder debugger error hack
+#import collections
+#collections.Callable = collections.abc.Callable
 
 #%% concat with other data
 loss_data = pd.read_csv('./results/loss_estimate_data.csv', index_col=None)
@@ -43,14 +45,15 @@ class Prediction:
         self.y = self._raw_data[[outcome_var]]
         
     # if classification is done, plot the predictions
-    def plot_classification(self):
+    def plot_classification(self, mdl_clf):
         import matplotlib.pyplot as plt
         
         xx = self.xx
         yy = self.yy
-        Z = self.svc.decision_function(self.X_plot)
+        Z = mdl_clf.decision_function(self.X_plot)
         Z = Z.reshape(xx.shape)
         
+        plt.figure()
         plt.imshow(
             Z,
             interpolation="nearest",
@@ -70,7 +73,10 @@ class Prediction:
                     cmap=plt.cm.Paired, edgecolors="k")
         plt.xlabel('Gap ratio')
         plt.ylabel('Ry')
-        plt.title('Impact classification')
+        if 'svc' in mdl_clf.named_steps.keys():
+            plt.title('Impact classification (SVC)')
+        elif 'log_reg' in mdl_clf.named_steps.keys():
+            plt.title('Impact classification (logistic)')
         plt.show()
         
     # make a generalized 2D plotting grid, defaulted to gap and Ry
@@ -143,7 +149,35 @@ class Prediction:
         sv_pipe.fit(self.X_train, self.y_train)
         
         self.svr = sv_pipe
-     
+        
+    # Train logistic classification
+    def fit_log_reg(self, neg_wt=1.0):
+        from sklearn.pipeline import Pipeline
+        from sklearn.preprocessing import StandardScaler
+        from sklearn.linear_model import LogisticRegressionCV
+        
+        # pipeline to scale -> logistic
+        wts = {0: neg_wt, 1:1.0}
+        log_reg_pipe = Pipeline([('scaler', StandardScaler()),
+                                 ('log_reg', LogisticRegressionCV(
+                                         class_weight=wts))])
+        
+        # LRCV finds optimum C value, L2 penalty
+        log_reg_pipe.fit(self.X_train, self.y_train)
+        
+        # Get test accuracy
+        C = log_reg_pipe._final_estimator.C_
+        tr_scr = log_reg_pipe.score(self.X_train, self.y_train)
+        
+        print('The best C value is %f with a training score of %0.2f'
+              % (C, tr_scr))
+        
+        te_scr = log_reg_pipe.score(self.X_test, self.y_test)
+        print('Testing score: %0.2f'
+              %te_scr)
+        
+        self.log_reg = log_reg_pipe
+        
     # Train SVM classification
     def fit_svc(self, neg_wt=1.0):
         from sklearn.pipeline import Pipeline
@@ -170,9 +204,11 @@ class Prediction:
         sv_pipe.set_params(**svc_cv.best_params_)
         sv_pipe.fit(self.X_train, self.y_train)
         
-        print("The best parameters are %s with a score of %0.2f"
+        print("The best parameters are %s with a training score of %0.2f"
               % (svc_cv.best_params_, svc_cv.best_score_))
         
+        te_scr = sv_pipe.score(self.X_test, self.y_test)
+        print('Testing score: %0.2f' %te_scr)
         self.svc = sv_pipe
         
     # TODO: if params passed, don't do CV
@@ -220,28 +256,49 @@ class Prediction:
         
     # assumes that problem is already created
     def predict_loss(self, impact_pred_mdl, hit_loss_mdl, miss_loss_mdl):
-        # get points that are predicted impact from full dataset
-        preds_imp = impact_pred_mdl.svc.predict(self.X)
-        df_imp = self.X[preds_imp == 1]
         
+        # two ways of doing this
+        # 1) predict impact first (binary)), then fit the impact predictions 
+        # with the impact-only SVR and likewise with non-impacts. This creates
+        # two tiers of predictions that are relatively flat (impact dominated)
+        # 2) using expectations, get probabilities of collapse and weigh the
+        # two (cost|impact) regressions with Pr(impact). Creates smooth
+        # predictions that are somewhat moderate
+        
+#        # get points that are predicted impact from full dataset
+#        preds_imp = impact_pred_mdl.svc.predict(self.X)
+#        df_imp = self.X[preds_imp == 1]
+        
+        # get probability of impact
+        probs_imp = impact_pred_mdl.predict_proba(self.X)
+        
+        miss_prob = probs_imp[:,0]
+        hit_prob = probs_imp[:,1]
+        
+        # weight with probability of collapse
+        # E[Loss] = (impact loss)*Pr(impact) + (no impact loss)*Pr(no impact)
         # run SVR_hit model on this dataset
         loss_pred_hit = pd.DataFrame(
-                {'median_loss_pred':
-                    hit_loss_mdl.svr.predict(df_imp)},
-                    index=df_imp.index)
+                {'median_loss_pred':np.multiply(
+                        hit_loss_mdl.svr.predict(self.X),
+                        hit_prob)},
+                    index=self.X.index)
                 
         
-        # get points that are predicted no impact from full dataset
-        df_mss = self.X[preds_imp == 0]
+#        # get points that are predicted no impact from full dataset
+#        df_mss = self.X[preds_imp == 0]
         
         # run SVR_miss model on this dataset
         loss_pred_miss = pd.DataFrame(
-                {'median_loss_pred':
-                    miss_loss_mdl.svr.predict(df_mss)},
-                    index=df_mss.index)
+                {'median_loss_pred':np.multiply(
+                        miss_loss_mdl.svr.predict(self.X),
+                        miss_prob)},
+                    index=self.X.index)
+        
+        self.median_loss_pred = loss_pred_hit+loss_pred_miss
             
-        self.median_loss_pred = pd.concat([loss_pred_hit,loss_pred_miss], 
-                                          axis=0).sort_index(ascending=True)
+        # self.median_loss_pred = pd.concat([loss_pred_hit,loss_pred_miss], 
+        #                                   axis=0).sort_index(ascending=True)
         
     # TODO: GP Regression model
  
@@ -256,7 +313,7 @@ mdl_miss = Prediction(df_miss)
 mdl_miss.set_outcome('cost_50%')
 mdl_miss.test_train_split(0.2)
 
-#%% fit impact
+#%% fit impact (SVC)
 # prepare the problem
 mdl = Prediction(df)
 mdl.set_outcome('impacted')
@@ -267,6 +324,8 @@ mdl.fit_svc(neg_wt=0.6)
 
 # predict the entire dataset
 preds_imp = mdl.svc.predict(mdl.X)
+
+# note: SVC probabilities are NOT well calibrated
 probs_imp = mdl.svc.predict_proba(mdl.X)
 
 # we've done manual CV to pick the hyperparams that trades some accuracy
@@ -279,7 +338,28 @@ print('False positives: ', fp)
 
 # make grid and plot classification predictions
 X_plot = mdl.make_2D_plotting_space(100)
-mdl.plot_classification()
+mdl.plot_classification(mdl.svc)
+
+#%% fit impact (logistic classification)
+
+# fit logistic classification for impact
+mdl.fit_log_reg(neg_wt=0.85)
+
+# predict the entire dataset
+preds_imp = mdl.log_reg.predict(mdl.X)
+probs_imp = mdl.log_reg.predict_proba(mdl.X)
+
+# we've done manual CV to pick the hyperparams that trades some accuracy
+# in order to lower false negatives
+from sklearn.metrics import confusion_matrix
+
+tn, fp, fn, tp = confusion_matrix(mdl.y, preds_imp).ravel()
+print('False negatives: ', fn)
+print('False positives: ', fp)
+
+# make grid and plot classification predictions
+X_plot = mdl.make_2D_plotting_space(100)
+mdl.plot_classification(mdl.log_reg)
 
 #%% Fit costs (SVR)
 
@@ -297,7 +377,6 @@ comparison_cost_miss = np.array([mdl_miss.y_test,
         
 scr = mdl_miss.svr.score(mdl_miss.X_test, mdl_miss.y_test)
 
-import matplotlib.pyplot as plt
 mdl_miss.make_2D_plotting_space(100)
 
 xx = mdl_miss.xx
@@ -337,7 +416,6 @@ comparison_cost_miss = np.array([mdl_miss.y_test,
         
 scr = mdl_miss.kr.score(mdl_miss.X_test, mdl_miss.y_test)
 
-import matplotlib.pyplot as plt
 mdl_miss.make_2D_plotting_space(100)
 
 xx = mdl_miss.xx
@@ -382,18 +460,16 @@ comparison_cost_miss = np.array([mdl_miss.y_test,
 scr = mdl_miss.o_ridge.score(mdl_miss.X_test, mdl_miss.y_test)
 
 #%% aggregate the two models
-mdl_imp_clf = mdl
-mdl.predict_loss(mdl_imp_clf, mdl_hit, mdl_miss)
+mdl.predict_loss(mdl.svc, mdl_hit, mdl_miss)
 comparison_cost = np.array([df['cost_50%'],
                             np.ravel(mdl.median_loss_pred)]).transpose()
 
-#%% Big cost prediction plot
+#%% Big cost prediction plot (SVC-SVR)
 
-import matplotlib.pyplot as plt
 X_plot = mdl.make_2D_plotting_space(100)
 
 grid_mdl = Prediction(X_plot)
-grid_mdl.predict_loss(mdl_imp_clf, mdl_hit, mdl_miss)
+grid_mdl.predict_loss(mdl.svc, mdl_hit, mdl_miss)
 grid_mdl.make_2D_plotting_space(100)
 
 xx = grid_mdl.xx
@@ -415,20 +491,14 @@ ax.set_zlabel('Median loss ($)')
 ax.set_title('Median cost predictions: SVC-impact, SVR-loss')
 plt.show()
 
-#%% Fit costs (SVR, across all data)
+#%% Big cost prediction plot (LR-SVR)
 
-# fit impacted set
-mdl = Prediction(df)
-mdl.set_outcome('cost_50%')
-mdl.test_train_split(0.2)
-mdl.fit_svr()
+grid_mdl.predict_loss(mdl.log_reg, mdl_hit, mdl_miss)
+grid_mdl.make_2D_plotting_space(100)
 
-X_plot = mdl.make_2D_plotting_space(100)
-import matplotlib.pyplot as plt
-
-xx = mdl.xx
-yy = mdl.yy
-Z = mdl.svr.predict(mdl.X_plot)
+xx = grid_mdl.xx
+yy = grid_mdl.yy
+Z = np.array(grid_mdl.median_loss_pred)
 Z = Z.reshape(xx.shape)
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -442,12 +512,42 @@ ax.scatter(df['gapRatio'], df['RI'], df['cost_50%'],
 ax.set_xlabel('Gap ratio')
 ax.set_ylabel('Ry')
 ax.set_zlabel('Median loss ($)')
-ax.set_title('Median cost predictions across all data (SVR)')
+ax.set_title('Median cost predictions: LR-impact, SVR-loss')
 plt.show()
+
+#%% Fit costs (SVR, across all data)
+
+## fit impacted set
+#mdl = Prediction(df)
+#mdl.set_outcome('cost_50%')
+#mdl.test_train_split(0.2)
+#mdl.fit_svr()
+#
+#X_plot = mdl.make_2D_plotting_space(100)
+#
+#xx = mdl.xx
+#yy = mdl.yy
+#Z = mdl.svr.predict(mdl.X_plot)
+#Z = Z.reshape(xx.shape)
+#
+#fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+## Plot the surface.
+#surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
+#                       linewidth=0, antialiased=False)
+#
+#ax.scatter(df['gapRatio'], df['RI'], df['cost_50%'],
+#           edgecolors='k')
+#
+#ax.set_xlabel('Gap ratio')
+#ax.set_ylabel('Ry')
+#ax.set_zlabel('Median loss ($)')
+#ax.set_title('Median cost predictions across all data (SVR)')
+#plt.show()
         
 
 #%% dirty test prediction plots for cost
-plt.close('all')
+
+#plt.close('all')
 plt.figure()
 plt.scatter(mdl_miss.X_test['RI'], mdl_miss.y_test)
 plt.scatter(mdl_miss.X_test['RI'], cost_pred_miss)
