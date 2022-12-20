@@ -32,12 +32,49 @@ df = pd.concat([full_isolation_data, loss_data], axis=1)
 #%% new class
 class Prediction:
     
-    def __init__(self, data, outcome):
+    # sets up the problem by grabbing the x covariates
+    def __init__(self, data):
         self._raw_data = data
         self.k = len(data)
         self.X = data[['gapRatio', 'RI', 'zetaM', 'Tm']]
-        self.y = data[[outcome]]
         
+    # sets up prediction variable
+    def set_outcome(self, outcome_var):
+        self.y = self._raw_data[[outcome_var]]
+        
+    # if classification is done, plot the predictions
+    def plot_classification(self):
+        import matplotlib.pyplot as plt
+        
+        xx = self.xx
+        yy = self.yy
+        Z = self.svc.decision_function(self.X_plot)
+        Z = Z.reshape(xx.shape)
+        
+        plt.imshow(
+            Z,
+            interpolation="nearest",
+            extent=(xx.min(), xx.max(),
+                    yy.min(), yy.max()),
+            aspect="auto",
+            origin="lower",
+            cmap=plt.cm.PuOr_r,
+        )
+            
+        plt_density = 100
+        
+        plt.contour(xx, yy, Z, levels=[0], linewidths=2, linestyles="dashed")
+        plt.scatter(self.X_train['gapRatio'][:plt_density],
+                    self.X_train['RI'][:plt_density],
+                    s=30, c=self.y_train[:plt_density],
+                    cmap=plt.cm.Paired, edgecolors="k")
+        plt.xlabel('Gap ratio')
+        plt.ylabel('Ry')
+        plt.title('Impact classification')
+        plt.show()
+        
+    # make a generalized 2D plotting grid, defaulted to gap and Ry
+    # grid is based on the bounds of input data
     def make_2D_plotting_space(self, res, x_var='gapRatio', y_var='RI'):
         xx, yy = np.meshgrid(np.linspace(min(self.X[x_var]),
                                          max(self.X[x_var]),
@@ -58,9 +95,12 @@ class Prediction:
                                                  res*res),
                              fourth_var:np.repeat(self.X[fourth_var].median(), 
                                                   res*res)})
+                             
+        return(self.X_plot)
         
     # TODO: consider method that cleans data based on prediction outcome
         
+    # train test split to be done before any learning 
     def test_train_split(self, percentage):
         from sklearn.model_selection import train_test_split
         X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, 
@@ -74,6 +114,7 @@ class Prediction:
         self.y_train = ravel(y_train)
         self.y_test = ravel(y_test)
         
+    # Train SVM regression
     def fit_svr(self):
         from sklearn.pipeline import Pipeline
         from sklearn.preprocessing import StandardScaler
@@ -94,18 +135,16 @@ class Prediction:
         svr_cv = GridSearchCV(sv_pipe, param_grid=parameters)
         svr_cv.fit(self.X_train, self.y_train)
         
+        print("The best parameters are %s"
+              % (svr_cv.best_params_))
+        
         # set pipeline to use CV params
         sv_pipe.set_params(**svr_cv.best_params_)
         sv_pipe.fit(self.X_train, self.y_train)
         
         self.svr = sv_pipe
-        
-        # ultimately, want:
-            # fit method to apply to new data
-            # details of params used
-            # training score
-            # testing score
      
+    # Train SVM classification
     def fit_svc(self, neg_wt=1.0):
         from sklearn.pipeline import Pipeline
         from sklearn.preprocessing import StandardScaler
@@ -138,6 +177,7 @@ class Prediction:
         
     # TODO: if params passed, don't do CV
     
+    # Train kernel ridge regression
     def fit_kernel_ridge(self, kernel_name='rbf'):
         from sklearn.pipeline import Pipeline
         from sklearn.preprocessing import StandardScaler
@@ -164,6 +204,7 @@ class Prediction:
         
         self.kr = kr_pipe
         
+    # Train regular ridge regression
     def fit_ols_ridge(self):
         from sklearn.pipeline import Pipeline
         from sklearn.preprocessing import StandardScaler
@@ -177,66 +218,68 @@ class Prediction:
         
         self.o_ridge = or_pipe
         
+    # assumes that problem is already created
+    def predict_loss(self, impact_pred_mdl, hit_loss_mdl, miss_loss_mdl):
+        # get points that are predicted impact from full dataset
+        preds_imp = impact_pred_mdl.svc.predict(self.X)
+        df_imp = self.X[preds_imp == 1]
+        
+        # run SVR_hit model on this dataset
+        loss_pred_hit = pd.DataFrame(
+                {'median_loss_pred':
+                    hit_loss_mdl.svr.predict(df_imp)},
+                    index=df_imp.index)
+                
+        
+        # get points that are predicted no impact from full dataset
+        df_mss = self.X[preds_imp == 0]
+        
+        # run SVR_miss model on this dataset
+        loss_pred_miss = pd.DataFrame(
+                {'median_loss_pred':
+                    miss_loss_mdl.svr.predict(df_mss)},
+                    index=df_mss.index)
+            
+        self.median_loss_pred = pd.concat([loss_pred_hit,loss_pred_miss], 
+                                          axis=0).sort_index(ascending=True)
+        
     # TODO: GP Regression model
  
 # make prediction objects for impacted and non-impacted datasets
 df_hit = df[df['impacted'] == 1]
-mdl_hit = Prediction(df_hit, 'cost_50%')
+mdl_hit = Prediction(df_hit)
+mdl_hit.set_outcome('cost_50%')
 mdl_hit.test_train_split(0.2)
 
 df_miss = df[df['impacted'] == 0]
-mdl_miss = Prediction(df_miss, 'cost_50%')
+mdl_miss = Prediction(df_miss)
+mdl_miss.set_outcome('cost_50%')
 mdl_miss.test_train_split(0.2)
+
 #%% fit impact
 # prepare the problem
-mdl_imp_clf = Prediction(df, 'impacted')
-mdl_imp_clf.test_train_split(0.2)
+mdl = Prediction(df)
+mdl.set_outcome('impacted')
+mdl.test_train_split(0.2)
 
 # fit SVM classification for impact
-mdl_imp_clf.fit_svc(neg_wt=0.6)
+mdl.fit_svc(neg_wt=0.6)
 
 # predict the entire dataset
-preds_imp = mdl_imp_clf.svc.predict(mdl_imp_clf.X)
-probs_imp = mdl_imp_clf.svc.predict_proba(mdl_imp_clf.X)
+preds_imp = mdl.svc.predict(mdl.X)
+probs_imp = mdl.svc.predict_proba(mdl.X)
 
 # we've done manual CV to pick the hyperparams that trades some accuracy
 # in order to lower false negatives
 from sklearn.metrics import confusion_matrix
 
-tn, fp, fn, tp = confusion_matrix(mdl_imp_clf.y, preds_imp).ravel()
+tn, fp, fn, tp = confusion_matrix(mdl.y, preds_imp).ravel()
 print('False negatives: ', fn)
 print('False positives: ', fp)
 
-# plot a contour of the impact classification
-import matplotlib.pyplot as plt
-mdl_imp_clf.make_2D_plotting_space(100)
-
-xx = mdl_imp_clf.xx
-yy = mdl_imp_clf.yy
-Z = mdl_imp_clf.svc.decision_function(mdl_imp_clf.X_plot)
-Z = Z.reshape(xx.shape)
-
-plt.imshow(
-    Z,
-    interpolation="nearest",
-    extent=(xx.min(), xx.max(),
-            yy.min(), yy.max()),
-    aspect="auto",
-    origin="lower",
-    cmap=plt.cm.PuOr_r,
-)
-    
-plt_density = 100
-
-contours = plt.contour(xx, yy, Z, levels=[0], linewidths=2, linestyles="dashed")
-plt.scatter(mdl_imp_clf.X_train['gapRatio'][:plt_density],
-            mdl_imp_clf.X_train['RI'][:plt_density],
-            s=30, c=mdl_imp_clf.y_train[:plt_density],
-            cmap=plt.cm.Paired, edgecolors="k")
-plt.xlabel('Gap ratio')
-plt.ylabel('Ry')
-plt.title('Impact classification')
-plt.show()
+# make grid and plot classification predictions
+X_plot = mdl.make_2D_plotting_space(100)
+mdl.plot_classification()
 
 #%% Fit costs (SVR)
 
@@ -294,7 +337,29 @@ comparison_cost_miss = np.array([mdl_miss.y_test,
         
 scr = mdl_miss.kr.score(mdl_miss.X_test, mdl_miss.y_test)
 
-# TODO: ridge plotting
+import matplotlib.pyplot as plt
+mdl_miss.make_2D_plotting_space(100)
+
+xx = mdl_miss.xx
+yy = mdl_miss.yy
+Z = mdl_miss.kr.predict(mdl_miss.X_plot)
+Z = Z.reshape(xx.shape)
+
+fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+# Plot the surface.
+surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
+                       linewidth=0, antialiased=False)
+
+ax.scatter(df_miss['gapRatio'], df_miss['RI'], df_miss['cost_50%'],
+           edgecolors='k')
+
+ax.set_xlabel('Gap ratio')
+ax.set_ylabel('Ry')
+ax.set_zlabel('Median loss ($)')
+ax.set_title('Median cost predictions given no impact (Polynomial kernel ridge)')
+ax.set_zlim([0, 1e6])
+plt.show()
+
 #%% Fit costs (regular ridge)
 
 # sensitive to alpha. keep alpha > 1e-2 since smaller alphas will result in 
@@ -317,8 +382,69 @@ comparison_cost_miss = np.array([mdl_miss.y_test,
 scr = mdl_miss.o_ridge.score(mdl_miss.X_test, mdl_miss.y_test)
 
 #%% aggregate the two models
+mdl_imp_clf = mdl
+mdl.predict_loss(mdl_imp_clf, mdl_hit, mdl_miss)
+comparison_cost = np.array([df['cost_50%'],
+                            np.ravel(mdl.median_loss_pred)]).transpose()
 
-# TODO: aggregate both datasets
+#%% Big cost prediction plot
+
+import matplotlib.pyplot as plt
+X_plot = mdl.make_2D_plotting_space(100)
+
+grid_mdl = Prediction(X_plot)
+grid_mdl.predict_loss(mdl_imp_clf, mdl_hit, mdl_miss)
+grid_mdl.make_2D_plotting_space(100)
+
+xx = grid_mdl.xx
+yy = grid_mdl.yy
+Z = np.array(grid_mdl.median_loss_pred)
+Z = Z.reshape(xx.shape)
+
+fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+# Plot the surface.
+surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
+                       linewidth=0, antialiased=False)
+
+ax.scatter(df['gapRatio'], df['RI'], df['cost_50%'],
+           edgecolors='k')
+
+ax.set_xlabel('Gap ratio')
+ax.set_ylabel('Ry')
+ax.set_zlabel('Median loss ($)')
+ax.set_title('Median cost predictions: SVC-impact, SVR-loss')
+plt.show()
+
+#%% Fit costs (SVR, across all data)
+
+# fit impacted set
+mdl = Prediction(df)
+mdl.set_outcome('cost_50%')
+mdl.test_train_split(0.2)
+mdl.fit_svr()
+
+X_plot = mdl.make_2D_plotting_space(100)
+import matplotlib.pyplot as plt
+
+xx = mdl.xx
+yy = mdl.yy
+Z = mdl.svr.predict(mdl.X_plot)
+Z = Z.reshape(xx.shape)
+
+fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+# Plot the surface.
+surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
+                       linewidth=0, antialiased=False)
+
+ax.scatter(df['gapRatio'], df['RI'], df['cost_50%'],
+           edgecolors='k')
+
+ax.set_xlabel('Gap ratio')
+ax.set_ylabel('Ry')
+ax.set_zlabel('Median loss ($)')
+ax.set_title('Median cost predictions across all data (SVR)')
+plt.show()
+        
 
 #%% dirty test prediction plots for cost
 plt.close('all')
@@ -330,5 +456,9 @@ plt.figure()
 plt.scatter(mdl_hit.X_test['RI'], mdl_hit.y_test)
 plt.scatter(mdl_hit.X_test['RI'], cost_pred_hit)
 
-    
-# # TODO: generate prediction grid and plot
+#%% Other plotting
+
+# idea for plots
+
+# stats-style qq error plot
+# Tm, zeta plots
