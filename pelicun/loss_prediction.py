@@ -15,7 +15,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from prediction_model import Prediction
+from prediction_model import Prediction, predict_DV
 plt.close('all')
 idx = pd.IndexSlice
 pd.options.display.max_rows = 30
@@ -96,6 +96,32 @@ print('False positives: ', fp)
 X_plot = mdl.make_2D_plotting_space(100)
 mdl.plot_classification(mdl.log_reg)
 
+#%% fit impact (kernel logistic classification)
+
+# currently only rbf is working
+krn = 'rbf'
+gam = 1e-1
+mdl.fit_kernel_logistic(neg_wt=0.85, kernel_name=krn, gamma=gam)
+
+# predict the entire dataset
+K_data = mdl.get_kernel(mdl.X, kernel_name=krn, gamma=gam)
+preds_imp = mdl.log_reg_kernel.predict(K_data)
+probs_imp = mdl.log_reg_kernel.predict_proba(K_data)
+
+cmpr = np.array([mdl.y.values.flatten(), preds_imp]).transpose()
+
+# we've done manual CV to pick the hyperparams that trades some accuracy
+# in order to lower false negatives
+from sklearn.metrics import confusion_matrix
+
+tn, fp, fn, tp = confusion_matrix(mdl.y, preds_imp).ravel()
+print('False negatives: ', fn)
+print('False positives: ', fp)
+
+# make grid and plot classification predictions
+X_plot = mdl.make_2D_plotting_space(100)
+K_plot = mdl.get_kernel(X_plot, kernel_name=krn, gamma=gam)
+mdl.plot_classification(mdl.log_reg_kernel)
 #%% fit impact (gp classification)
 
 mdl.fit_gpc(kernel_name='rbf_iso')
@@ -247,21 +273,25 @@ comparison_cost_miss = np.array([mdl_miss.y_test,
                                       cost_pred_miss]).transpose()
 
 #%% aggregate the two models
-mdl.predict_loss(mdl.log_reg, mdl_hit.svr, mdl_miss.svr)
+dataset_median_repair_cost = predict_DV(mdl.X,
+                                        mdl.log_reg,
+                                        mdl_hit.svr,
+                                        mdl_miss.svr)
 comparison_cost = np.array([df['cost_50%'],
-                            np.ravel(mdl.median_loss_pred)]).transpose()
+                            np.ravel(dataset_median_repair_cost)]).transpose()
 
 #%% Big cost prediction plot (SVC-SVR)
 
 X_plot = mdl.make_2D_plotting_space(100)
 
-grid_mdl = Prediction(X_plot)
-grid_mdl.predict_loss(mdl.svc, mdl_hit.svr, mdl_miss.svr)
-grid_mdl.make_2D_plotting_space(100)
+grid_median_repair_cost = predict_DV(X_plot,
+                                     mdl.svc,
+                                     mdl_hit.svr,
+                                     mdl_miss.svr)
 
-xx = grid_mdl.xx
-yy = grid_mdl.yy
-Z = np.array(grid_mdl.median_loss_pred)
+xx = mdl.xx
+yy = mdl.yy
+Z = np.array(grid_median_repair_cost)
 Z = Z.reshape(xx.shape)
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -287,12 +317,16 @@ plt.show()
 
 #%% Big cost prediction plot (LR-SVR)
 
-grid_mdl.predict_loss(mdl.log_reg, mdl_hit.svr, mdl_miss.svr)
-grid_mdl.make_2D_plotting_space(100)
+X_plot = mdl.make_2D_plotting_space(100)
 
-xx = grid_mdl.xx
-yy = grid_mdl.yy
-Z = np.array(grid_mdl.median_loss_pred)
+grid_median_repair_cost = predict_DV(X_plot,
+                                     mdl.log_reg,
+                                     mdl_hit.svr,
+                                     mdl_miss.svr)
+
+xx = mdl.xx
+yy = mdl.yy
+Z = np.array(grid_median_repair_cost)
 Z = Z.reshape(xx.shape)
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -316,14 +350,53 @@ ax.set_zlabel('Median loss ($)')
 ax.set_title('Median cost predictions: LR-impact, SVR-loss')
 plt.show()
 
+#%% Big cost prediction plot (KLR-SVR)
+
+X_plot = mdl.make_2D_plotting_space(100)
+K_plot = mdl.get_kernel(X_plot, kernel_name=krn, gamma=gam)
+grid_median_repair_cost = predict_DV(X_plot,
+                                     mdl.log_reg_kernel,
+                                     mdl_hit.svr,
+                                     mdl_miss.svr)
+
+xx = mdl.xx
+yy = mdl.yy
+Z = np.array(grid_median_repair_cost)
+Z = Z.reshape(xx.shape)
+
+fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+# Plot the surface.
+surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
+                       linewidth=0, antialiased=False, alpha=0.6)
+
+ax.scatter(df['gapRatio'], df['RI'], df['cost_50%'],
+           edgecolors='k', alpha = 0.5)
+
+xlim = ax.get_xlim()
+ylim = ax.get_ylim()
+zlim = ax.get_zlim()
+cset = ax.contour(xx, yy, Z, zdir='z', offset=zlim[0], cmap=plt.cm.coolwarm)
+cset = ax.contour(xx, yy, Z, zdir='x', offset=xlim[0], cmap=plt.cm.coolwarm)
+cset = ax.contour(xx, yy, Z, zdir='y', offset=ylim[1], cmap=plt.cm.coolwarm)
+
+ax.set_xlabel('Gap ratio')
+ax.set_ylabel('Ry')
+ax.set_zlabel('Median loss ($)')
+ax.set_title('Median cost predictions: KLR-impact, SVR-loss')
+plt.show()
+
 #%% Big cost prediction plot (GP-SVR)
 
-grid_mdl.predict_loss(mdl.gpc, mdl_hit.svr, mdl_miss.svr)
-grid_mdl.make_2D_plotting_space(100)
+X_plot = mdl.make_2D_plotting_space(100)
 
-xx = grid_mdl.xx
-yy = grid_mdl.yy
-Z = np.array(grid_mdl.median_loss_pred)
+grid_median_repair_cost = predict_DV(X_plot,
+                                     mdl.gpc,
+                                     mdl_hit.svr,
+                                     mdl_miss.svr)
+
+xx = mdl.xx
+yy = mdl.yy
+Z = np.array(grid_median_repair_cost)
 Z = Z.reshape(xx.shape)
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -349,12 +422,16 @@ plt.show()
 
 #%% Big cost prediction plot (GP-KR)
 
-grid_mdl.predict_loss(mdl.gpc, mdl_hit.kr, mdl_miss.kr)
-grid_mdl.make_2D_plotting_space(100)
+X_plot = mdl.make_2D_plotting_space(100)
 
-xx = grid_mdl.xx
-yy = grid_mdl.yy
-Z = np.array(grid_mdl.median_loss_pred)
+grid_median_repair_cost = predict_DV(X_plot,
+                                     mdl.gpc,
+                                     mdl_hit.kr,
+                                     mdl_miss.kr)
+
+xx = mdl.xx
+yy = mdl.yy
+Z = np.array(grid_median_repair_cost)
 Z = Z.reshape(xx.shape)
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -424,12 +501,17 @@ comparison_time_miss = np.array([mdl_time_miss.y_test,
 
 #%% Big downtime prediction plot (GP-SVR)
 
-grid_mdl.predict_loss(mdl.gpc, mdl_time_hit.svr, mdl_time_miss.svr)
-grid_mdl.make_2D_plotting_space(100)
+X_plot = mdl.make_2D_plotting_space(100)
 
-xx = grid_mdl.xx
-yy = grid_mdl.yy
-Z = np.array(grid_mdl.median_loss_pred)
+grid_median_downtime = predict_DV(X_plot,
+                                  mdl.log_reg,
+                                  mdl_time_hit.svr,
+                                  mdl_time_miss.svr,
+                                  outcome='time_u_50%')
+
+xx = mdl.xx
+yy = mdl.yy
+Z = np.array(grid_median_downtime)
 Z = Z.reshape(xx.shape)
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -459,11 +541,23 @@ import time
 res_des = 30
 X_space = mdl.make_design_space(res_des)
 
-des_mdl = Prediction(X_space)
 t0 = time.time()
-des_mdl.predict_loss(mdl.log_reg, mdl_hit.svr, mdl_miss.svr)
+space_median_repair_cost = predict_DV(X_space,
+                                      mdl.log_reg,
+                                      mdl_hit.svr,
+                                      mdl_miss.svr)
 tp = time.time() - t0
-print("LR-SVR prediction for %d inputs in %.3f s" % (X_space.shape[0], tp))
+print("LR-SVR repair cost prediction for %d inputs in %.3f s" % (X_space.shape[0],
+                                                           tp))
+
+t0 = time.time()
+space_median_downtime = predict_DV(X_space,
+                                      mdl.log_reg,
+                                      mdl_time_hit.svr,
+                                      mdl_time_miss.svr)
+tp = time.time() - t0
+print("LR-SVR downtime prediction for %d inputs in %.3f s" % (X_space.shape[0],
+                                                               tp))
 
 #%% Fit costs (SVR, across all data)
 

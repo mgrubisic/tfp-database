@@ -34,6 +34,8 @@ class Prediction:
         yy = self.yy
         if 'gpc' in mdl_clf.named_steps.keys():
             Z = mdl_clf.predict_proba(self.X_plot)[:, 1]
+        elif 'log_reg_kernel' in mdl_clf.named_steps.keys():
+            Z = mdl_clf.decision_function(self.K_pr)
         else:
             Z = mdl_clf.decision_function(self.X_plot)
             
@@ -68,6 +70,8 @@ class Prediction:
             plt.title('Impact classification (SVC)')
         elif 'log_reg' in mdl_clf.named_steps.keys():
             plt.title('Impact classification (logistic)')
+        elif 'log_reg_kernel' in mdl_clf.named_steps.keys():
+            plt.title('Impact classification (kernel logistic)')
         elif 'gpc' in mdl_clf.named_steps.keys():
             plt.title('Impact classification (GP)')
         plt.show()
@@ -180,7 +184,6 @@ class Prediction:
         self.gpc = gp_pipe
         
     # Train logistic classification
-    # TODO: kernelize
     def fit_log_reg(self, neg_wt=1.0):
         from sklearn.pipeline import Pipeline
         from sklearn.preprocessing import StandardScaler
@@ -240,6 +243,70 @@ class Prediction:
         te_scr = sv_pipe.score(self.X_test, self.y_test)
         print('SVC testing score: %0.2f' %te_scr)
         self.svc = sv_pipe
+        
+    def get_kernel(self, X_pr, kernel_name='rbf', gamma=100.0,
+                               degree=3):
+        if kernel_name=='rbf':
+            from sklearn.metrics.pairwise import rbf_kernel
+            K_pr = rbf_kernel(X_pr, self.X_train, gamma=gamma)
+        elif kernel_name=='poly':
+            from sklearn.metrics.pairwise import polynomial_kernel
+            K_pr = polynomial_kernel(X_pr, self.X_train, degree=degree)
+        elif kernel_name=='sigmoid':
+            from sklearn.metrics.pairwise import sigmoid_kernel
+            K_pr = sigmoid_kernel(X_pr, self.X_train)
+            
+        self.K_pr = K_pr
+        self.log_reg_kernel.K_pr = K_pr
+        return(K_pr)
+        
+    # TODO: cross validate gamma, get other kernels working
+    def fit_kernel_logistic(self, kernel_name='rbf', neg_wt=1.0, gamma=100.0,
+                            degree=3):
+        from sklearn.pipeline import Pipeline
+        from sklearn.linear_model import LogisticRegressionCV
+            
+        # pipeline to scale -> logistic
+        wts = {0: neg_wt, 1:1.0}
+        
+        if kernel_name=='rbf':
+            from sklearn.metrics.pairwise import rbf_kernel
+            K_train = rbf_kernel(self.X_train, self.X_train, gamma=gamma)
+            K_test = rbf_kernel(self.X_test, self.X_train, gamma=gamma)
+        elif kernel_name=='poly':
+            from sklearn.metrics.pairwise import polynomial_kernel
+            K_train = polynomial_kernel(self.X_train, self.X_train,
+                                        degree=degree)
+            K_train = polynomial_kernel(self.X_test, self.X_train,
+                                        degree=degree)
+        elif kernel_name=='sigmoid':
+            from sklearn.metrics.pairwise import sigmoid_kernel
+            K_train = sigmoid_kernel(self.X_train, self.X_train)
+            K_test = sigmoid_kernel(self.X_train, self.X_train)
+            
+        log_reg_pipe = Pipeline([('log_reg_kernel', LogisticRegressionCV(
+                                         class_weight=wts,
+                                         solver='newton-cg'))])
+        
+#        log_reg_pipe = Pipeline([('scaler', StandardScaler()),
+#                                 ('log_reg_kernel', LogisticRegressionCV(
+#                                         class_weight=wts))])
+        
+        # LRCV finds optimum C value, L2 penalty
+        log_reg_pipe.fit(K_train, self.y_train)
+            
+        # Get test accuracy
+        C = log_reg_pipe._final_estimator.C_
+        tr_scr = log_reg_pipe.score(K_train, self.y_train)
+        
+        print('The best logistic C value is %f with a training score of %0.2f'
+              % (C, tr_scr))
+        
+        te_scr = log_reg_pipe.score(K_test, self.y_test)
+        print('Kernel logistic testing score: %0.2f'
+              %te_scr)
+        
+        self.log_reg_kernel = log_reg_pipe   
         
     
 
@@ -361,52 +428,53 @@ class Prediction:
     # 
     def calculate_upfront_cost(self):
         return self
-    
-    # assumes that problem is already created
-    # TODO: make this agnostic to object passed in (one object for
-    # plotting, testing, training, designing)
-    
-    def predict_loss(self, impact_pred_mdl, hit_loss_mdl, miss_loss_mdl):
+
+# two ways of doing this
         
-        # two ways of doing this
-        # 1) predict impact first (binary)), then fit the impact predictions 
+        # 1) predict impact first (binary), then fit the impact predictions 
         # with the impact-only SVR and likewise with non-impacts. This creates
         # two tiers of predictions that are relatively flat (impact dominated)
         # 2) using expectations, get probabilities of collapse and weigh the
         # two (cost|impact) regressions with Pr(impact). Creates smooth
         # predictions that are somewhat moderate
         
+def predict_DV(X, impact_pred_mdl, hit_loss_mdl, miss_loss_mdl,
+               outcome='cost_50%'):
+        
 #        # get points that are predicted impact from full dataset
 #        preds_imp = impact_pred_mdl.svc.predict(self.X)
 #        df_imp = self.X[preds_imp == 1]
-        
+    
         # get probability of impact
-        probs_imp = impact_pred_mdl.predict_proba(self.X)
-        
+        if 'log_reg_kernel' in impact_pred_mdl.named_steps.keys():
+            probs_imp = impact_pred_mdl.predict_proba(impact_pred_mdl.K_pr)
+        else:
+            probs_imp = impact_pred_mdl.predict_proba(X)
+    
         miss_prob = probs_imp[:,0]
         hit_prob = probs_imp[:,1]
         
         # weight with probability of collapse
         # E[Loss] = (impact loss)*Pr(impact) + (no impact loss)*Pr(no impact)
         # run SVR_hit model on this dataset
-        loss_pred_hit = pd.DataFrame(
-                {'median_loss_pred':np.multiply(
-                        hit_loss_mdl.predict(self.X),
-                        hit_prob)},
-                    index=self.X.index)
+        outcome_str = outcome+'_pred'
+        expected_DV_hit = pd.DataFrame(
+                {outcome_str:np.multiply(
+                        hit_loss_mdl.predict(X),
+                        hit_prob)})
                 
-        
 #        # get points that are predicted no impact from full dataset
 #        df_mss = self.X[preds_imp == 0]
         
         # run SVR_miss model on this dataset
-        loss_pred_miss = pd.DataFrame(
-                {'median_loss_pred':np.multiply(
-                        miss_loss_mdl.predict(self.X),
-                        miss_prob)},
-                    index=self.X.index)
+        expected_DV_miss = pd.DataFrame(
+                {outcome_str:np.multiply(
+                        miss_loss_mdl.predict(X),
+                        miss_prob)})
         
-        self.median_loss_pred = loss_pred_hit+loss_pred_miss
-            
+        expected_DV = expected_DV_hit + expected_DV_miss
+        
         # self.median_loss_pred = pd.concat([loss_pred_hit,loss_pred_miss], 
         #                                   axis=0).sort_index(ascending=True)
+        
+        return(expected_DV)
