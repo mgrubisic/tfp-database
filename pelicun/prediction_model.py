@@ -424,10 +424,6 @@ class Prediction:
 ###############################################################################
     # Full prediction models
 ###############################################################################
-    
-    # 
-    def calculate_upfront_cost(self):
-        return self
 
 # two ways of doing this
         

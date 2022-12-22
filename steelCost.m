@@ -23,8 +23,6 @@ function steelCoef = steelCost(isolDat)
     isolDat.Bm  = interp1(zetaRef, BmRef, isolDat.zetaM);
 
     %% Calculate steel cost of existing data
-    % Cost lasso
-
     isolDat.beamWeight  = str2double(extractAfter(isolDat.beam,'X'));
     isolDat.roofWeight  = str2double(extractAfter(isolDat.roofBeam,'X'));
     isolDat.colWeight   = str2double(extractAfter(isolDat.col,'X'));

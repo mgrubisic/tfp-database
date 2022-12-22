@@ -29,7 +29,7 @@ loss_data = pd.read_csv('./results/loss_estimate_data.csv', index_col=None)
 full_isolation_data = pd.read_csv('full_isolation_data.csv', index_col=None)
 
 df = pd.concat([full_isolation_data, loss_data], axis=1)
-# df['max_drift'] = df[["driftMax1", "driftMax2", "driftMax3"]].max(axis=1)
+df['max_drift'] = df[["driftMax1", "driftMax2", "driftMax3"]].max(axis=1)
 # df['max_accel'] = df[["accMax0", "accMax1", "accMax2", "accMax3"]].max(axis=1)
 # df['max_vel'] = df[["velMax0", "velMax1", "velMax2", "velMax3"]].max(axis=1)
 #%% Prepare data
@@ -504,7 +504,7 @@ comparison_time_miss = np.array([mdl_time_miss.y_test,
 X_plot = mdl.make_2D_plotting_space(100)
 
 grid_median_downtime = predict_DV(X_plot,
-                                  mdl.log_reg,
+                                  mdl.gpc,
                                   mdl_time_hit.svr,
                                   mdl_time_miss.svr,
                                   outcome='time_u_50%')
@@ -535,6 +535,80 @@ ax.set_zlabel('Median downtime (worker-days)')
 ax.set_title('Median sequential downtime predictions: GP-impact, SVR-loss')
 plt.show()
 
+#%% collapse model (KR)
+
+# SVR seems to be expensive, may need limiting CV runs
+
+#mdl_clsp = Prediction(df)
+#mdl_clsp.set_outcome('max_drift')
+#mdl_clsp.test_train_split(0.2)
+#mdl_clsp.fit_kernel_ridge()
+
+mdl_drift_hit = Prediction(df_hit)
+mdl_drift_hit.set_outcome('max_drift')
+mdl_drift_hit.test_train_split(0.2)
+
+mdl_drift_miss = Prediction(df_miss)
+mdl_drift_miss.set_outcome('max_drift')
+mdl_drift_miss.test_train_split(0.2)
+
+# fit impacted set
+mdl_drift_hit.fit_kernel_ridge()
+        
+# fit no impact set
+mdl_drift_miss.fit_kernel_ridge()
+
+X_plot = mdl.make_2D_plotting_space(100)
+
+grid_drift = predict_DV(X_plot,
+                        mdl.gpc,
+                        mdl_drift_hit.kr,
+                        mdl_drift_miss.kr,
+                                  outcome='max_drift')
+
+xx = mdl.xx
+yy = mdl.yy
+Z = np.array(grid_drift)
+Z = Z.reshape(xx.shape)
+
+fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+# Plot the surface.
+surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
+                       linewidth=0, antialiased=False)
+
+ax.scatter(df['gapRatio'], df['RI'], df['max_drift'],
+           edgecolors='k')
+
+ax.set_xlabel('Gap ratio')
+ax.set_ylabel('Ry')
+ax.set_zlabel('PID (%)')
+ax.set_title('Peak interstory drift prediction (kernel ridge)')
+plt.show()
+
+# drift -> collapse risk
+from scipy.stats import lognorm
+from math import log, exp
+beta_drift = 0.25
+mean_log_drift = exp(log(0.1) - beta_drift*0.9945)
+ln_dist = lognorm(s=beta_drift, scale=mean_log_drift)
+
+Z = ln_dist.cdf(np.array(grid_drift))
+Z = Z.reshape(xx.shape)
+
+fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+# Plot the surface.
+surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
+                       linewidth=0, antialiased=False)
+
+ax.scatter(df['gapRatio'], df['RI'], df['max_drift'],
+           edgecolors='k')
+
+ax.set_xlabel('Gap ratio')
+ax.set_ylabel('Ry')
+ax.set_zlabel('Collapse risk')
+ax.set_title('Collapse risk prediction, LN transformed from drift (kernel ridge)')
+plt.show()
+
 #%% Testing the design space
 import time
 
@@ -554,10 +628,145 @@ t0 = time.time()
 space_median_downtime = predict_DV(X_space,
                                       mdl.log_reg,
                                       mdl_time_hit.svr,
-                                      mdl_time_miss.svr)
+                                      mdl_time_miss.svr,
+                                      outcome='time_u_50%')
 tp = time.time() - t0
 print("LR-SVR downtime prediction for %d inputs in %.3f s" % (X_space.shape[0],
                                                                tp))
+
+t0 = time.time()
+space_median_drift = predict_DV(X_space,
+                                      mdl.log_reg,
+                                      mdl_drift_hit.kr,
+                                      mdl_drift_miss.kr,
+                                      outcome='max_drift')
+tp = time.time() - t0
+print("LR-KR drift prediction for %d inputs in %.3f s" % (X_space.shape[0],
+                                                               tp))
+#%% Transform predicted drift into probability
+
+from scipy.stats import lognorm
+from math import log, exp
+beta_drift = 0.25
+mean_log_drift = exp(log(0.1) - beta_drift*0.9945)
+ln_dist = lognorm(s=beta_drift, scale=mean_log_drift)
+
+space_median_collapse_risk = pd.DataFrame(ln_dist.cdf(space_median_drift),
+                                          columns=['collapse_risk_pred'])
+
+#%% Calculate upfront cost of data
+# TODO: use PACT to get the replacement cost of these components
+# TODO: include the deckings/slabs for more realistic initial costs
+def get_steel_coefs(df, steel_per_unit=1.25, W=3037.5, Ws=2227.5):
+    col_str = df['col']
+    beam_str = df['beam']
+    rbeam_str = df['roofBeam']
+    
+    col_wt = np.array([float(member.split('X',1)[1]) for member in col_str])
+    beam_wt = np.array([float(member.split('X',1)[1]) for member in beam_str])
+    rbeam_wt = np.array([float(member.split('X',1)[1]) for member in rbeam_str])
+    
+    # find true steel costs
+    n_frames = 4
+    n_cols = 12
+    L_col = 39.0 #ft
+    
+    n_beam_per_frame = 6
+    L_beam = 30.0 #ft
+    
+    n_roof_per_frame = 3
+    L_roof = 30.0 #ft
+    
+    bldg_wt = ((L_col * n_cols)*col_wt +
+               (L_beam * n_beam_per_frame * n_frames)*beam_wt +
+               (L_roof * n_roof_per_frame * n_frames)*rbeam_wt
+               )
+    
+    steel_cost = steel_per_unit*bldg_wt
+    
+    # find design base shear as a feature
+    pi = 3.14159
+    g = 386.4
+    kM = (1/g)*(2*pi/df['Tm'])**2
+    S1 = 1.017
+    Dm = g*S1*df['Tm']/(4*pi**2*df['Bm'])
+    Vb = Dm * kM * Ws / 2
+    Vst = Vb*(Ws/W)**(1 - 2.5*df['zetaM'])
+    Vs = np.array(Vst/df['RI']).reshape(-1,1)
+    
+    # linear regress cost as f(base shear)
+    from sklearn.linear_model import LinearRegression
+    reg = LinearRegression()
+    reg.fit(X=Vs, y=steel_cost)
+    return({'coef':reg.coef_, 'intercept':reg.intercept_})
+    
+# TODO: if full costs are accounted for, then must change land cost to include
+# bldg footprint, rather than just moat gap
+
+# TODO: investigate upfront cost's influence by Tm
+    
+def calc_upfront_cost(X_query, steel_coefs,
+                      land_cost_per_sqft=2837/(3.28**2),
+                      W=3037.5, Ws=2227.5):
+    
+    from scipy.interpolate import interp1d
+    zeta_ref = [0.02, 0.05, 0.10, 0.20, 0.30, 0.40, 0.50]
+    Bm_ref = [0.8, 1.0, 1.2, 1.5, 1.7, 1.9, 2.0]
+    interp_f = interp1d(zeta_ref, Bm_ref)
+    Bm = interp_f(X_query['zetaM'])
+    
+    # calculate moat gap
+    pi = 3.14159
+    g = 386.4
+    S1 = 1.017
+    SaTm = S1/X_query['Tm']
+    moat_gap = X_query['gapRatio'] * (g*(SaTm/Bm)*X_query['Tm']**2)/(4*pi**2)
+    
+    # calculate design base shear
+    kM = (1/g)*(2*pi/X_query['Tm'])**2
+    Dm = g*S1*X_query['Tm']/(4*pi**2*Bm)
+    Vb = Dm * kM * Ws / 2
+    Vst = Vb*(Ws/W)**(1 - 2.5*X_query['zetaM'])
+    Vs = np.array(Vst/X_query['RI']).reshape(-1,1)
+    
+    steel_cost = np.array(steel_coefs['intercept'] +
+                          steel_coefs['coef']*Vs).ravel()
+    land_area = 2*(90.0*12.0)*moat_gap - moat_gap**2
+    land_cost = land_cost_per_sqft/144.0 * land_area
+    
+    return(steel_cost + land_cost)
+
+#%% refine space to meet repair cost and downtime requirements
+    
+steel_price = 2.00
+coef_dict = get_steel_coefs(df, steel_per_unit=steel_price)
+
+cost_thresh = 1e6
+ok_cost = X_space.loc[space_median_repair_cost['cost_50%_pred']<=cost_thresh]
+
+# <2 weeks for a team of 50
+dt_thresh = 50*14
+ok_time = X_space.loc[space_median_downtime['time_u_50%_pred']<=dt_thresh]
+
+risk_thresh = 0.025
+ok_risk = X_space.loc[space_median_collapse_risk['collapse_risk_pred']<=
+                      risk_thresh]
+
+X_design = X_space[np.logical_and(
+        X_space.index.isin(ok_cost.index), 
+        X_space.index.isin(ok_time.index))]
+    
+# in the filter-design process, only one of cost/dt is likely to control
+    
+# select best viable design
+upfront_costs = calc_upfront_cost(X_design, coef_dict)
+cheapest_design_idx = upfront_costs.idxmin()
+cheapest_upfront_cost = upfront_costs.min()
+
+# least upfront cost of the viable designs
+best_design = X_design.loc[cheapest_design_idx]
+
+print(best_design)
 
 #%% Fit costs (SVR, across all data)
 
@@ -607,3 +816,5 @@ print("LR-SVR downtime prediction for %d inputs in %.3f s" % (X_space.shape[0],
 # stats-style qq error plot
 # slice the 3D predictions into contours and label important values
 # Tm, zeta plots
+
+# tradeoff curve of init-x, repair-y
