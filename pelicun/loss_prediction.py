@@ -600,12 +600,13 @@ fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
                        linewidth=0, antialiased=False)
 
-ax.scatter(df['gapRatio'], df['RI'], df['max_drift'],
+ax.scatter(df['gapRatio'], df['RI'], df['collapse_freq'],
            edgecolors='k')
 
 ax.set_xlabel('Gap ratio')
 ax.set_ylabel('Ry')
 ax.set_zlabel('Collapse risk')
+ax.set_zlim([0, 0.2])
 ax.set_title('Collapse risk prediction, LN transformed from drift (kernel ridge)')
 plt.show()
 
