@@ -27,12 +27,12 @@ def getShape(shape):
     return(shapeName)
 
 # main function
-def failurePostprocess(filename, scaleFactor, spectrumAverage, runStatus, Tfb):
+def failurePostprocess(filename, scaleFactor, spectrumAverage, runStatus, Tfb, IDALevel):
 
     # take input as the run 'ok' variable from eqAnly, passes that as one of the results csv columns
 
     # gather inputs
-    bearingParams           = pd.read_csv('./inputs/bearingInput.csv',
+    bearingParams           = pd.read_csv('./inputs/bearingInputVal.csv',
         index_col=None, header=0)
 
     # param is dictionary of all inputs. call with param['whatYouWant']
@@ -66,7 +66,7 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, runStatus, Tfb):
 
     afterRun.update(fromDesign)
 
-    gmDir                   = './groundMotions/PEERNGARecords_Unscaled/'
+    gmDir                   = '../groundMotions/PEERNGARecords_Unscaled/'
     resultsCSV              = 'combinedSearch.csv'
 
     # calculate system periods
@@ -88,6 +88,7 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, runStatus, Tfb):
         filename, scaleFactor, afterRun['T2'], 32, 133, 290, 111)
     afterRun['GMSTm']       = gmSelector.getST(gmDir, resultsCSV,
         filename, scaleFactor, param['Tm'], 32, 133, 290, 111)
+    afterRun['IDALevel']    = IDALevel
 
     # # calculate nondimensionalized parameters
     # afterRun['Pi1']       = afterRun['mu1']/param['GMS1']

@@ -194,7 +194,7 @@ def runGM(gmFilename, gmDefScale, dtTransient):
 
     # Uniform Earthquake ground motion (uniform acceleration input at all support nodes)
 
-    GMDir           = "./groundMotions/PEERNGARecords_Unscaled/"
+    GMDir           = "../groundMotions/PEERNGARecords_Unscaled/"
     GMDirection     = 1                             # ground-motion direction
     GMFile          = gmFilename                    # ground motion file name passed in
     GMFactor        = gmDefScale
