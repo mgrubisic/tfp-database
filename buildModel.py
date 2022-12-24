@@ -52,11 +52,22 @@ def giveLoads():
     return(w0, w1, w2, w3, pLc0, pLc1, pLc2, pLc3)
 
 # add superstructure damping (dependent on eigenvalue anly)
-def provideSuperDamping(regTag, omega1, zetaTarget):
-    alphaM      = 0.0
+def provideSuperDamping(regTag, w2, zetai=0.05, zetaj=0.05, modes=[1,3]):
+    # Pick your modes and damping ratios
+    wi = w2[modes[0]-1]**0.5; zetai = 0.05 # 5% in mode 1
+    wj = w2[modes[1]-1]**0.5; zetaj = 0.02 # 2% in mode 3
+    
+    import numpy as np
+    
+    A = np.array([[1/wi, wi],[1/wj, wj]])
+    b = np.array([zetai,zetaj])
+    
+    x = np.linalg.solve(A,2*b)
+    
+    # alphaM      = 0.0
     betaK       = 0.0
     betaKInit   = 0.0
-    a1          = 2*zetaTarget/omega1
+    # a1          = 2*zetaTarget/omega1
     ops.region(regTag, '-ele',
         111, 112, 113, 114,
         121, 122, 123, 124,
@@ -76,7 +87,7 @@ def provideSuperDamping(regTag, omega1, zetaTarget):
         5327, 5337, 5347,
         5419, 5429, 5439,
         5427, 5437, 5447,
-        '-rayleigh', alphaM, betaK, betaKInit, a1)
+        '-rayleigh', x[0], betaK, betaKInit, x[1])
 
 def getModifiedIK(shape, L):
     # reference Lignos & Krawinkler (2011)
