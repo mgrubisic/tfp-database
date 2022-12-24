@@ -3,3 +3,6 @@ Current run summary:
 Nov 12: collecting absolute acceleration
 Nov 14/15: collecting 400 runs without Opensees failures
 Dec 6: collecting PFA/PID/PFV, lowered impact stiffness to be wall-dependent
+
+Dec 24: changed Rayleigh damping so that there is a mass-part and committed-stiffness-part
+	pegged damping as 5% on mode 1 and 2% on mode 3 of structure

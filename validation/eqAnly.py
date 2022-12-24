@@ -120,7 +120,7 @@ def runGM(gmFilename, gmDefScale, dtTransient):
     regTag      = 80
     # zetaTarget  = 0.05
     # bm.provideSuperDamping(regTag, omega1, zetaTarget)
-    bm.provideSuperDamping(regTag, lambdaN, zetai=0.05, zetaj=0.02, modes=[1,2])
+    bm.provideSuperDamping(regTag, lambdaN, zetai=0.05, zetaj=0.02, modes=[1,3])
 
     ############################################################################
     #              Recorders

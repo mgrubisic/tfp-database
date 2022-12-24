@@ -164,4 +164,4 @@ data.to_csv(pelicunPath+'full_isolation_data.csv', index=False)
 
 # write into pelicun style EDP
 edp = get_demand_data.get_demand_data(data)
-edp.to_csv('./pelicun/demand_data.csv', index=True)
+edp.to_csv(pelicunPath+'demand_data.csv', index=True)
