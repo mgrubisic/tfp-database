@@ -117,6 +117,7 @@ def get_structural_cmp_MF(run_info, metadata):
 def estimate_damage(raw_demands, run_data, cmp_marginals):
     
     # initialize, no printing outputs, offset fixed with current components
+    # TODO: add a mode that does validation
     PAL = Assessment({
         "PrintLog": False, 
         "Seed": 985,

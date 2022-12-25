@@ -818,4 +818,5 @@ print(best_design)
 # slice the 3D predictions into contours and label important values
 # Tm, zeta plots
 
-# tradeoff curve of init-x, repair-y
+# tradeoff curve of upfront-x, repair-y
+# for validation, present IDA loss distribution as violin plot
