@@ -27,7 +27,7 @@ class Prediction:
         self.y = self._raw_data[[outcome_var]]
         
     # if classification is done, plot the predictions
-    def plot_classification(self, mdl_clf):
+    def plot_classification(self, mdl_clf, xvar='Gap ratio', yvar='RI'):
         import matplotlib.pyplot as plt
         
         xx = self.xx
@@ -61,11 +61,11 @@ class Prediction:
             plt.contour(xx, yy, Z, levels=[0],
                         linewidths=2, linestyles="dashed")
         plt.scatter(self.X_train['gapRatio'][:plt_density],
-                    self.X_train['RI'][:plt_density],
+                    self.X_train[yvar][:plt_density],
                     s=30, c=self.y_train[:plt_density],
                     cmap=plt.cm.Paired, edgecolors="k")
-        plt.xlabel('Gap ratio')
-        plt.ylabel('Ry')
+        plt.xlabel(xvar)
+        plt.ylabel(yvar)
         if 'svc' in mdl_clf.named_steps.keys():
             plt.title('Impact classification (SVC)')
         elif 'log_reg' in mdl_clf.named_steps.keys():
@@ -90,6 +90,14 @@ class Prediction:
         if (x_var=='gapRatio') and (y_var=='RI'):
             third_var = 'Tm'
             fourth_var = 'zetaM'
+            
+        if (x_var=='gapRatio') and (y_var=='Tm'):
+            third_var = 'RI'
+            fourth_var = 'zetaM'
+            
+        if (x_var=='gapRatio') and (y_var=='zetaM'):
+            third_var = 'RI'
+            fourth_var = 'Tm'
            
         self.xx = xx
         self.yy = yy
@@ -357,8 +365,8 @@ class Prediction:
         
         # cross-validate several parameters
         parameters = [
-            {'kr__alpha':[0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0],
-             'kr__gamma':np.logspace(-2, 2, 5)}
+            {'kr__alpha':[0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0, 1000.0],
+             'kr__gamma':np.logspace(-3, 3, 7)}
             ]
         
         kr_cv = GridSearchCV(kr_pipe, param_grid=parameters)

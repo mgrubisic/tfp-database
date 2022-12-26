@@ -32,9 +32,9 @@ import matplotlib.pyplot as plt
 plt.close('all')
 
 # df_plot = df[df['cost_90%'] < 8e6]
-df_plot = df[df['impacted'] == 0]
+#df_plot = df[df['impacted'] == 0]
 #df_plot = df[df['replacement_freq'] < 1.0]
-#df_plot = df
+df_plot = df
 fig = plt.figure()
 ax = plt.scatter(df_plot['gapRatio'], df_plot['cost_50%'], alpha=0.5)
 plt.title('Repair cost no impact')
@@ -48,6 +48,14 @@ fig = plt.figure()
 ax = plt.scatter(df_plot['RI'], df_plot['cost_50%'], alpha=0.5)
 plt.title('Repair cost no impact')
 plt.xlabel('RI')
+plt.ylabel('Median repair cost ($)')
+plt.yscale('log')
+plt.grid(True)
+
+fig = plt.figure()
+ax = plt.scatter(df_plot['Tm'], df_plot['cost_50%'], alpha=0.5)
+plt.title('Repair cost')
+plt.xlabel('Tm')
 plt.ylabel('Median repair cost ($)')
 plt.yscale('log')
 plt.grid(True)
