@@ -160,7 +160,7 @@ databaseFile = 'sessionSummary.csv'
 # clean data and add additional variables
 data = tmp_cleaner.cleanDat(resultsDf)
 pelicunPath = './pelicun/'
-data.to_csv(pelicunPath+'full_isolation_data.csv', index=False)
+data.to_csv(pelicunPath+'full_isolation_data.csv', index=True)
 
 # write into pelicun style EDP
 edp = get_demand_data.get_demand_data(data)
