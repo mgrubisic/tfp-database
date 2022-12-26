@@ -80,6 +80,7 @@ pt_counter = 0
 for index, row in enumerate(inputValues):
 
     print('The run index is ' + str(index) + '.') # run counter
+    print('Converted runs: ' + str(pt_counter) + '.') # run counter
 
     empty_directory('outputs') # clear run histories
 
@@ -153,7 +154,7 @@ resultsDf.to_csv('./sessionOut/sessionSummary.csv', index=False)
 
 #%% 
 import tmp_cleaner
-import get_demand_data
+from get_demand_data import get_EDP
 databasePath = './sessionOut/'
 databaseFile = 'sessionSummary.csv'
 
@@ -163,5 +164,5 @@ pelicunPath = './pelicun/'
 data.to_csv(pelicunPath+'full_isolation_data.csv', index=True)
 
 # write into pelicun style EDP
-edp = get_demand_data.get_demand_data(data)
+edp = get_EDP(data)
 edp.to_csv(pelicunPath+'demand_data.csv', index=True)

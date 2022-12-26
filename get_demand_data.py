@@ -15,7 +15,7 @@
 
 
 
-def get_demand_data(isol_data):
+def get_EDP(isol_data):
 
     EDP_data = isol_data[['accMax0', 'accMax1', 'accMax2', 'accMax3',
                           'velMax0', 'velMax1', 'velMax2', 'velMax3',
@@ -49,7 +49,7 @@ def get_demand_data(isol_data):
 
     return(EDP_data)
 
-import pandas as pd
-data = pd.read_csv('./pelicun/full_isolation_data.csv', sep=',')
-edp = get_demand_data(data)
-edp.to_csv('./pelicun/demand_data.csv', index=True)
+# import pandas as pd
+# data = pd.read_csv('./pelicun/full_isolation_data.csv', sep=',')
+# edp = get_EDP(data)
+# edp.to_csv('./pelicun/demand_data.csv', index=True)

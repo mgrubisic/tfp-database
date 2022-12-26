@@ -123,22 +123,22 @@ gmDatabase.to_csv(gmPath+databaseFile, index=False)
 resultsDf.to_csv('./sessionOut/sessionSummary.csv', index=False)
 
 #%% 
-import sys
+# import sys
 
-# setting path
-sys.path.append('..')
+# # setting path
+# sys.path.append('..')
 
-# importing
-import tmp_cleaner
-import get_demand_data
-databasePath = './sessionOut/'
-databaseFile = 'sessionSummary.csv'
+# # importing
+# import tmp_cleaner
+# from get_demand_data import get_EDP
+# databasePath = './sessionOut/'
+# databaseFile = 'sessionSummary.csv'
 
-# clean data and add additional variables
-data = tmp_cleaner.cleanDat(resultsDf)
-pelicunPath = '../pelicun/'
-data.to_csv(pelicunPath+'validation_data.csv', index=False)
+# # clean data and add additional variables
+# data = tmp_cleaner.cleanDat(resultsDf)
+# pelicunPath = '../pelicun/'
+# data.to_csv(pelicunPath+'validation_data.csv', index=False)
 
-# write into pelicun style EDP
-edp = get_demand_data.get_demand_data(data)
-edp.to_csv(pelicunPath+'validation_demand_data.csv', index=True)
+# # write into pelicun style EDP
+# edp = get_EDP(data)
+# edp.to_csv(pelicunPath+'validation_demand_data.csv', index=True)

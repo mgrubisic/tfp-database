@@ -127,7 +127,10 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, runStatus, Tfb, I
     story3Vel = pd.read_csv('./outputs/story3Vel.csv', sep=' ',
         header=None, names=dispColumns)
 
-    forceColumns = ['time', 'iAxial', 'iShearX', 'iShearY', 'iMomentX','iMomentY', 'iMomentZ', 'jAxial', 'jShearX', 'jShearY', 'jMomentX', 'jMomentY', 'jMomentZ']
+    forceColumns = ['time', 'iAxial', 'iShearX', 'iShearY',
+                    'iMomentX','iMomentY', 'iMomentZ',
+                    'jAxial', 'jShearX', 'jShearY',
+                    'jMomentX', 'jMomentY', 'jMomentZ']
 
     isol1Force = pd.read_csv('./outputs/isol1Force.csv', sep = ' ',
         header=None, names=forceColumns)
@@ -157,7 +160,7 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, runStatus, Tfb, I
 
     story3DriftOuter    = (story3Disp['isol1'] - story2Disp['isol1'])/(13*ft)
     story3DriftInner    = (story3Disp['isol2'] - story2Disp['isol2'])/(13*ft)
-
+    
     # maximum story acceleration
     g = 386.4
 
@@ -172,16 +175,7 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, runStatus, Tfb, I
 
     story3AccOuter    = (story3Acc['isol1'])/(g)
     story3AccInner    = (story3Acc['isol2'])/(g)
-
-    afterRun['accMax0']   = max(np.maximum(abs(story0AccOuter),
-        abs(story0AccInner)))
-    afterRun['accMax1']   = max(np.maximum(abs(story1AccOuter),
-        abs(story1AccInner)))
-    afterRun['accMax2']   = max(np.maximum(abs(story2AccOuter),
-        abs(story2AccInner)))
-    afterRun['accMax3']   = max(np.maximum(abs(story3AccOuter),
-        abs(story3AccInner)))
-
+    
     story0VelOuter    = (story0Vel['isol1'])
     story0VelInner    = (story0Vel['isol2'])
 
@@ -193,39 +187,95 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, runStatus, Tfb, I
 
     story3VelOuter    = (story3Vel['isol1'])
     story3VelInner    = (story3Vel['isol2'])
-
-    afterRun['velMax0']   = max(np.maximum(abs(story0VelOuter),
-        abs(story0VelInner)))
-    afterRun['velMax1']   = max(np.maximum(abs(story1VelOuter),
-        abs(story1VelInner)))
-    afterRun['velMax2']   = max(np.maximum(abs(story2VelOuter),
-        abs(story2VelInner)))
-    afterRun['velMax3']   = max(np.maximum(abs(story3VelOuter),
-        abs(story3VelInner)))
-
+    
     # drift failure check
     # TODO: remove all binary classification from postprocessing
     # collapse limit state
     collapseDriftLimit          = 0.05
-
-    afterRun['driftMax1']   = max(np.maximum(abs(story1DriftOuter),
-        abs(story1DriftInner)))
-    afterRun['driftMax2']   = max(np.maximum(abs(story2DriftOuter),
-        abs(story2DriftInner)))
-    afterRun['driftMax3']   = max(np.maximum(abs(story3DriftOuter),
-        abs(story3DriftInner)))
+    ok_thresh = 0.20
+    # if run was OK, we collect true max values
+    if runStatus == 0:
+        afterRun['driftMax1']   = max(np.maximum(abs(story1DriftOuter),
+            abs(story1DriftInner)))
+        afterRun['driftMax2']   = max(np.maximum(abs(story2DriftOuter),
+            abs(story2DriftInner)))
+        afterRun['driftMax3']   = max(np.maximum(abs(story3DriftOuter),
+            abs(story3DriftInner)))
+        
+        afterRun['accMax0']   = max(np.maximum(abs(story0AccOuter),
+            abs(story0AccInner)))
+        afterRun['accMax1']   = max(np.maximum(abs(story1AccOuter),
+            abs(story1AccInner)))
+        afterRun['accMax2']   = max(np.maximum(abs(story2AccOuter),
+            abs(story2AccInner)))
+        afterRun['accMax3']   = max(np.maximum(abs(story3AccOuter),
+            abs(story3AccInner)))
+        
+        afterRun['velMax0']   = max(np.maximum(abs(story0VelOuter),
+            abs(story0VelInner)))
+        afterRun['velMax1']   = max(np.maximum(abs(story1VelOuter),
+            abs(story1VelInner)))
+        afterRun['velMax2']   = max(np.maximum(abs(story2VelOuter),
+            abs(story2VelInner)))
+        afterRun['velMax3']   = max(np.maximum(abs(story3VelOuter),
+            abs(story3VelInner)))
+        
+    # if run failed, we find the state corresponding to 0.20 drift across all
+    # assumes that once drift crosses 0.20, it only increases (no other floor
+    # will exceed 0.20 AND be the highest)
+    else:
+        drift_df = pd.concat([story1DriftOuter, story1DriftInner,
+                                  story2DriftOuter, story2DriftInner,
+                                  story3DriftOuter, story3DriftInner], axis=1)
+        worst_drift = drift_df.abs().max(axis=1)
+        drift_sort = worst_drift.iloc[(worst_drift-ok_thresh).abs().argsort()[:1]]
+        ok_state = drift_sort.index.values
+        
+        afterRun['driftMax1'] = np.maximum(abs(story1DriftOuter),
+                                           abs(story1DriftInner)).iloc[ok_state].item()
+        afterRun['driftMax2'] = np.maximum(abs(story2DriftOuter),
+                                           abs(story2DriftInner)).iloc[ok_state].item()
+        afterRun['driftMax3'] = np.maximum(abs(story3DriftOuter),
+                                           abs(story3DriftInner)).iloc[ok_state].item()
+        
+        afterRun['accMax0'] = np.maximum(abs(story0AccOuter),
+                                         abs(story0AccInner)).iloc[ok_state].item()
+        afterRun['accMax1'] = np.maximum(abs(story1AccOuter),
+                                         abs(story1AccInner)).iloc[ok_state].item()
+        afterRun['accMax2'] = np.maximum(abs(story2AccOuter),
+                                         abs(story2AccInner)).iloc[ok_state].item()
+        afterRun['accMax3'] = np.maximum(abs(story3AccOuter),
+                                         abs(story3AccInner)).iloc[ok_state].item()
+        
+        afterRun['velMax0'] = np.maximum(abs(story0VelOuter),
+                                         abs(story0VelInner)).iloc[ok_state].item()
+        afterRun['velMax1'] = np.maximum(abs(story1VelOuter),
+                                         abs(story1VelInner)).iloc[ok_state].item()
+        afterRun['velMax2'] = np.maximum(abs(story2VelOuter),
+                                         abs(story2VelInner)).iloc[ok_state].item()
+        afterRun['velMax3'] = np.maximum(abs(story3VelOuter),
+                                         abs(story3VelInner)).iloc[ok_state].item()
 
     afterRun['collapseDrift1']  = 0
     afterRun['collapseDrift2']  = 0
     afterRun['collapseDrift3']  = 0
 
-    if(any(abs(driftRatio) > collapseDriftLimit for driftRatio in story1DriftOuter) or any(abs(driftRatio) > collapseDriftLimit for driftRatio in story1DriftInner)):
+    if(any(abs(driftRatio) > collapseDriftLimit
+           for driftRatio in story1DriftOuter) or
+       any(abs(driftRatio) > collapseDriftLimit
+           for driftRatio in story1DriftInner)):
         afterRun['collapseDrift1']  = 1
 
-    if(any(abs(driftRatio) > collapseDriftLimit for driftRatio in story2DriftOuter) or any(abs(driftRatio) > collapseDriftLimit for driftRatio in story2DriftInner)):
+    if(any(abs(driftRatio) > collapseDriftLimit
+           for driftRatio in story2DriftOuter) or
+       any(abs(driftRatio) > collapseDriftLimit
+           for driftRatio in story2DriftInner)):
         afterRun['collapseDrift2']  = 1
 
-    if(any(abs(driftRatio) > collapseDriftLimit for driftRatio in story3DriftOuter) or any(abs(driftRatio) > collapseDriftLimit for driftRatio in story3DriftInner)):
+    if(any(abs(driftRatio) > collapseDriftLimit
+           for driftRatio in story3DriftOuter) or
+       any(abs(driftRatio) > collapseDriftLimit
+           for driftRatio in story3DriftInner)):
         afterRun['collapseDrift3']  = 1
 
     serviceDriftLimit           = 0.025     # need to find ASCE 41 basis
@@ -234,13 +284,22 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, runStatus, Tfb, I
     afterRun['serviceDrift2']   = 0
     afterRun['serviceDrift3']   = 0
 
-    if(any(abs(driftRatio) > serviceDriftLimit for driftRatio in story1DriftOuter) or any(abs(driftRatio) > serviceDriftLimit for driftRatio in story1DriftInner)):
+    if(any(abs(driftRatio) > serviceDriftLimit
+           for driftRatio in story1DriftOuter) or
+       any(abs(driftRatio) > serviceDriftLimit
+           for driftRatio in story1DriftInner)):
         afterRun['serviceDrift1']   = 1
 
-    if(any(abs(driftRatio) > serviceDriftLimit for driftRatio in story2DriftOuter) or any(abs(driftRatio) > serviceDriftLimit for driftRatio in story2DriftInner)):
+    if(any(abs(driftRatio) > serviceDriftLimit
+           for driftRatio in story2DriftOuter) or
+       any(abs(driftRatio) > serviceDriftLimit
+           for driftRatio in story2DriftInner)):
         afterRun['serviceDrift2']   = 1
 
-    if(any(abs(driftRatio) > serviceDriftLimit for driftRatio in story3DriftOuter) or any(abs(driftRatio) > serviceDriftLimit for driftRatio in story3DriftInner)):
+    if(any(abs(driftRatio) > serviceDriftLimit
+           for driftRatio in story3DriftOuter) or
+       any(abs(driftRatio) > serviceDriftLimit
+           for driftRatio in story3DriftInner)):
         afterRun['serviceDrift3']   = 1
         
     IODriftLimit           = 0.007     # need to find ASCE 41 basis
@@ -249,13 +308,22 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, runStatus, Tfb, I
     afterRun['occupancyDrift2']   = 0
     afterRun['occupancyDrift3']   = 0
 
-    if(any(abs(driftRatio) > IODriftLimit for driftRatio in story1DriftOuter) or any(abs(driftRatio) > IODriftLimit for driftRatio in story1DriftInner)):
+    if(any(abs(driftRatio) > IODriftLimit
+           for driftRatio in story1DriftOuter) or
+       any(abs(driftRatio) > IODriftLimit
+           for driftRatio in story1DriftInner)):
         afterRun['occupancyDrift1']   = 1
 
-    if(any(abs(driftRatio) > IODriftLimit for driftRatio in story2DriftOuter) or any(abs(driftRatio) > IODriftLimit for driftRatio in story2DriftInner)):
+    if(any(abs(driftRatio) > IODriftLimit
+           for driftRatio in story2DriftOuter) or
+       any(abs(driftRatio) > IODriftLimit
+           for driftRatio in story2DriftInner)):
         afterRun['occupancyDrift2']   = 1
 
-    if(any(abs(driftRatio) > IODriftLimit for driftRatio in story3DriftOuter) or any(abs(driftRatio) > IODriftLimit for driftRatio in story3DriftInner)):
+    if(any(abs(driftRatio) > IODriftLimit
+           for driftRatio in story3DriftOuter) or
+       any(abs(driftRatio) > IODriftLimit
+           for driftRatio in story3DriftInner)):
         afterRun['occupancyDrift3']   = 1
 
     # residual drift: record each story's final drift
