@@ -478,14 +478,14 @@ def estimate_damage(raw_demands, run_data, cmp_marginals):
 
 #%% prepare whole set of runs
 
-full_isolation_data = pd.read_csv('full_isolation_data.csv', index_col=None)
+full_isolation_data = pd.read_csv('full_isolation_data.csv', index_col=0)
 
 
 # load the component configuration
 cmp_marginals = pd.read_csv('cmp_marginals.csv', index_col=0)
 
 # Prepare demand data set to match format
-all_demands = pd.read_csv('demand_data.csv', index_col=None,header=None)
+all_demands = pd.read_csv('demand_data.csv', index_col=None,header=None).transpose()
 
 all_demands.columns = all_demands.loc[0]
 all_demands = all_demands.iloc[1:, :]
@@ -510,7 +510,7 @@ col_list = []
 irr_list = []
 
 # for run_idx in range(3):
-for run_idx in range(len(full_isolation_data)):
+for run_idx in full_isolation_data.index:
     run_data = full_isolation_data.loc[run_idx]
     
     raw_demands = all_demands[['Units', str(run_idx)]]
