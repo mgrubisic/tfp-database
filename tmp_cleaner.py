@@ -47,13 +47,13 @@ def cleanDat(oldDf):
 
     return(newDf)
 
-databasePath = './sessionOut/'
-databaseFile = 'sessionSummary.csv'
+# databasePath = './sessionOut/'
+# databaseFile = 'sessionSummary.csv'
 
-unfilteredData = pd.read_csv(databasePath+databaseFile)
+# unfilteredData = pd.read_csv(databasePath+databaseFile)
 
-# write filtered data to csv for Matlab
-# make sure to write new cleanDat for the original data set
-# modified definitions of gapRatio and moatAmpli
-filteredData = cleanDat(unfilteredData)
-filteredData.to_csv(databasePath+'isol_data_low_impact.csv', index=False)
+# # write filtered data to csv for Matlab
+# # make sure to write new cleanDat for the original data set
+# # modified definitions of gapRatio and moatAmpli
+# filteredData = cleanDat(unfilteredData)
+# filteredData.to_csv(databasePath+'isol_data_low_impact.csv', index=False)
