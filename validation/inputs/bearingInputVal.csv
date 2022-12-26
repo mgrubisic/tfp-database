@@ -1,9 +1,9 @@
 ﻿variable,value
 S1,1.017
 Ss,2.281
-Tm,3.791
-zetaM,0.20
-gapRatio,1.760
+Tm,4.000
+zetaM,0.174
+gapRatio,1.486
 RI,2.0
-mu1,0.03
-R1,40.0
+mu1,0.02
+R1,50.0
