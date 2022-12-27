@@ -161,16 +161,16 @@ gmDatabase.to_csv(gmPath+databaseFile, index=False)
 resultsDf.to_csv('./sessionOut/sessionSummary.csv', index=False)
 
 #%% 
-import tmp_cleaner
-from get_demand_data import get_EDP
-databasePath = './sessionOut/'
-databaseFile = 'sessionSummary.csv'
+# import tmp_cleaner
+# from get_demand_data import get_EDP
+# databasePath = './sessionOut/'
+# databaseFile = 'sessionSummary.csv'
 
-# clean data and add additional variables
-data = tmp_cleaner.cleanDat(resultsDf)
-pelicunPath = './pelicun/'
-data.to_csv(pelicunPath+'full_isolation_data.csv', index=True)
+# # clean data and add additional variables
+# data = tmp_cleaner.cleanDat(resultsDf)
+# pelicunPath = './pelicun/'
+# data.to_csv(pelicunPath+'full_isolation_data.csv', index=True)
 
-# write into pelicun style EDP
-edp = get_EDP(data)
-edp.to_csv(pelicunPath+'demand_data.csv', index=True)
+# # write into pelicun style EDP
+# edp = get_EDP(data)
+# edp.to_csv(pelicunPath+'demand_data.csv', index=True)
