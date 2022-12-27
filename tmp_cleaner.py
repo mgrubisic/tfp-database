@@ -1,12 +1,15 @@
 import pandas as pd
 import numpy as np
 
-def cleanDat(oldDf):
+def cleanDat(oldDf, remove_failed_runs=False):
     # remove excessive scaling
     newDf = oldDf[oldDf.GMScale <= 20]
     
     # remove failed runs
-    newDf = newDf[newDf.runFailed == 0]
+    if remove_failed_runs == True:
+        newDf = newDf[newDf.runFailed == 0]
+    else:
+        pass
 
     # collapsed
     newDf['collapsed'] = (newDf['collapseDrift1'] | newDf['collapseDrift2']) | \
