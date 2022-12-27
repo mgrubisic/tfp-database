@@ -41,7 +41,7 @@ warnings.filterwarnings('ignore')
 #from get_demand_data import get_EDP
 #
 #unf_df = pd.read_csv('validation_run.csv')
-#isolation_data = cleanDat(unf_df)
+#isolation_data = cleanDat(unf_df, remove_failed_runs=False)
 #isolation_data.to_csv('validation_data.csv', index=True)
 #
 #edp = get_EDP(isolation_data)

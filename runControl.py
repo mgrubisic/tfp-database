@@ -131,8 +131,16 @@ for index, row in enumerate(inputValues):
     if runStatus != 0:
         print('Recording run and moving on.')
     
-    resultsHeader, thisRun  = postprocessing.failurePostprocess(filename, scaleFactor, specAvg, runStatus, Tfb) # add run results to holder df
+    # add run results to holder df
+    resultsHeader, thisRun  = postprocessing.failurePostprocess(filename,
+                                                                scaleFactor,
+                                                                specAvg,
+                                                                runStatus,
+                                                                Tfb)
+    # adapted to accept non-convergence
     if runStatus == 0:
+        pt_counter += 1
+    elif runStatus == -3:
         pt_counter += 1
         
     # if initial run, start the dataframe with headers from postprocessing.py
