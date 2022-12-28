@@ -80,7 +80,7 @@ pt_counter = 0
 for index, row in enumerate(inputValues):
 
     print('The run index is ' + str(index) + '.') # run counter
-    print('Converted runs: ' + str(pt_counter) + '.') # run counter
+    print('Converged runs: ' + str(pt_counter) + '.') # run counter
 
     empty_directory('outputs') # clear run histories
 

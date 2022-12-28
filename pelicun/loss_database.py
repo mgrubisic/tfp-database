@@ -24,6 +24,24 @@ from estimate_loss import estimate_damage
 import warnings
 warnings.filterwarnings('ignore')
 
+#%% if files have been unprepared, prepare
+import sys
+sys.path.append('..')
+import tmp_cleaner
+from get_demand_data import get_EDP
+databasePath = '../sessionOut/'
+databaseFile = 'sessionSummary.csv'
+
+# clean data and add additional variables
+resultsDf = pd.read_csv(databasePath+databaseFile)
+data = tmp_cleaner.cleanDat(resultsDf)
+pelicunPath = './pelicun/'
+data.to_csv(pelicunPath+'full_isolation_data.csv', index=True)
+
+# write into pelicun style EDP
+edp = get_EDP(data)
+edp.to_csv(pelicunPath+'demand_data.csv', index=True)
+
 #%% prepare whole set of runs
 
 full_isolation_data = pd.read_csv('full_isolation_data.csv', index_col=0)
