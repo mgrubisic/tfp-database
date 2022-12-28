@@ -35,7 +35,7 @@ databaseFile = 'sessionSummary.csv'
 # clean data and add additional variables
 resultsDf = pd.read_csv(databasePath+databaseFile)
 data = tmp_cleaner.cleanDat(resultsDf)
-pelicunPath = './pelicun/'
+pelicunPath = './'
 data.to_csv(pelicunPath+'full_isolation_data.csv', index=True)
 
 # write into pelicun style EDP
