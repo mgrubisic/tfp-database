@@ -59,7 +59,7 @@ mdl.test_train_split(0.2)
 # TODO: formalize the cross validation for this
 
 #mdl.fit_svc(neg_wt=0.75, kernel_name='sigmoid')
-mdl.fit_svc(neg_wt=0.85, kernel_name='rbf')
+mdl.fit_svc(neg_wt=1.0, kernel_name='rbf')
 
 # predict the entire dataset
 preds_imp = mdl.svc.predict(mdl.X)
@@ -82,7 +82,7 @@ mdl.plot_classification(mdl.svc)
 #%% fit impact (logistic classification)
 
 # fit logistic classification for impact
-mdl.fit_log_reg(neg_wt=0.75)
+mdl.fit_log_reg(neg_wt=1.0)
 
 # predict the entire dataset
 preds_imp = mdl.log_reg.predict(mdl.X)
@@ -105,7 +105,7 @@ mdl.plot_classification(mdl.log_reg)
 # currently only rbf is working
 krn = 'rbf'
 gam = 1e-1
-mdl.fit_kernel_logistic(neg_wt=0.85, kernel_name=krn, gamma=gam)
+mdl.fit_kernel_logistic(neg_wt=1.0, kernel_name=krn, gamma=gam)
 
 # predict the entire dataset
 K_data = mdl.get_kernel(mdl.X, kernel_name=krn, gamma=gam)
@@ -128,7 +128,7 @@ K_plot = mdl.get_kernel(X_plot, kernel_name=krn, gamma=gam)
 mdl.plot_classification(mdl.log_reg_kernel)
 #%% fit impact (gp classification)
 
-mdl.fit_gpc(kernel_name='rbf_ard')
+mdl.fit_gpc(kernel_name='rbf_iso')
 
 # predict the entire dataset
 preds_imp = mdl.gpc.predict(mdl.X)
@@ -221,41 +221,41 @@ plt.show()
 
 #%% Fit costs (GP regression)
 
-#kernel_type = 'rbf_iso'
-#
-## fit impacted set
-#mdl_hit.fit_gpr(kernel_name=kernel_type)
-#cost_pred_hit = mdl_hit.gpr.predict(mdl_hit.X_test)
-#comparison_cost_hit = np.array([mdl_hit.y_test, 
-#                                      cost_pred_hit]).transpose()
-#        
-## fit no impact set
-#mdl_miss.fit_gpr(kernel_name=kernel_type)
-#cost_pred_miss = mdl_miss.gpr.predict(mdl_miss.X_test)
-#comparison_cost_miss = np.array([mdl_miss.y_test, 
-#                                      cost_pred_miss]).transpose()
-#
-#mdl_miss.make_2D_plotting_space(100)
-#
-#xx = mdl_miss.xx
-#yy = mdl_miss.yy
-#Z = mdl_miss.gpr.predict(mdl_miss.X_plot)
-#Z = Z.reshape(xx.shape)
-#
-#fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-## Plot the surface.
-#surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
-#                       linewidth=0, antialiased=False)
-#
-#ax.scatter(df_miss['gapRatio'], df_miss['RI'], df_miss['cost_50%'],
-#           edgecolors='k')
-#
-#ax.set_xlabel('Gap ratio')
-#ax.set_ylabel('Ry')
-#ax.set_zlabel('Median loss ($)')
-#ax.set_title('Median cost predictions given no impact (GP regression)')
-#ax.set_zlim([0, 1e6])
-#plt.show()
+kernel_type = 'rq'
+
+# fit impacted set
+mdl_hit.fit_gpr(kernel_name=kernel_type)
+cost_pred_hit = mdl_hit.gpr.predict(mdl_hit.X_test)
+comparison_cost_hit = np.array([mdl_hit.y_test, 
+                                      cost_pred_hit]).transpose()
+        
+# fit no impact set
+mdl_miss.fit_gpr(kernel_name=kernel_type)
+cost_pred_miss = mdl_miss.gpr.predict(mdl_miss.X_test)
+comparison_cost_miss = np.array([mdl_miss.y_test, 
+                                      cost_pred_miss]).transpose()
+
+mdl_miss.make_2D_plotting_space(100)
+
+xx = mdl_miss.xx
+yy = mdl_miss.yy
+Z = mdl_miss.gpr.predict(mdl_miss.X_plot)
+Z = Z.reshape(xx.shape)
+
+fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+# Plot the surface.
+surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
+                       linewidth=0, antialiased=False)
+
+ax.scatter(df_miss['gapRatio'], df_miss['RI'], df_miss['cost_50%'],
+           edgecolors='k')
+
+ax.set_xlabel('Gap ratio')
+ax.set_ylabel('Ry')
+ax.set_zlabel('Median loss ($)')
+ax.set_title('Median cost predictions given no impact (GP regression)')
+ax.set_zlim([0, 1e6])
+plt.show()
 
 #%% Fit costs (regular ridge)
 
@@ -494,6 +494,41 @@ ax.set_zlabel('Median loss ($)')
 ax.set_title('Median cost predictions: GP-impact, KR-loss')
 plt.show()
 
+#%% Big cost prediction plot (GPC-GPR)
+
+X_plot = mdl.make_2D_plotting_space(100)
+
+grid_median_repair_cost = predict_DV(X_plot,
+                                     mdl.gpc,
+                                     mdl_hit.gpr,
+                                     mdl_miss.gpr)
+
+xx = mdl.xx
+yy = mdl.yy
+Z = np.array(grid_median_repair_cost)
+Z = Z.reshape(xx.shape)
+
+fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+# Plot the surface.
+surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
+                       linewidth=0, antialiased=False, alpha=0.6)
+
+ax.scatter(df['gapRatio'], df['RI'], df['cost_50%'],
+           edgecolors='k', alpha = 0.5)
+
+xlim = ax.get_xlim()
+ylim = ax.get_ylim()
+zlim = ax.get_zlim()
+cset = ax.contour(xx, yy, Z, zdir='z', offset=zlim[0], cmap=plt.cm.coolwarm)
+cset = ax.contour(xx, yy, Z, zdir='x', offset=xlim[0], cmap=plt.cm.coolwarm)
+cset = ax.contour(xx, yy, Z, zdir='y', offset=ylim[1], cmap=plt.cm.coolwarm)
+
+ax.set_xlabel('Gap ratio')
+ax.set_ylabel('Ry')
+ax.set_zlabel('Median loss ($)')
+ax.set_title('Median cost predictions: GP-impact, GP-loss')
+plt.show()
+
 #%% Fit downtime (SVR)
 # make prediction objects for impacted and non-impacted datasets
 mdl_time_hit = Prediction(df_hit)
@@ -623,7 +658,43 @@ ax.set_zlabel('Median downtime (worker-days)')
 ax.set_title('Median sequential downtime predictions: GP-impact, KR-time')
 plt.show()
 
-#%% collapse model (KR)
+#%% Big downtime prediction plot (SVC-KR)
+
+X_plot = mdl.make_2D_plotting_space(100)
+
+grid_median_downtime = predict_DV(X_plot,
+                                  mdl.svc,
+                                  mdl_time_hit.kr,
+                                  mdl_time_miss.kr,
+                                  outcome='time_u_50%')
+
+xx = mdl.xx
+yy = mdl.yy
+Z = np.array(grid_median_downtime)
+Z = Z.reshape(xx.shape)
+
+fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+# Plot the surface.
+surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
+                       linewidth=0, antialiased=False, alpha=0.6)
+
+ax.scatter(df['gapRatio'], df['RI'], df['time_u_50%'],
+           edgecolors='k', alpha = 0.5)
+
+xlim = ax.get_xlim()
+ylim = ax.get_ylim()
+zlim = ax.get_zlim()
+cset = ax.contour(xx, yy, Z, zdir='z', offset=zlim[0], cmap=plt.cm.coolwarm)
+cset = ax.contour(xx, yy, Z, zdir='x', offset=xlim[0], cmap=plt.cm.coolwarm)
+cset = ax.contour(xx, yy, Z, zdir='y', offset=ylim[1], cmap=plt.cm.coolwarm)
+
+ax.set_xlabel('Gap ratio')
+ax.set_ylabel('Ry')
+ax.set_zlabel('Median downtime (worker-days)')
+ax.set_title('Median sequential downtime predictions: SVC-impact, KR-time')
+plt.show()
+
+#%% fit collapse models (SVR and KR)
 
 # SVR seems to be expensive, may need limiting CV runs
 
@@ -640,18 +711,23 @@ mdl_drift_miss = Prediction(df_miss)
 mdl_drift_miss.set_outcome('max_drift')
 mdl_drift_miss.test_train_split(0.2)
 
+# TODO: fit SVR for drift
+# SVR seems to be expensive, may need limiting CV runs
 # fit impacted set
 mdl_drift_hit.fit_kernel_ridge()
+mdl_drift_hit.fit_ols_ridge()
         
 # fit no impact set
 mdl_drift_miss.fit_kernel_ridge()
+mdl_drift_miss.fit_ols_ridge()
 
+#%% Drift model (GP-KR)
 X_plot = mdl.make_2D_plotting_space(100)
 
 grid_drift = predict_DV(X_plot,
-                        mdl.log_reg,
-                        mdl_drift_hit.kr,
-                        mdl_drift_miss.kr,
+                        mdl.gpc,
+                        mdl_drift_hit.o_ridge,
+                        mdl_drift_miss.o_ridge,
                                   outcome='max_drift')
 
 xx = mdl.xx
@@ -670,16 +746,14 @@ ax.scatter(df['gapRatio'], df['RI'], df['max_drift'],
 ax.set_xlabel('Gap ratio')
 ax.set_ylabel('Ry')
 ax.set_zlabel('PID (%)')
-ax.set_title('Peak interstory drift prediction (LR-impact, KR-drift)')
+ax.set_title('Peak interstory drift prediction (GPC-impact, OR-drift)')
 plt.show()
-
-#%%
 
 # drift -> collapse risk
 from scipy.stats import lognorm
 from math import log, exp
 beta_drift = 0.25
-mean_log_drift = exp(log(0.1) - beta_drift*0.9945)
+mean_log_drift = exp(log(0.05) - beta_drift*0.9945)
 ln_dist = lognorm(s=beta_drift, scale=mean_log_drift)
 
 Z = ln_dist.cdf(np.array(grid_drift))
@@ -697,28 +771,29 @@ ax.set_xlabel('Gap ratio')
 ax.set_ylabel('Ry')
 ax.set_zlabel('Collapse risk')
 ax.set_zlim([0, 0.5])
-ax.set_title('Collapse risk prediction, LN transformed from drift (LR-KR)')
+ax.set_title('Collapse risk prediction, LN transformed from drift (GPC-OR)')
 plt.show()
 
 #%% Testing the design space
 import time
 
-res_des = 20
+res_des = 25
 X_space = mdl.make_design_space(res_des)
 #K_space = mdl.get_kernel(X_space, kernel_name='rbf', gamma=gam)
 
 # choice SVC for impact bc fast and behavior most closely resembles GPC
 # HOWEVER, SVC is poorly calibrated for probablities
-# consider using GP if computational resources allow
+# consider using GP if computational resources allow, and GP looks good
 
-# choice KR bc of smooth behavior in gap direction
+# choice SVR bc behavior most closely resembles GPR
+# also trend is visible: impact set looks like GPR, nonimpact set favors high R
 t0 = time.time()
 space_median_repair_cost = predict_DV(X_space,
                                       mdl.gpc,
-                                      mdl_hit.kr,
-                                      mdl_miss.kr)
+                                      mdl_hit.svr,
+                                      mdl_miss.svr)
 tp = time.time() - t0
-print("GPC-KR repair cost prediction for %d inputs in %.3f s" % (X_space.shape[0],
+print("GPC-SVR repair cost prediction for %d inputs in %.3f s" % (X_space.shape[0],
                                                            tp))
 
 # choice KR bc smoother when predicting downtime
@@ -732,15 +807,15 @@ tp = time.time() - t0
 print("GPC-KR downtime prediction for %d inputs in %.3f s" % (X_space.shape[0],
                                                                tp))
 
-# choice KR bc SVR seems to hang
+# choice O_ridge bc SVR seems to hang, and KR overestimates (may need CV)
 t0 = time.time()
 space_median_drift = predict_DV(X_space,
                                       mdl.gpc,
-                                      mdl_drift_hit.kr,
-                                      mdl_drift_miss.kr,
+                                      mdl_drift_hit.o_ridge,
+                                      mdl_drift_miss.o_ridge,
                                       outcome='max_drift')
 tp = time.time() - t0
-print("GPC-KR drift prediction for %d inputs in %.3f s" % (X_space.shape[0],
+print("GPC-OR drift prediction for %d inputs in %.3f s" % (X_space.shape[0],
                                                                tp))
 
 #%% Transform predicted drift into probability
@@ -748,7 +823,7 @@ print("GPC-KR drift prediction for %d inputs in %.3f s" % (X_space.shape[0],
 from scipy.stats import lognorm
 from math import log, exp
 beta_drift = 0.25
-mean_log_drift = exp(log(0.1) - beta_drift*0.9945)
+mean_log_drift = exp(log(0.5) - beta_drift*0.9945)
 ln_dist = lognorm(s=beta_drift, scale=mean_log_drift)
 
 space_median_collapse_risk = pd.DataFrame(ln_dist.cdf(space_median_drift),
@@ -841,7 +916,8 @@ def calc_upfront_cost(X_query, steel_coefs,
 steel_price = 2.00
 coef_dict = get_steel_coefs(df, steel_per_unit=steel_price)
 
-cost_thresh = 5e5
+percent_of_replacement = 0.2
+cost_thresh = percent_of_replacement*8.1e6
 ok_cost = X_space.loc[space_median_repair_cost['cost_50%_pred']<=cost_thresh]
 
 # <2 weeks for a team of 50
@@ -862,12 +938,24 @@ X_design = X_space[np.logical_and(
 # select best viable design
 upfront_costs = calc_upfront_cost(X_design, coef_dict)
 cheapest_design_idx = upfront_costs.idxmin()
-cheapest_upfront_cost = upfront_costs.min()
+design_upfront_cost = upfront_costs.min()
 
 # least upfront cost of the viable designs
 best_design = X_design.loc[cheapest_design_idx]
+design_downtime = space_median_downtime.iloc[cheapest_design_idx].item()
+design_repair_cost = space_median_repair_cost.iloc[cheapest_design_idx].item()
+design_collapse_risk = space_median_collapse_risk.iloc[cheapest_design_idx].item()
 
 print(best_design)
+
+print('Upfront cost of selected design: ',
+      f'${design_upfront_cost:,.2f}')
+print('Predicted median repair cost: ',
+      f'${design_repair_cost:,.2f}')
+print('Predicted repair time (sequential): ',
+      f'{design_downtime:,.2f}', 'worker-days')
+print('Predicted collapse risk: ',
+      f'{design_collapse_risk:.2%}')
 
 #%% Fit costs (SVR, across all data)
 
