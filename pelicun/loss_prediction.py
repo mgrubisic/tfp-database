@@ -56,9 +56,8 @@ mdl.test_train_split(0.2)
 #%% fit impact (SVC)
 # fit SVM classification for impact
 # lower neg_wt = penalize false negatives more
-# TODO: formalize the cross validation for this
 
-#mdl.fit_svc(neg_wt=0.75, kernel_name='sigmoid')
+#mdl.fit_svc(neg_wt=1.0, kernel_name='sigmoid')
 mdl.fit_svc(neg_wt=1.0, kernel_name='rbf')
 
 # predict the entire dataset
@@ -103,8 +102,9 @@ mdl.plot_classification(mdl.log_reg)
 #%% fit impact (kernel logistic classification)
 
 # currently only rbf is working
+# TODO: gamma cross validation
 krn = 'rbf'
-gam = 1e-1
+gam = None # if None, defaults to 1/n_features = 0.25
 mdl.fit_kernel_logistic(neg_wt=1.0, kernel_name=krn, gamma=gam)
 
 # predict the entire dataset
@@ -770,7 +770,7 @@ ax.scatter(df['gapRatio'], df['RI'], df['collapse_freq'],
 ax.set_xlabel('Gap ratio')
 ax.set_ylabel('Ry')
 ax.set_zlabel('Collapse risk')
-ax.set_zlim([0, 0.5])
+ax.set_zlim([0, 1.0])
 ax.set_title('Collapse risk prediction, LN transformed from drift (GPC-OR)')
 plt.show()
 

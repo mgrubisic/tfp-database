@@ -269,10 +269,11 @@ class Prediction:
         return(K_pr)
         
     # TODO: cross validate gamma, get other kernels working
-    def fit_kernel_logistic(self, kernel_name='rbf', neg_wt=1.0, gamma=100.0,
+    def fit_kernel_logistic(self, kernel_name='rbf', neg_wt=1.0, gamma=None,
                             degree=3):
         from sklearn.pipeline import Pipeline
         from sklearn.linear_model import LogisticRegressionCV
+        from sklearn.preprocessing import StandardScaler
             
         # pipeline to scale -> logistic
         wts = {0: neg_wt, 1:1.0}
@@ -292,13 +293,14 @@ class Prediction:
             K_train = sigmoid_kernel(self.X_train, self.X_train)
             K_test = sigmoid_kernel(self.X_train, self.X_train)
             
-        log_reg_pipe = Pipeline([('log_reg_kernel', LogisticRegressionCV(
+#        log_reg_pipe = Pipeline([('log_reg_kernel', LogisticRegressionCV(
+#                                         class_weight=wts,
+#                                         solver='newton-cg'))])
+        
+        log_reg_pipe = Pipeline([('scaler', StandardScaler()),
+                                 ('log_reg_kernel', LogisticRegressionCV(
                                          class_weight=wts,
                                          solver='newton-cg'))])
-        
-#        log_reg_pipe = Pipeline([('scaler', StandardScaler()),
-#                                 ('log_reg_kernel', LogisticRegressionCV(
-#                                         class_weight=wts))])
         
         # LRCV finds optimum C value, L2 penalty
         log_reg_pipe.fit(K_train, self.y_train)
