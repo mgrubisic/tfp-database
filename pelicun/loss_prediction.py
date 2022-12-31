@@ -126,6 +126,11 @@ print('False positives: ', fp)
 X_plot = mdl.make_2D_plotting_space(100)
 K_plot = mdl.get_kernel(X_plot, kernel_name=krn, gamma=gam)
 mdl.plot_classification(mdl.log_reg_kernel)
+
+## make grid and plot classification predictions
+#X_plot = mdl.make_2D_plotting_space(100, y_var='Tm')
+#K_plot = mdl.get_kernel(X_plot, kernel_name=krn, gamma=gam)
+#mdl.plot_classification(mdl.log_reg_kernel, yvar='Tm')
 #%% fit impact (gp classification)
 
 mdl.fit_gpc(kernel_name='rbf_iso')
@@ -145,6 +150,12 @@ print('False positives: ', fp)
 # make grid and plot classification predictions
 X_plot = mdl.make_2D_plotting_space(100)
 mdl.plot_classification(mdl.gpc)
+
+X_plot = mdl.make_2D_plotting_space(100, y_var='Tm')
+mdl.plot_classification(mdl.gpc, yvar='Tm')
+
+X_plot = mdl.make_2D_plotting_space(100, x_var='Tm', y_var='zetaM')
+mdl.plot_classification(mdl.gpc, xvar='Tm', yvar='zetaM')
 #%% Fit costs (SVR)
 
 # fit impacted set
