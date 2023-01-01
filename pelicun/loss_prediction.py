@@ -154,8 +154,8 @@ mdl.plot_classification(mdl.gpc)
 X_plot = mdl.make_2D_plotting_space(100, y_var='Tm')
 mdl.plot_classification(mdl.gpc, yvar='Tm')
 
-X_plot = mdl.make_2D_plotting_space(100, x_var='Tm', y_var='zetaM')
-mdl.plot_classification(mdl.gpc, xvar='Tm', yvar='zetaM')
+X_plot = mdl.make_2D_plotting_space(100, x_var='gapRatio', y_var='zetaM')
+mdl.plot_classification(mdl.gpc, xvar='gapRatio', yvar='zetaM')
 #%% Fit costs (SVR)
 
 # fit impacted set
