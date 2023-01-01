@@ -27,7 +27,7 @@ class Prediction:
         self.y = self._raw_data[[outcome_var]]
         
     # if classification is done, plot the predictions
-    def plot_classification(self, mdl_clf, xvar='Gap ratio', yvar='RI'):
+    def plot_classification(self, mdl_clf, xvar='gapRatio', yvar='RI'):
         import matplotlib.pyplot as plt
         
         xx = self.xx
@@ -60,7 +60,7 @@ class Prediction:
         else:
             plt.contour(xx, yy, Z, levels=[0],
                         linewidths=2, linestyles="dashed")
-        plt.scatter(self.X_train['gapRatio'][:plt_density],
+        plt.scatter(self.X_train[xvar][:plt_density],
                     self.X_train[yvar][:plt_density],
                     s=30, c=self.y_train[:plt_density],
                     cmap=plt.cm.Paired, edgecolors="k")
@@ -98,15 +98,20 @@ class Prediction:
         if (x_var=='gapRatio') and (y_var=='zetaM'):
             third_var = 'RI'
             fourth_var = 'Tm'
+            
+        if (x_var=='Tm') and (y_var=='zetaM'):
+            third_var = 'gapRatio'
+            fourth_var = 'RI'
            
         self.xx = xx
         self.yy = yy
-        self.X_plot = pd.DataFrame({x_var:xx.ravel(),
+        X_pl = pd.DataFrame({x_var:xx.ravel(),
                              y_var:yy.ravel(),
                              third_var:np.repeat(self.X[third_var].median(),
                                                  res*res),
                              fourth_var:np.repeat(self.X[fourth_var].median(), 
                                                   res*res)})
+        self.X_plot = X_pl[['gapRatio', 'RI', 'Tm', 'zetaM']]
                              
         return(self.X_plot)
         
