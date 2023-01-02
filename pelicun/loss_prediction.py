@@ -36,16 +36,18 @@ df['max_drift'] = df[["driftMax1", "driftMax2", "driftMax3"]].max(axis=1)
 # df['max_accel'] = df[["accMax0", "accMax1", "accMax2", "accMax3"]].max(axis=1)
 # df['max_vel'] = df[["velMax0", "velMax1", "velMax2", "velMax3"]].max(axis=1)
 #%% Prepare data
+cost_var = 'cost_50%'
+time_var = 'time_u_50%'
 
 # make prediction objects for impacted and non-impacted datasets
 df_hit = df[df['impacted'] == 1]
 mdl_hit = Prediction(df_hit)
-mdl_hit.set_outcome('cost_50%')
+mdl_hit.set_outcome(cost_var)
 mdl_hit.test_train_split(0.2)
 
 df_miss = df[df['impacted'] == 0]
 mdl_miss = Prediction(df_miss)
-mdl_miss.set_outcome('cost_50%')
+mdl_miss.set_outcome(cost_var)
 mdl_miss.test_train_split(0.2)
 
 # prepare the problem
@@ -182,7 +184,7 @@ fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
                        linewidth=0, antialiased=False)
 
-ax.scatter(df_miss['gapRatio'], df_miss['RI'], df_miss['cost_50%'],
+ax.scatter(df_miss['gapRatio'], df_miss['RI'], df_miss[cost_var],
            edgecolors='k')
 
 ax.set_xlabel('Gap ratio')
@@ -220,7 +222,7 @@ fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
                        linewidth=0, antialiased=False)
 
-ax.scatter(df_miss['gapRatio'], df_miss['RI'], df_miss['cost_50%'],
+ax.scatter(df_miss['gapRatio'], df_miss['RI'], df_miss[cost_var],
            edgecolors='k')
 
 ax.set_xlabel('Gap ratio')
@@ -258,7 +260,7 @@ fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
                        linewidth=0, antialiased=False)
 
-ax.scatter(df_miss['gapRatio'], df_miss['RI'], df_miss['cost_50%'],
+ax.scatter(df_miss['gapRatio'], df_miss['RI'], df_miss[cost_var],
            edgecolors='k')
 
 ax.set_xlabel('Gap ratio')
@@ -288,25 +290,26 @@ comparison_cost_miss = np.array([mdl_miss.y_test,
                                       cost_pred_miss]).transpose()
 
 #%% aggregate the two models
-dataset_median_repair_cost = predict_DV(mdl.X,
+dataset_mean_repair_cost = predict_DV(mdl.X,
                                         mdl.log_reg,
                                         mdl_hit.svr,
                                         mdl_miss.svr)
-comparison_cost = np.array([df['cost_50%'],
-                            np.ravel(dataset_median_repair_cost)]).transpose()
+comparison_cost = np.array([df[cost_var],
+                            np.ravel(dataset_mean_repair_cost)]).transpose()
 
 #%% Big cost prediction plot (SVC-SVR)
 
 X_plot = mdl.make_2D_plotting_space(100)
 
-grid_median_repair_cost = predict_DV(X_plot,
+grid_mean_repair_cost = predict_DV(X_plot,
                                      mdl.svc,
                                      mdl_hit.svr,
-                                     mdl_miss.svr)
+                                     mdl_miss.svr,
+                                     outcome=cost_var)
 
 xx = mdl.xx
 yy = mdl.yy
-Z = np.array(grid_median_repair_cost)
+Z = np.array(grid_mean_repair_cost)
 Z = Z.reshape(xx.shape)
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -314,7 +317,7 @@ fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
                        linewidth=0, antialiased=False, alpha=0.6)
 
-ax.scatter(df['gapRatio'], df['RI'], df['cost_50%'],
+ax.scatter(df['gapRatio'], df['RI'], df[cost_var],
            edgecolors='k', alpha = 0.5)
 
 xlim = ax.get_xlim()
@@ -334,14 +337,15 @@ plt.show()
 
 X_plot = mdl.make_2D_plotting_space(100)
 
-grid_median_repair_cost = predict_DV(X_plot,
+grid_mean_repair_cost = predict_DV(X_plot,
                                      mdl.svc,
                                      mdl_hit.kr,
-                                     mdl_miss.kr)
+                                     mdl_miss.kr,
+                                     outcome=cost_var)
 
 xx = mdl.xx
 yy = mdl.yy
-Z = np.array(grid_median_repair_cost)
+Z = np.array(grid_mean_repair_cost)
 Z = Z.reshape(xx.shape)
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -349,7 +353,7 @@ fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
                        linewidth=0, antialiased=False, alpha=0.6)
 
-ax.scatter(df['gapRatio'], df['RI'], df['cost_50%'],
+ax.scatter(df['gapRatio'], df['RI'], df[cost_var],
            edgecolors='k', alpha = 0.5)
 
 xlim = ax.get_xlim()
@@ -369,14 +373,15 @@ plt.show()
 
 X_plot = mdl.make_2D_plotting_space(100)
 K_plot = mdl.get_kernel(X_plot, kernel_name=krn, gamma=gam)
-grid_median_repair_cost = predict_DV(X_plot,
+grid_mean_repair_cost = predict_DV(X_plot,
                                      mdl.log_reg_kernel,
                                      mdl_hit.svr,
-                                     mdl_miss.svr)
+                                     mdl_miss.svr,
+                                     outcome=cost_var)
 
 xx = mdl.xx
 yy = mdl.yy
-Z = np.array(grid_median_repair_cost)
+Z = np.array(grid_mean_repair_cost)
 Z = Z.reshape(xx.shape)
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -384,7 +389,7 @@ fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
                        linewidth=0, antialiased=False, alpha=0.6)
 
-ax.scatter(df['gapRatio'], df['RI'], df['cost_50%'],
+ax.scatter(df['gapRatio'], df['RI'], df[cost_var],
            edgecolors='k', alpha = 0.5)
 
 xlim = ax.get_xlim()
@@ -404,14 +409,15 @@ plt.show()
 
 X_plot = mdl.make_2D_plotting_space(100)
 K_plot = mdl.get_kernel(X_plot, kernel_name=krn, gamma=gam)
-grid_median_repair_cost = predict_DV(X_plot,
+grid_mean_repair_cost = predict_DV(X_plot,
                                      mdl.log_reg_kernel,
                                      mdl_hit.kr,
-                                     mdl_miss.kr)
+                                     mdl_miss.kr,
+                                     outcome=cost_var)
 
 xx = mdl.xx
 yy = mdl.yy
-Z = np.array(grid_median_repair_cost)
+Z = np.array(grid_mean_repair_cost)
 Z = Z.reshape(xx.shape)
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -419,7 +425,7 @@ fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
                        linewidth=0, antialiased=False, alpha=0.6)
 
-ax.scatter(df['gapRatio'], df['RI'], df['cost_50%'],
+ax.scatter(df['gapRatio'], df['RI'], df[cost_var],
            edgecolors='k', alpha = 0.5)
 
 xlim = ax.get_xlim()
@@ -439,14 +445,15 @@ plt.show()
 
 X_plot = mdl.make_2D_plotting_space(100)
 
-grid_median_repair_cost = predict_DV(X_plot,
+grid_mean_repair_cost = predict_DV(X_plot,
                                      mdl.gpc,
                                      mdl_hit.svr,
-                                     mdl_miss.svr)
+                                     mdl_miss.svr,
+                                     outcome=cost_var)
 
 xx = mdl.xx
 yy = mdl.yy
-Z = np.array(grid_median_repair_cost)
+Z = np.array(grid_mean_repair_cost)
 Z = Z.reshape(xx.shape)
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -454,7 +461,7 @@ fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
                        linewidth=0, antialiased=False, alpha=0.6)
 
-ax.scatter(df['gapRatio'], df['RI'], df['cost_50%'],
+ax.scatter(df['gapRatio'], df['RI'], df[cost_var],
            edgecolors='k', alpha = 0.5)
 
 xlim = ax.get_xlim()
@@ -470,18 +477,20 @@ ax.set_zlabel('Median loss ($)')
 ax.set_title('Median cost predictions: GP-impact, SVR-loss')
 plt.show()
 
+
 #%% Big cost prediction plot (GP-KR)
 
 X_plot = mdl.make_2D_plotting_space(100)
 
-grid_median_repair_cost = predict_DV(X_plot,
+grid_mean_repair_cost = predict_DV(X_plot,
                                      mdl.gpc,
                                      mdl_hit.kr,
-                                     mdl_miss.kr)
+                                     mdl_miss.kr,
+                                     outcome=cost_var)
 
 xx = mdl.xx
 yy = mdl.yy
-Z = np.array(grid_median_repair_cost)
+Z = np.array(grid_mean_repair_cost)
 Z = Z.reshape(xx.shape)
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -489,7 +498,7 @@ fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
                        linewidth=0, antialiased=False, alpha=0.6)
 
-ax.scatter(df['gapRatio'], df['RI'], df['cost_50%'],
+ax.scatter(df['gapRatio'], df['RI'], df[cost_var],
            edgecolors='k', alpha = 0.5)
 
 xlim = ax.get_xlim()
@@ -509,14 +518,15 @@ plt.show()
 
 X_plot = mdl.make_2D_plotting_space(100)
 
-grid_median_repair_cost = predict_DV(X_plot,
+grid_mean_repair_cost = predict_DV(X_plot,
                                      mdl.gpc,
                                      mdl_hit.gpr,
-                                     mdl_miss.gpr)
+                                     mdl_miss.gpr,
+                                     outcome=cost_var)
 
 xx = mdl.xx
 yy = mdl.yy
-Z = np.array(grid_median_repair_cost)
+Z = np.array(grid_mean_repair_cost)
 Z = Z.reshape(xx.shape)
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -524,7 +534,7 @@ fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
                        linewidth=0, antialiased=False, alpha=0.6)
 
-ax.scatter(df['gapRatio'], df['RI'], df['cost_50%'],
+ax.scatter(df['gapRatio'], df['RI'], df[cost_var],
            edgecolors='k', alpha = 0.5)
 
 xlim = ax.get_xlim()
@@ -543,11 +553,11 @@ plt.show()
 #%% Fit downtime (SVR)
 # make prediction objects for impacted and non-impacted datasets
 mdl_time_hit = Prediction(df_hit)
-mdl_time_hit.set_outcome('time_u_50%')
+mdl_time_hit.set_outcome(time_var)
 mdl_time_hit.test_train_split(0.2)
 
 mdl_time_miss = Prediction(df_miss)
-mdl_time_miss.set_outcome('time_u_50%')
+mdl_time_miss.set_outcome(time_var)
 mdl_time_miss.test_train_split(0.2)
 
 # fit impacted set
@@ -587,7 +597,7 @@ comparison_time_miss = np.array([mdl_time_miss.y_test,
 #surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
 #                       linewidth=0, antialiased=False)
 #
-#ax.scatter(df_miss['gapRatio'], df_miss['RI'], df_miss['time_u_50%'],
+#ax.scatter(df_miss['gapRatio'], df_miss['RI'], df_miss[time_var],
 #           edgecolors='k')
 #
 #ax.set_xlabel('Gap ratio')
@@ -601,15 +611,15 @@ comparison_time_miss = np.array([mdl_time_miss.y_test,
 
 X_plot = mdl.make_2D_plotting_space(100)
 
-grid_median_downtime = predict_DV(X_plot,
+grid_mean_downtime = predict_DV(X_plot,
                                   mdl.gpc,
                                   mdl_time_hit.svr,
                                   mdl_time_miss.svr,
-                                  outcome='time_u_50%')
+                                  outcome=time_var)
 
 xx = mdl.xx
 yy = mdl.yy
-Z = np.array(grid_median_downtime)
+Z = np.array(grid_mean_downtime)
 Z = Z.reshape(xx.shape)
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -617,7 +627,7 @@ fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
                        linewidth=0, antialiased=False, alpha=0.6)
 
-ax.scatter(df['gapRatio'], df['RI'], df['time_u_50%'],
+ax.scatter(df['gapRatio'], df['RI'], df[time_var],
            edgecolors='k', alpha = 0.5)
 
 xlim = ax.get_xlim()
@@ -637,15 +647,15 @@ plt.show()
 
 X_plot = mdl.make_2D_plotting_space(100)
 
-grid_median_downtime = predict_DV(X_plot,
+grid_mean_downtime = predict_DV(X_plot,
                                   mdl.gpc,
                                   mdl_time_hit.kr,
                                   mdl_time_miss.kr,
-                                  outcome='time_u_50%')
+                                  outcome=time_var)
 
 xx = mdl.xx
 yy = mdl.yy
-Z = np.array(grid_median_downtime)
+Z = np.array(grid_mean_downtime)
 Z = Z.reshape(xx.shape)
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -653,7 +663,7 @@ fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
                        linewidth=0, antialiased=False, alpha=0.6)
 
-ax.scatter(df['gapRatio'], df['RI'], df['time_u_50%'],
+ax.scatter(df['gapRatio'], df['RI'], df[time_var],
            edgecolors='k', alpha = 0.5)
 
 xlim = ax.get_xlim()
@@ -673,15 +683,15 @@ plt.show()
 
 X_plot = mdl.make_2D_plotting_space(100)
 
-grid_median_downtime = predict_DV(X_plot,
+grid_mean_downtime = predict_DV(X_plot,
                                   mdl.svc,
                                   mdl_time_hit.kr,
                                   mdl_time_miss.kr,
-                                  outcome='time_u_50%')
+                                  outcome=time_var)
 
 xx = mdl.xx
 yy = mdl.yy
-Z = np.array(grid_median_downtime)
+Z = np.array(grid_mean_downtime)
 Z = Z.reshape(xx.shape)
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -689,7 +699,7 @@ fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
                        linewidth=0, antialiased=False, alpha=0.6)
 
-ax.scatter(df['gapRatio'], df['RI'], df['time_u_50%'],
+ax.scatter(df['gapRatio'], df['RI'], df[time_var],
            edgecolors='k', alpha = 0.5)
 
 xlim = ax.get_xlim()
@@ -799,28 +809,29 @@ X_space = mdl.make_design_space(res_des)
 # choice SVR bc behavior most closely resembles GPR
 # also trend is visible: impact set looks like GPR, nonimpact set favors high R
 t0 = time.time()
-space_median_repair_cost = predict_DV(X_space,
+space_repair_cost = predict_DV(X_space,
                                       mdl.gpc,
                                       mdl_hit.svr,
-                                      mdl_miss.svr)
+                                      mdl_miss.svr,
+                                      outcome=cost_var)
 tp = time.time() - t0
 print("GPC-SVR repair cost prediction for %d inputs in %.3f s" % (X_space.shape[0],
                                                            tp))
 
 # choice KR bc smoother when predicting downtime
 t0 = time.time()
-space_median_downtime = predict_DV(X_space,
+space_downtime = predict_DV(X_space,
                                       mdl.gpc,
                                       mdl_time_hit.kr,
                                       mdl_time_miss.kr,
-                                      outcome='time_u_50%')
+                                      outcome=time_var)
 tp = time.time() - t0
 print("GPC-KR downtime prediction for %d inputs in %.3f s" % (X_space.shape[0],
                                                                tp))
 
 # choice O_ridge bc SVR seems to hang, and KR overestimates (may need CV)
 t0 = time.time()
-space_median_drift = predict_DV(X_space,
+space_drift = predict_DV(X_space,
                                       mdl.gpc,
                                       mdl_drift_hit.o_ridge,
                                       mdl_drift_miss.o_ridge,
@@ -837,7 +848,7 @@ beta_drift = 0.25
 mean_log_drift = exp(log(0.5) - beta_drift*0.9945)
 ln_dist = lognorm(s=beta_drift, scale=mean_log_drift)
 
-space_median_collapse_risk = pd.DataFrame(ln_dist.cdf(space_median_drift),
+space_collapse_risk = pd.DataFrame(ln_dist.cdf(space_drift),
                                           columns=['collapse_risk_pred'])
 
 #%% Calculate upfront cost of data
@@ -929,14 +940,14 @@ coef_dict = get_steel_coefs(df, steel_per_unit=steel_price)
 
 percent_of_replacement = 0.2
 cost_thresh = percent_of_replacement*8.1e6
-ok_cost = X_space.loc[space_median_repair_cost['cost_50%_pred']<=cost_thresh]
+ok_cost = X_space.loc[space_repair_cost[cost_var+'_pred']<=cost_thresh]
 
 # <2 weeks for a team of 50
 dt_thresh = 50*14
-ok_time = X_space.loc[space_median_downtime['time_u_50%_pred']<=dt_thresh]
+ok_time = X_space.loc[space_downtime[time_var+'_pred']<=dt_thresh]
 
 risk_thresh = 0.025
-ok_risk = X_space.loc[space_median_collapse_risk['collapse_risk_pred']<=
+ok_risk = X_space.loc[space_collapse_risk['collapse_risk_pred']<=
                       risk_thresh]
 
 X_design = X_space[np.logical_and(
@@ -953,15 +964,15 @@ design_upfront_cost = upfront_costs.min()
 
 # least upfront cost of the viable designs
 best_design = X_design.loc[cheapest_design_idx]
-design_downtime = space_median_downtime.iloc[cheapest_design_idx].item()
-design_repair_cost = space_median_repair_cost.iloc[cheapest_design_idx].item()
-design_collapse_risk = space_median_collapse_risk.iloc[cheapest_design_idx].item()
+design_downtime = space_downtime.iloc[cheapest_design_idx].item()
+design_repair_cost = space_repair_cost.iloc[cheapest_design_idx].item()
+design_collapse_risk = space_collapse_risk.iloc[cheapest_design_idx].item()
 
 print(best_design)
 
 print('Upfront cost of selected design: ',
       f'${design_upfront_cost:,.2f}')
-print('Predicted median repair cost: ',
+print('Predicted mean repair cost: ',
       f'${design_repair_cost:,.2f}')
 print('Predicted repair time (sequential): ',
       f'{design_downtime:,.2f}', 'worker-days')
@@ -972,7 +983,7 @@ print('Predicted collapse risk: ',
 
 ## fit impacted set
 #mdl = Prediction(df)
-#mdl.set_outcome('cost_50%')
+#mdl.set_outcome(cost_var)
 #mdl.test_train_split(0.2)
 #mdl.fit_svr()
 #
@@ -988,7 +999,7 @@ print('Predicted collapse risk: ',
 #surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
 #                       linewidth=0, antialiased=False)
 #
-#ax.scatter(df['gapRatio'], df['RI'], df['cost_50%'],
+#ax.scatter(df['gapRatio'], df['RI'], df[cost_var],
 #           edgecolors='k')
 #
 #ax.set_xlabel('Gap ratio')

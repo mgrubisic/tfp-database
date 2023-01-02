@@ -102,6 +102,10 @@ class Prediction:
         if (x_var=='Tm') and (y_var=='zetaM'):
             third_var = 'gapRatio'
             fourth_var = 'RI'
+            
+        if (x_var=='RI') and (y_var=='Tm'):
+            third_var = 'gapRatio'
+            fourth_var = 'zetaM'
            
         self.xx = xx
         self.yy = yy
@@ -116,9 +120,8 @@ class Prediction:
         return(self.X_plot)
         
     def make_design_space(self, res):
-        xx, yy, uu, vv = np.meshgrid(np.linspace(min(self.X['gapRatio']),
-                                         max(self.X['gapRatio']),
-                                         res),
+        xx, yy, uu, vv = np.meshgrid(np.linspace(0.8, 2.2,
+                                                 res),
                                      np.linspace(min(self.X['RI']),
                                                  max(self.X['RI']),
                                                  res),
