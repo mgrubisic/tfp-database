@@ -28,8 +28,8 @@ df = pd.concat([full_isolation_data, loss_data], axis=1)
 df['max_drift'] = df[["driftMax1", "driftMax2", "driftMax3"]].max(axis=1)
 
 #%% Prepare data
-cost_var = 'cost_50%'
-time_var = 'time_u_50%'
+cost_var = 'cost_mean'
+time_var = 'time_u_mean'
 
 # make prediction objects for impacted and non-impacted datasets
 df_hit = df[df['impacted'] == 1]
@@ -263,3 +263,357 @@ mdl_drift_hit.fit_ols_ridge()
 mdl_miss.fit_svr()
 mdl_time_miss.fit_kernel_ridge(kernel_name='rbf')
 mdl_drift_miss.fit_ols_ridge()
+
+#%% 3d surf
+
+#plt.setp((ax1, ax2, ax3), xticks=np.arange(0.5, 4.0, step=0.5),
+#        yticks=np.arange(0.1, 1.1, step=0.1))
+#fig=plt.figure(figsize=(13, 4))
+#ax1=fig.add_subplot(1, 3, 1)
+#ax2=fig.add_subplot(1, 3, 2)
+#ax3=fig.add_subplot(1, 3, 3)
+
+# Plot the surface.
+#ax1=fig.add_subplot(1, 3, 1, projection='3d')
+#surf = ax1.plot_surface(xx, yy, Z, cmap=plt.cm.gist_gray,
+#                       linewidth=0, antialiased=False, alpha=0.4)
+
+#ax1.scatter(df[xvar], df[yvar], df[cost_var]/8.1e6, color='white',
+#           edgecolors='k', alpha = 0.5)
+#
+#xlim = ax1.get_xlim()
+#ylim = ax1.get_ylim()
+#zlim = ax1.get_zlim()
+#cset = ax1.contour(xx, yy, Z, zdir='z', offset=zlim[0], cmap=plt.cm.gist_gray)
+#cset = ax1.contour(xx, yy, Z, zdir='x', offset=xlim[0], cmap=plt.cm.gist_gray)
+#cset = ax1.contour(xx, yy, Z, zdir='y', offset=ylim[1], cmap=plt.cm.gist_gray)
+#
+#ax1.set_xlabel('Gap ratio', fontsize=axis_font)
+#ax1.set_ylabel('$T_M$', fontsize=axis_font)
+#ax1.set_zlabel('Mean loss ($)', fontsize=axis_font)
+#ax1.set_title('Cost: GPC-SVR', fontsize=subt_font)
+
+#%% Big cost prediction plot (GP-SVR)
+plt.rcParams["font.family"] = "serif"
+plt.rcParams["mathtext.fontset"] = "dejavuserif"
+axis_font = 18
+subt_font = 18
+label_size = 14
+mpl.rcParams['xtick.labelsize'] = label_size 
+mpl.rcParams['ytick.labelsize'] = label_size 
+
+plt.close('all')
+
+xvar = 'Tm'
+yvar = 'gapRatio'
+
+res = 100
+step = 0.01
+y_bounds = [0.7, 0.7+res*step-step]
+X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
+                                    y_bounds=y_bounds)
+
+grid_repair_cost = predict_DV(X_plot,
+                                     mdl.gpc,
+                                     mdl_hit.svr,
+                                     mdl_miss.svr,
+                                     outcome=cost_var)
+
+xx = mdl.xx
+yy = mdl.yy
+zz = np.array(grid_repair_cost)/8.1e6
+Z = zz.reshape(xx.shape)
+
+fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(13, 4), sharey=True)
+plt.setp((ax1, ax2, ax3), yticks=np.arange(0.1, 1.1, step=0.1), ylim=[0.0, 1.0])
+
+yyy = yy[:,1]
+cs = ax1.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
+                 levels=np.arange(0.7, 1.6, step=0.1))
+ax1.clabel(cs, fontsize=label_size)
+ax1.set_ylabel('% of replacement cost', fontsize=axis_font)
+ax1.set_xlabel('$T_M$', fontsize=axis_font)
+ax1.grid()
+
+####################################################################
+xvar = 'RI'
+yvar = 'gapRatio'
+
+res = 100
+step = 0.01
+y_bounds = [0.7, 0.7+res*step-step]
+
+X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
+                                    y_bounds=y_bounds)
+
+grid_repair_cost = predict_DV(X_plot,
+                                     mdl.gpc,
+                                     mdl_hit.svr,
+                                     mdl_miss.svr,
+                                     outcome=cost_var)
+
+xx = mdl.xx
+yy = mdl.yy
+zz = np.array(grid_repair_cost)/8.1e6
+Z = zz.reshape(xx.shape)
+
+yyy = yy[:,1]
+cs = ax2.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
+                 levels=np.arange(0.7, 1.6, step=0.1))
+
+ax2.clabel(cs, fontsize=label_size)
+#ax2.set_ylabel('% of replacement', fontsize=axis_font)
+ax2.set_xlabel('$R_y$', fontsize=axis_font)
+ax2.grid()
+
+####################################################################
+xvar = 'zetaM'
+yvar = 'gapRatio'
+
+res = 100
+step = 0.01
+y_bounds = [0.7, 0.7+res*step-step]
+
+X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
+                                    y_bounds=y_bounds)
+grid_repair_cost = predict_DV(X_plot,
+                                     mdl.gpc,
+                                     mdl_hit.svr,
+                                     mdl_miss.svr,
+                                     outcome=cost_var)
+
+xx = mdl.xx
+yy = mdl.yy
+zz = np.array(grid_repair_cost)/8.1e6
+Z = zz.reshape(xx.shape)
+
+yyy = yy[:,1]
+cs = ax3.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
+                 levels=np.arange(0.7, 1.6, step=0.1))
+ax3.clabel(cs, fontsize=label_size)
+
+#ax3.set_ylabel('% of replacement', fontsize=axis_font)
+ax3.set_xlabel('$\zeta_M$', fontsize=axis_font)
+ax3.grid()
+plt.show()
+fig.tight_layout()
+
+#%% Big downtime prediction plot (GP-KR)
+plt.rcParams["font.family"] = "serif"
+plt.rcParams["mathtext.fontset"] = "dejavuserif"
+axis_font = 18
+subt_font = 18
+label_size = 14
+mpl.rcParams['xtick.labelsize'] = label_size 
+mpl.rcParams['ytick.labelsize'] = label_size 
+
+plt.close('all')
+
+xvar = 'Tm'
+yvar = 'gapRatio'
+
+res = 100
+step = 0.01
+y_bounds = [0.7, 0.7+res*step-step]
+X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
+                                    y_bounds=y_bounds)
+
+grid_repair_time = predict_DV(X_plot,
+                                     mdl.gpc,
+                                     mdl_time_hit.kr,
+                                     mdl_time_miss.kr,
+                                     outcome=time_var)
+
+xx = mdl.xx
+yy = mdl.yy
+zz = np.array(grid_repair_time)/4764.71
+Z = zz.reshape(xx.shape)
+
+fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(13, 4), sharey=True)
+plt.setp((ax1, ax2, ax3), yticks=np.arange(0.1, 1.1, step=0.1), ylim=[0.0, 1.0])
+
+yyy = yy[:,1]
+cs = ax1.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
+                 levels=np.arange(0.7, 1.6, step=0.1))
+ax1.clabel(cs, fontsize=label_size)
+ax1.set_ylabel('% of replacement time', fontsize=axis_font)
+ax1.set_xlabel('$T_M$', fontsize=axis_font)
+ax1.grid()
+
+####################################################################
+xvar = 'RI'
+yvar = 'gapRatio'
+
+res = 100
+step = 0.01
+y_bounds = [0.7, 0.7+res*step-step]
+
+X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
+                                    y_bounds=y_bounds)
+
+grid_repair_time = predict_DV(X_plot,
+                                     mdl.gpc,
+                                     mdl_time_hit.kr,
+                                     mdl_time_miss.kr,
+                                     outcome=time_var)
+
+xx = mdl.xx
+yy = mdl.yy
+zz = np.array(grid_repair_time)/4764.71
+Z = zz.reshape(xx.shape)
+
+yyy = yy[:,1]
+cs = ax2.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
+                 levels=np.arange(0.7, 1.6, step=0.1))
+
+ax2.clabel(cs, fontsize=label_size)
+#ax2.set_ylabel('% of replacement', fontsize=axis_font)
+ax2.set_xlabel('$R_y$', fontsize=axis_font)
+ax2.grid()
+
+####################################################################
+xvar = 'zetaM'
+yvar = 'gapRatio'
+
+res = 100
+step = 0.01
+y_bounds = [0.7, 0.7+res*step-step]
+
+X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
+                                    y_bounds=y_bounds)
+grid_repair_time = predict_DV(X_plot,
+                                     mdl.gpc,
+                                     mdl_time_hit.kr,
+                                     mdl_time_miss.kr,
+                                     outcome=time_var)
+
+xx = mdl.xx
+yy = mdl.yy
+zz = np.array(grid_repair_time)/4764.71
+Z = zz.reshape(xx.shape)
+
+yyy = yy[:,1]
+cs = ax3.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
+                 levels=np.arange(0.7, 1.6, step=0.1))
+ax3.clabel(cs, fontsize=label_size)
+
+#ax3.set_ylabel('% of replacement', fontsize=axis_font)
+ax3.set_xlabel('$\zeta_M$', fontsize=axis_font)
+ax3.grid()
+plt.show()
+fig.tight_layout()
+
+#%% Big collapse risk prediction plot (GP-OR)
+plt.rcParams["font.family"] = "serif"
+plt.rcParams["mathtext.fontset"] = "dejavuserif"
+axis_font = 18
+subt_font = 18
+label_size = 14
+mpl.rcParams['xtick.labelsize'] = label_size 
+mpl.rcParams['ytick.labelsize'] = label_size 
+
+plt.close('all')
+
+xvar = 'Tm'
+yvar = 'gapRatio'
+
+res = 100
+step = 0.01
+y_bounds = [0.7, 0.7+res*step-step]
+X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
+                                    y_bounds=y_bounds)
+
+grid_drift = predict_DV(X_plot,
+                                     mdl.gpc,
+                                     mdl_drift_hit.o_ridge,
+                                     mdl_drift_miss.o_ridge,
+                                     outcome='max_drift')
+
+from scipy.stats import lognorm
+from math import log, exp
+
+xx = mdl.xx
+yy = mdl.yy
+
+beta_drift = 0.25
+mean_log_drift = exp(log(0.1) - beta_drift*0.9945)
+ln_dist = lognorm(s=beta_drift, scale=mean_log_drift)
+
+zz = ln_dist.cdf(np.array(grid_drift))
+Z = zz.reshape(xx.shape)
+
+fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(13, 4), sharey=True)
+plt.setp((ax1, ax2, ax3), yticks=np.arange(0.02, 0.22, step=0.02), ylim=[0.0, 0.2])
+
+yyy = yy[:,1]
+cs = ax1.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
+                 levels=np.arange(0.7, 1.6, step=0.1))
+ax1.clabel(cs, fontsize=label_size)
+ax1.set_ylabel('Collapse risk', fontsize=axis_font)
+ax1.set_xlabel('$T_M$', fontsize=axis_font)
+ax1.grid()
+
+####################################################################
+xvar = 'RI'
+yvar = 'gapRatio'
+
+res = 100
+step = 0.01
+y_bounds = [0.7, 0.7+res*step-step]
+
+X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
+                                    y_bounds=y_bounds)
+
+grid_drift = predict_DV(X_plot,
+                                     mdl.gpc,
+                                     mdl_drift_hit.o_ridge,
+                                     mdl_drift_miss.o_ridge,
+                                     outcome='max_drift')
+
+xx = mdl.xx
+yy = mdl.yy
+
+zz = ln_dist.cdf(np.array(grid_drift))
+Z = zz.reshape(xx.shape)
+
+yyy = yy[:,1]
+cs = ax2.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
+                 levels=np.arange(0.7, 1.6, step=0.1))
+
+ax2.clabel(cs, fontsize=label_size)
+#ax2.set_ylabel('% of replacement', fontsize=axis_font)
+ax2.set_xlabel('$R_y$', fontsize=axis_font)
+ax2.grid()
+
+####################################################################
+xvar = 'zetaM'
+yvar = 'gapRatio'
+
+res = 100
+step = 0.01
+y_bounds = [0.7, 0.7+res*step-step]
+
+X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
+                                    y_bounds=y_bounds)
+grid_drift = predict_DV(X_plot,
+                                     mdl.gpc,
+                                     mdl_drift_hit.o_ridge,
+                                     mdl_drift_miss.o_ridge,
+                                     outcome='max_drift')
+
+xx = mdl.xx
+yy = mdl.yy
+
+zz = ln_dist.cdf(np.array(grid_drift))
+Z = zz.reshape(xx.shape)
+
+yyy = yy[:,1]
+cs = ax3.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
+                 levels=np.arange(0.7, 1.6, step=0.1))
+ax3.clabel(cs, fontsize=label_size)
+
+#ax3.set_ylabel('% of replacement', fontsize=axis_font)
+ax3.set_xlabel('$\zeta_M$', fontsize=axis_font)
+ax3.grid()
+plt.show()
+fig.tight_layout()

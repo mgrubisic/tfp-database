@@ -36,8 +36,8 @@ df['max_drift'] = df[["driftMax1", "driftMax2", "driftMax3"]].max(axis=1)
 # df['max_accel'] = df[["accMax0", "accMax1", "accMax2", "accMax3"]].max(axis=1)
 # df['max_vel'] = df[["velMax0", "velMax1", "velMax2", "velMax3"]].max(axis=1)
 #%% Prepare data
-cost_var = 'cost_50%'
-time_var = 'time_u_50%'
+cost_var = 'cost_mean'
+time_var = 'time_u_mean'
 
 # make prediction objects for impacted and non-impacted datasets
 df_hit = df[df['impacted'] == 1]
@@ -189,8 +189,8 @@ ax.scatter(df_miss['gapRatio'], df_miss['RI'], df_miss[cost_var],
 
 ax.set_xlabel('Gap ratio')
 ax.set_ylabel('Ry')
-ax.set_zlabel('Median loss ($)')
-ax.set_title('Median cost predictions given no impact (SVR)')
+ax.set_zlabel('Mean loss ($)')
+ax.set_title('Mean cost predictions given no impact (SVR)')
 ax.set_zlim([0, 5e5])
 plt.show()
 
@@ -227,8 +227,8 @@ ax.scatter(df_miss['gapRatio'], df_miss['RI'], df_miss[cost_var],
 
 ax.set_xlabel('Gap ratio')
 ax.set_ylabel('Ry')
-ax.set_zlabel('Median loss ($)')
-ax.set_title('Median cost predictions given no impact (RBF kernel ridge)')
+ax.set_zlabel('Mean loss ($)')
+ax.set_title('Mean cost predictions given no impact (RBF kernel ridge)')
 ax.set_zlim([0, 5e5])
 plt.show()
 
@@ -265,8 +265,8 @@ ax.scatter(df_miss['gapRatio'], df_miss['RI'], df_miss[cost_var],
 
 ax.set_xlabel('Gap ratio')
 ax.set_ylabel('Ry')
-ax.set_zlabel('Median loss ($)')
-ax.set_title('Median cost predictions given no impact (GP regression)')
+ax.set_zlabel('Mean loss ($)')
+ax.set_title('Mean cost predictions given no impact (GP regression)')
 ax.set_zlim([0, 1e6])
 plt.show()
 
@@ -290,18 +290,18 @@ comparison_cost_miss = np.array([mdl_miss.y_test,
                                       cost_pred_miss]).transpose()
 
 #%% aggregate the two models
-dataset_mean_repair_cost = predict_DV(mdl.X,
+dataset_repair_cost = predict_DV(mdl.X,
                                         mdl.log_reg,
                                         mdl_hit.svr,
                                         mdl_miss.svr)
 comparison_cost = np.array([df[cost_var],
-                            np.ravel(dataset_mean_repair_cost)]).transpose()
+                            np.ravel(dataset_repair_cost)]).transpose()
 
 #%% Big cost prediction plot (SVC-SVR)
 
 X_plot = mdl.make_2D_plotting_space(100)
 
-grid_mean_repair_cost = predict_DV(X_plot,
+grid_repair_cost = predict_DV(X_plot,
                                      mdl.svc,
                                      mdl_hit.svr,
                                      mdl_miss.svr,
@@ -309,7 +309,7 @@ grid_mean_repair_cost = predict_DV(X_plot,
 
 xx = mdl.xx
 yy = mdl.yy
-Z = np.array(grid_mean_repair_cost)
+Z = np.array(grid_repair_cost)
 Z = Z.reshape(xx.shape)
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -329,15 +329,15 @@ cset = ax.contour(xx, yy, Z, zdir='y', offset=ylim[1], cmap=plt.cm.coolwarm)
 
 ax.set_xlabel('Gap ratio')
 ax.set_ylabel('Ry')
-ax.set_zlabel('Median loss ($)')
-ax.set_title('Median cost predictions: SVC-impact, SVR-loss')
+ax.set_zlabel('Mean loss ($)')
+ax.set_title('Mean cost predictions: SVC-impact, SVR-loss')
 plt.show()
 
 #%% Big cost prediction plot (SVC-KR)
 
 X_plot = mdl.make_2D_plotting_space(100)
 
-grid_mean_repair_cost = predict_DV(X_plot,
+grid_repair_cost = predict_DV(X_plot,
                                      mdl.svc,
                                      mdl_hit.kr,
                                      mdl_miss.kr,
@@ -345,7 +345,7 @@ grid_mean_repair_cost = predict_DV(X_plot,
 
 xx = mdl.xx
 yy = mdl.yy
-Z = np.array(grid_mean_repair_cost)
+Z = np.array(grid_repair_cost)
 Z = Z.reshape(xx.shape)
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -365,15 +365,15 @@ cset = ax.contour(xx, yy, Z, zdir='y', offset=ylim[1], cmap=plt.cm.coolwarm)
 
 ax.set_xlabel('Gap ratio')
 ax.set_ylabel('Ry')
-ax.set_zlabel('Median loss ($)')
-ax.set_title('Median cost predictions: SVC-impact, KR-loss')
+ax.set_zlabel('Mean loss ($)')
+ax.set_title('Mean cost predictions: SVC-impact, KR-loss')
 plt.show()
 
 #%% Big cost prediction plot (KLR-SVR)
 
 X_plot = mdl.make_2D_plotting_space(100)
 K_plot = mdl.get_kernel(X_plot, kernel_name=krn, gamma=gam)
-grid_mean_repair_cost = predict_DV(X_plot,
+grid_repair_cost = predict_DV(X_plot,
                                      mdl.log_reg_kernel,
                                      mdl_hit.svr,
                                      mdl_miss.svr,
@@ -381,7 +381,7 @@ grid_mean_repair_cost = predict_DV(X_plot,
 
 xx = mdl.xx
 yy = mdl.yy
-Z = np.array(grid_mean_repair_cost)
+Z = np.array(grid_repair_cost)
 Z = Z.reshape(xx.shape)
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -401,15 +401,15 @@ cset = ax.contour(xx, yy, Z, zdir='y', offset=ylim[1], cmap=plt.cm.coolwarm)
 
 ax.set_xlabel('Gap ratio')
 ax.set_ylabel('Ry')
-ax.set_zlabel('Median loss ($)')
-ax.set_title('Median cost predictions: KLR-impact, SVR-loss')
+ax.set_zlabel('Mean loss ($)')
+ax.set_title('Mean cost predictions: KLR-impact, SVR-loss')
 plt.show()
 
 #%% Big cost prediction plot (KLR-KR)
 
 X_plot = mdl.make_2D_plotting_space(100)
 K_plot = mdl.get_kernel(X_plot, kernel_name=krn, gamma=gam)
-grid_mean_repair_cost = predict_DV(X_plot,
+grid_repair_cost = predict_DV(X_plot,
                                      mdl.log_reg_kernel,
                                      mdl_hit.kr,
                                      mdl_miss.kr,
@@ -417,7 +417,7 @@ grid_mean_repair_cost = predict_DV(X_plot,
 
 xx = mdl.xx
 yy = mdl.yy
-Z = np.array(grid_mean_repair_cost)
+Z = np.array(grid_repair_cost)
 Z = Z.reshape(xx.shape)
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -437,15 +437,15 @@ cset = ax.contour(xx, yy, Z, zdir='y', offset=ylim[1], cmap=plt.cm.coolwarm)
 
 ax.set_xlabel('Gap ratio')
 ax.set_ylabel('Ry')
-ax.set_zlabel('Median loss ($)')
-ax.set_title('Median cost predictions: KLR-impact, KR-loss')
+ax.set_zlabel('Mean loss ($)')
+ax.set_title('Mean cost predictions: KLR-impact, KR-loss')
 plt.show()
 
 #%% Big cost prediction plot (GP-SVR)
 
 X_plot = mdl.make_2D_plotting_space(100)
 
-grid_mean_repair_cost = predict_DV(X_plot,
+grid_repair_cost = predict_DV(X_plot,
                                      mdl.gpc,
                                      mdl_hit.svr,
                                      mdl_miss.svr,
@@ -453,7 +453,7 @@ grid_mean_repair_cost = predict_DV(X_plot,
 
 xx = mdl.xx
 yy = mdl.yy
-Z = np.array(grid_mean_repair_cost)
+Z = np.array(grid_repair_cost)
 Z = Z.reshape(xx.shape)
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -473,8 +473,8 @@ cset = ax.contour(xx, yy, Z, zdir='y', offset=ylim[1], cmap=plt.cm.coolwarm)
 
 ax.set_xlabel('Gap ratio')
 ax.set_ylabel('Ry')
-ax.set_zlabel('Median loss ($)')
-ax.set_title('Median cost predictions: GP-impact, SVR-loss')
+ax.set_zlabel('Mean loss ($)')
+ax.set_title('Mean cost predictions: GP-impact, SVR-loss')
 plt.show()
 
 
@@ -482,7 +482,7 @@ plt.show()
 
 X_plot = mdl.make_2D_plotting_space(100)
 
-grid_mean_repair_cost = predict_DV(X_plot,
+grid_repair_cost = predict_DV(X_plot,
                                      mdl.gpc,
                                      mdl_hit.kr,
                                      mdl_miss.kr,
@@ -490,7 +490,7 @@ grid_mean_repair_cost = predict_DV(X_plot,
 
 xx = mdl.xx
 yy = mdl.yy
-Z = np.array(grid_mean_repair_cost)
+Z = np.array(grid_repair_cost)
 Z = Z.reshape(xx.shape)
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -510,15 +510,15 @@ cset = ax.contour(xx, yy, Z, zdir='y', offset=ylim[1], cmap=plt.cm.coolwarm)
 
 ax.set_xlabel('Gap ratio')
 ax.set_ylabel('Ry')
-ax.set_zlabel('Median loss ($)')
-ax.set_title('Median cost predictions: GP-impact, KR-loss')
+ax.set_zlabel('Mean loss ($)')
+ax.set_title('Mean cost predictions: GP-impact, KR-loss')
 plt.show()
 
 #%% Big cost prediction plot (GPC-GPR)
 
 X_plot = mdl.make_2D_plotting_space(100)
 
-grid_mean_repair_cost = predict_DV(X_plot,
+grid_repair_cost = predict_DV(X_plot,
                                      mdl.gpc,
                                      mdl_hit.gpr,
                                      mdl_miss.gpr,
@@ -526,7 +526,7 @@ grid_mean_repair_cost = predict_DV(X_plot,
 
 xx = mdl.xx
 yy = mdl.yy
-Z = np.array(grid_mean_repair_cost)
+Z = np.array(grid_repair_cost)
 Z = Z.reshape(xx.shape)
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -546,8 +546,8 @@ cset = ax.contour(xx, yy, Z, zdir='y', offset=ylim[1], cmap=plt.cm.coolwarm)
 
 ax.set_xlabel('Gap ratio')
 ax.set_ylabel('Ry')
-ax.set_zlabel('Median loss ($)')
-ax.set_title('Median cost predictions: GP-impact, GP-loss')
+ax.set_zlabel('Mean loss ($)')
+ax.set_title('Mean cost predictions: GP-impact, GP-loss')
 plt.show()
 
 #%% Fit downtime (SVR)
@@ -602,8 +602,8 @@ comparison_time_miss = np.array([mdl_time_miss.y_test,
 #
 #ax.set_xlabel('Gap ratio')
 #ax.set_ylabel('Ry')
-#ax.set_zlabel('Median downtime (worker-day)')
-#ax.set_title('Median sequential downtime predictions given no impact (SVR)')
+#ax.set_zlabel('Mean downtime (worker-day)')
+#ax.set_title('Mean sequential downtime predictions given no impact (SVR)')
 #ax.set_zlim([0, 500])
 #plt.show()
 
@@ -611,7 +611,7 @@ comparison_time_miss = np.array([mdl_time_miss.y_test,
 
 X_plot = mdl.make_2D_plotting_space(100)
 
-grid_mean_downtime = predict_DV(X_plot,
+grid_downtime = predict_DV(X_plot,
                                   mdl.gpc,
                                   mdl_time_hit.svr,
                                   mdl_time_miss.svr,
@@ -619,7 +619,7 @@ grid_mean_downtime = predict_DV(X_plot,
 
 xx = mdl.xx
 yy = mdl.yy
-Z = np.array(grid_mean_downtime)
+Z = np.array(grid_downtime)
 Z = Z.reshape(xx.shape)
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -639,15 +639,15 @@ cset = ax.contour(xx, yy, Z, zdir='y', offset=ylim[1], cmap=plt.cm.coolwarm)
 
 ax.set_xlabel('Gap ratio')
 ax.set_ylabel('Ry')
-ax.set_zlabel('Median downtime (worker-days)')
-ax.set_title('Median sequential downtime predictions: GP-impact, SVR-time')
+ax.set_zlabel('Mean downtime (worker-days)')
+ax.set_title('Mean sequential downtime predictions: GP-impact, SVR-time')
 plt.show()
 
 #%% Big downtime prediction plot (GP-KR)
 
 X_plot = mdl.make_2D_plotting_space(100)
 
-grid_mean_downtime = predict_DV(X_plot,
+grid_downtime = predict_DV(X_plot,
                                   mdl.gpc,
                                   mdl_time_hit.kr,
                                   mdl_time_miss.kr,
@@ -655,7 +655,7 @@ grid_mean_downtime = predict_DV(X_plot,
 
 xx = mdl.xx
 yy = mdl.yy
-Z = np.array(grid_mean_downtime)
+Z = np.array(grid_downtime)
 Z = Z.reshape(xx.shape)
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -675,15 +675,15 @@ cset = ax.contour(xx, yy, Z, zdir='y', offset=ylim[1], cmap=plt.cm.coolwarm)
 
 ax.set_xlabel('Gap ratio')
 ax.set_ylabel('Ry')
-ax.set_zlabel('Median downtime (worker-days)')
-ax.set_title('Median sequential downtime predictions: GP-impact, KR-time')
+ax.set_zlabel('Mean downtime (worker-days)')
+ax.set_title('Mean sequential downtime predictions: GP-impact, KR-time')
 plt.show()
 
 #%% Big downtime prediction plot (SVC-KR)
 
 X_plot = mdl.make_2D_plotting_space(100)
 
-grid_mean_downtime = predict_DV(X_plot,
+grid_downtime = predict_DV(X_plot,
                                   mdl.svc,
                                   mdl_time_hit.kr,
                                   mdl_time_miss.kr,
@@ -691,7 +691,7 @@ grid_mean_downtime = predict_DV(X_plot,
 
 xx = mdl.xx
 yy = mdl.yy
-Z = np.array(grid_mean_downtime)
+Z = np.array(grid_downtime)
 Z = Z.reshape(xx.shape)
 
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -711,8 +711,8 @@ cset = ax.contour(xx, yy, Z, zdir='y', offset=ylim[1], cmap=plt.cm.coolwarm)
 
 ax.set_xlabel('Gap ratio')
 ax.set_ylabel('Ry')
-ax.set_zlabel('Median downtime (worker-days)')
-ax.set_title('Median sequential downtime predictions: SVC-impact, KR-time')
+ax.set_zlabel('Mean downtime (worker-days)')
+ax.set_title('Mean sequential downtime predictions: SVC-impact, KR-time')
 plt.show()
 
 #%% fit collapse models (SVR and KR)
@@ -774,7 +774,7 @@ plt.show()
 from scipy.stats import lognorm
 from math import log, exp
 beta_drift = 0.25
-mean_log_drift = exp(log(0.05) - beta_drift*0.9945)
+mean_log_drift = exp(log(0.1) - beta_drift*0.9945)
 ln_dist = lognorm(s=beta_drift, scale=mean_log_drift)
 
 Z = ln_dist.cdf(np.array(grid_drift))
@@ -845,7 +845,7 @@ print("GPC-OR drift prediction for %d inputs in %.3f s" % (X_space.shape[0],
 from scipy.stats import lognorm
 from math import log, exp
 beta_drift = 0.25
-mean_log_drift = exp(log(0.5) - beta_drift*0.9945)
+mean_log_drift = exp(log(0.1) - beta_drift*0.9945)
 ln_dist = lognorm(s=beta_drift, scale=mean_log_drift)
 
 space_collapse_risk = pd.DataFrame(ln_dist.cdf(space_drift),
@@ -967,6 +967,7 @@ best_design = X_design.loc[cheapest_design_idx]
 design_downtime = space_downtime.iloc[cheapest_design_idx].item()
 design_repair_cost = space_repair_cost.iloc[cheapest_design_idx].item()
 design_collapse_risk = space_collapse_risk.iloc[cheapest_design_idx].item()
+design_PID = space_drift.iloc[cheapest_design_idx].item()
 
 print(best_design)
 
@@ -978,6 +979,8 @@ print('Predicted repair time (sequential): ',
       f'{design_downtime:,.2f}', 'worker-days')
 print('Predicted collapse risk: ',
       f'{design_collapse_risk:.2%}')
+print('Predicted peak interstory drift: ',
+      f'{design_PID:.2%}')
 
 #%% Fit costs (SVR, across all data)
 
@@ -1004,8 +1007,8 @@ print('Predicted collapse risk: ',
 #
 #ax.set_xlabel('Gap ratio')
 #ax.set_ylabel('Ry')
-#ax.set_zlabel('Median loss ($)')
-#ax.set_title('Median cost predictions across all data (SVR)')
+#ax.set_zlabel('Mean loss ($)')
+#ax.set_title('Mean cost predictions across all data (SVR)')
 #plt.show()
         
 

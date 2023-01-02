@@ -78,15 +78,29 @@ class Prediction:
         
     # make a generalized 2D plotting grid, defaulted to gap and Ry
     # grid is based on the bounds of input data
-    # TODO: make a version for Tm and zetaM
-    def make_2D_plotting_space(self, res, x_var='gapRatio', y_var='RI'):
-        xx, yy = np.meshgrid(np.linspace(min(self.X[x_var]),
-                                         max(self.X[x_var]),
+    def make_2D_plotting_space(self, res, x_var='gapRatio', y_var='RI',
+                               x_bounds=None, y_bounds=None):
+        
+        if x_bounds == None:
+            x_min = min(self.X[x_var])
+            x_max = max(self.X[x_var])
+        else:
+            x_min = x_bounds[0]
+            x_max = x_bounds[1]
+        if y_bounds == None:
+            y_min = min(self.X[y_var])
+            y_max = max(self.X[y_var])
+        else:
+            y_min = y_bounds[0]
+            y_max = y_bounds[1]
+        xx, yy = np.meshgrid(np.linspace(x_min,
+                                         x_max,
                                          res),
-                             np.linspace(min(self.X[y_var]),
-                                         max(self.X[y_var]),
+                             np.linspace(y_min,
+                                         y_max,
                                          res))
 
+        # don't code like this
         if (x_var=='gapRatio') and (y_var=='RI'):
             third_var = 'Tm'
             fourth_var = 'zetaM'
@@ -101,6 +115,18 @@ class Prediction:
             
         if (x_var=='Tm') and (y_var=='zetaM'):
             third_var = 'gapRatio'
+            fourth_var = 'RI'
+            
+        if (x_var=='Tm') and (y_var=='gapRatio'):
+            third_var = 'zetaM'
+            fourth_var = 'RI'
+            
+        if (x_var=='RI') and (y_var=='gapRatio'):
+            third_var = 'Tm'
+            fourth_var = 'zetaM'
+            
+        if (x_var=='zetaM') and (y_var=='gapRatio'):
+            third_var = 'Tm'
             fourth_var = 'RI'
             
         if (x_var=='RI') and (y_var=='Tm'):
