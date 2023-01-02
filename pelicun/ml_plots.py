@@ -28,24 +28,26 @@ df = pd.concat([full_isolation_data, loss_data], axis=1)
 df['max_drift'] = df[["driftMax1", "driftMax2", "driftMax3"]].max(axis=1)
 
 #%% Prepare data
+cost_var = 'cost_50%'
+time_var = 'time_u_50%'
 
 # make prediction objects for impacted and non-impacted datasets
 df_hit = df[df['impacted'] == 1]
 mdl_hit = Prediction(df_hit)
-mdl_hit.set_outcome('cost_50%')
+mdl_hit.set_outcome(cost_var)
 mdl_hit.test_train_split(0.2)
 
 df_miss = df[df['impacted'] == 0]
 mdl_miss = Prediction(df_miss)
-mdl_miss.set_outcome('cost_50%')
+mdl_miss.set_outcome(cost_var)
 mdl_miss.test_train_split(0.2)
 
 mdl_time_hit = Prediction(df_hit)
-mdl_time_hit.set_outcome('time_u_50%')
+mdl_time_hit.set_outcome(time_var)
 mdl_time_hit.test_train_split(0.2)
 
 mdl_time_miss = Prediction(df_miss)
-mdl_time_miss.set_outcome('time_u_50%')
+mdl_time_miss.set_outcome(time_var)
 mdl_time_miss.test_train_split(0.2)
 
 mdl_drift_hit = Prediction(df_hit)
@@ -221,7 +223,7 @@ fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(13, 4))
 sns.boxplot(y="cost_50%", x= "impacted", data=df,  showfliers=False,
             boxprops={'facecolor': 'none'}, medianprops={'color': 'black'},
             width=0.6, ax=ax1)
-sns.stripplot(x='impacted', y='cost_50%', data=df, ax=ax1,
+sns.stripplot(x='impacted', y=cost_var, data=df, ax=ax1,
               color='black', jitter=True)
 ax1.set_title('Median repair cost', fontsize=subt_font)
 ax1.set_ylabel('Cost [USD]', fontsize=axis_font)
@@ -231,7 +233,7 @@ ax1.set_yscale('log')
 sns.boxplot(y="time_u_50%", x= "impacted", data=df,  showfliers=False,
             boxprops={'facecolor': 'none'}, medianprops={'color': 'black'},
             width=0.6, ax=ax2)
-sns.stripplot(x='impacted', y='time_u_50%', data=df, ax=ax2,
+sns.stripplot(x='impacted', y=time_var, data=df, ax=ax2,
               color='black', jitter=True)
 ax2.set_title('Median sequential repair time', fontsize=subt_font)
 ax2.set_ylabel('Time [worker-day]', fontsize=axis_font)
