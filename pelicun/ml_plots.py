@@ -617,3 +617,38 @@ ax3.set_xlabel('$\zeta_M$', fontsize=axis_font)
 ax3.grid()
 plt.show()
 fig.tight_layout()
+
+#%% read out results
+
+df_val = pd.read_csv('./results/loss_estimate_val.csv', index_col=None)
+df_base = pd.read_csv('./results/loss_estimate_base.csv', index_col=None)
+
+design_repair_cost = df_val['cost_mean'][2]
+design_downtime = df_val['time_u_mean'][2]
+design_collapse_risk = df_val['collapse_freq'][2]
+design_replacement_risk = df_val['replacement_freq'][2]
+
+print('====== INVERSE DESIGN ======')
+print('Estimated mean repair cost: ',
+      f'${design_repair_cost:,.2f}')
+print('Estimated repair time (sequential): ',
+      f'{design_downtime:,.2f}', 'worker-days')
+print('Estimated collapse frequency: ',
+      f'{design_collapse_risk:.2%}')
+print('Estimated replacement frequency: ',
+      f'{design_replacement_risk:.2%}')
+
+baseline_repair_cost = df_base['cost_mean'][2]
+baseline_downtime = df_base['time_u_mean'][2]
+baseline_collapse_risk = df_base['collapse_freq'][2]
+baseline_replacement_risk = df_base['replacement_freq'][2]
+
+print('====== BASELINE DESIGN ======')
+print('Estimated mean repair cost: ',
+      f'${baseline_repair_cost:,.2f}')
+print('Estimated repair time (sequential): ',
+      f'{baseline_downtime:,.2f}', 'worker-days')
+print('Estimated collapse frequency: ',
+      f'{baseline_collapse_risk:.2%}')
+print('Estimated replacement frequency: ',
+      f'{baseline_replacement_risk:.2%}')
