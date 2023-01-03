@@ -20,6 +20,83 @@ plt.close('all')
 idx = pd.IndexSlice
 pd.options.display.max_rows = 30
 
+def get_steel_coefs(df, steel_per_unit=1.25, W=3037.5, Ws=2227.5):
+    col_str = df['col']
+    beam_str = df['beam']
+    rbeam_str = df['roofBeam']
+    
+    col_wt = np.array([float(member.split('X',1)[1]) for member in col_str])
+    beam_wt = np.array([float(member.split('X',1)[1]) for member in beam_str])
+    rbeam_wt = np.array([float(member.split('X',1)[1]) for member in rbeam_str])
+    
+    # find true steel costs
+    n_frames = 4
+    n_cols = 12
+    L_col = 39.0 #ft
+    
+    n_beam_per_frame = 6
+    L_beam = 30.0 #ft
+    
+    n_roof_per_frame = 3
+    L_roof = 30.0 #ft
+    
+    bldg_wt = ((L_col * n_cols)*col_wt +
+               (L_beam * n_beam_per_frame * n_frames)*beam_wt +
+               (L_roof * n_roof_per_frame * n_frames)*rbeam_wt
+               )
+    
+    steel_cost = steel_per_unit*bldg_wt
+    
+    # find design base shear as a feature
+    pi = 3.14159
+    g = 386.4
+    kM = (1/g)*(2*pi/df['Tm'])**2
+    S1 = 1.017
+    Dm = g*S1*df['Tm']/(4*pi**2*df['Bm'])
+    Vb = Dm * kM * Ws / 2
+    Vst = Vb*(Ws/W)**(1 - 2.5*df['zetaM'])
+    Vs = np.array(Vst/df['RI']).reshape(-1,1)
+    
+    # linear regress cost as f(base shear)
+    from sklearn.linear_model import LinearRegression
+    reg = LinearRegression()
+    reg.fit(X=Vs, y=steel_cost)
+    return({'coef':reg.coef_, 'intercept':reg.intercept_})
+    
+
+    
+def calc_upfront_cost(X_query, steel_coefs,
+                      land_cost_per_sqft=2837/(3.28**2),
+                      W=3037.5, Ws=2227.5):
+    
+    from scipy.interpolate import interp1d
+    zeta_ref = [0.02, 0.05, 0.10, 0.20, 0.30, 0.40, 0.50]
+    Bm_ref = [0.8, 1.0, 1.2, 1.5, 1.7, 1.9, 2.0]
+    interp_f = interp1d(zeta_ref, Bm_ref)
+    Bm = interp_f(X_query['zetaM'])
+    
+    # calculate moat gap
+    pi = 3.14159
+    g = 386.4
+    S1 = 1.017
+    SaTm = S1/X_query['Tm']
+    moat_gap = X_query['gapRatio'] * (g*(SaTm/Bm)*X_query['Tm']**2)/(4*pi**2)
+    
+    # calculate design base shear
+    kM = (1/g)*(2*pi/X_query['Tm'])**2
+    Dm = g*S1*X_query['Tm']/(4*pi**2*Bm)
+    Vb = Dm * kM * Ws / 2
+    Vst = Vb*(Ws/W)**(1 - 2.5*X_query['zetaM'])
+    Vs = np.array(Vst/X_query['RI']).reshape(-1,1)
+    
+    steel_cost = np.array(steel_coefs['intercept'] +
+                          steel_coefs['coef']*Vs).ravel()
+#    land_area = 2*(90.0*12.0)*moat_gap - moat_gap**2
+    land_area = (90*12 + moat_gap)**2
+    land_cost = land_cost_per_sqft/144.0 * land_area
+    
+    return(steel_cost + land_cost)
+
 #%% concat with other data
 loss_data = pd.read_csv('./results/loss_estimate_data.csv', index_col=None)
 full_isolation_data = pd.read_csv('full_isolation_data.csv', index_col=None)
@@ -89,7 +166,7 @@ label_size = 12
 mpl.rcParams['xtick.labelsize'] = label_size 
 mpl.rcParams['ytick.labelsize'] = label_size 
 
-plt.close('all')
+#plt.close('all')
 # make grid and plot classification predictions
 
 fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(13, 4))
@@ -204,7 +281,7 @@ lg.get_title().set_fontsize(axis_font) #legend 'Title' fontsize
 fig.tight_layout()
 plt.show()
 
-#%%
+#%% impact effect
 
 plt.rcParams["font.family"] = "serif"
 plt.rcParams["mathtext.fontset"] = "dejavuserif"
@@ -214,28 +291,28 @@ label_size = 14
 mpl.rcParams['xtick.labelsize'] = label_size 
 mpl.rcParams['ytick.labelsize'] = label_size 
 
-plt.close('all')
+#plt.close('all')
 import seaborn as sns
 
 # make grid and plot classification predictions
 
 fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(13, 4))
-sns.boxplot(y="cost_50%", x= "impacted", data=df,  showfliers=False,
+sns.boxplot(y=cost_var, x= "impacted", data=df,  showfliers=False,
             boxprops={'facecolor': 'none'}, medianprops={'color': 'black'},
             width=0.6, ax=ax1)
 sns.stripplot(x='impacted', y=cost_var, data=df, ax=ax1,
               color='black', jitter=True)
-ax1.set_title('Median repair cost', fontsize=subt_font)
+ax1.set_title('Mean repair cost', fontsize=subt_font)
 ax1.set_ylabel('Cost [USD]', fontsize=axis_font)
 ax1.set_xlabel('Impact', fontsize=axis_font)
 ax1.set_yscale('log')
 
-sns.boxplot(y="time_u_50%", x= "impacted", data=df,  showfliers=False,
+sns.boxplot(y=time_var, x= "impacted", data=df,  showfliers=False,
             boxprops={'facecolor': 'none'}, medianprops={'color': 'black'},
             width=0.6, ax=ax2)
 sns.stripplot(x='impacted', y=time_var, data=df, ax=ax2,
               color='black', jitter=True)
-ax2.set_title('Median sequential repair time', fontsize=subt_font)
+ax2.set_title('Mean sequential repair time', fontsize=subt_font)
 ax2.set_ylabel('Time [worker-day]', fontsize=axis_font)
 ax2.set_xlabel('Impact', fontsize=axis_font)
 ax2.set_yscale('log')
@@ -256,42 +333,193 @@ fig.tight_layout()
 
 # fit impacted set
 mdl_hit.fit_svr()
+mdl_hit.fit_kernel_ridge(kernel_name='rbf')
+
+mdl_time_hit.fit_svr()
 mdl_time_hit.fit_kernel_ridge(kernel_name='rbf')
+
+mdl_drift_hit.fit_kernel_ridge(kernel_name='rbf')
 mdl_drift_hit.fit_ols_ridge()
 
 # fit no impact set
 mdl_miss.fit_svr()
+mdl_miss.fit_kernel_ridge(kernel_name='rbf')
+
+mdl_time_miss.fit_svr()
 mdl_time_miss.fit_kernel_ridge(kernel_name='rbf')
+
+mdl_drift_miss.fit_kernel_ridge(kernel_name='rbf')
 mdl_drift_miss.fit_ols_ridge()
 
 #%% 3d surf
+plt.rcParams["font.family"] = "serif"
+plt.rcParams["mathtext.fontset"] = "dejavuserif"
+axis_font = 18
+subt_font = 18
+label_size = 12
+mpl.rcParams['xtick.labelsize'] = label_size 
+mpl.rcParams['ytick.labelsize'] = label_size 
 
-#plt.setp((ax1, ax2, ax3), xticks=np.arange(0.5, 4.0, step=0.5),
-#        yticks=np.arange(0.1, 1.1, step=0.1))
-#fig=plt.figure(figsize=(13, 4))
-#ax1=fig.add_subplot(1, 3, 1)
-#ax2=fig.add_subplot(1, 3, 2)
-#ax3=fig.add_subplot(1, 3, 3)
+#plt.close('all')
 
-# Plot the surface.
-#ax1=fig.add_subplot(1, 3, 1, projection='3d')
-#surf = ax1.plot_surface(xx, yy, Z, cmap=plt.cm.gist_gray,
-#                       linewidth=0, antialiased=False, alpha=0.4)
+fig = plt.figure(figsize=(13, 8))
 
-#ax1.scatter(df[xvar], df[yvar], df[cost_var]/8.1e6, color='white',
-#           edgecolors='k', alpha = 0.5)
-#
-#xlim = ax1.get_xlim()
-#ylim = ax1.get_ylim()
-#zlim = ax1.get_zlim()
-#cset = ax1.contour(xx, yy, Z, zdir='z', offset=zlim[0], cmap=plt.cm.gist_gray)
-#cset = ax1.contour(xx, yy, Z, zdir='x', offset=xlim[0], cmap=plt.cm.gist_gray)
-#cset = ax1.contour(xx, yy, Z, zdir='y', offset=ylim[1], cmap=plt.cm.gist_gray)
-#
-#ax1.set_xlabel('Gap ratio', fontsize=axis_font)
-#ax1.set_ylabel('$T_M$', fontsize=axis_font)
+#plt.setp((ax1, ax2), xticks=np.arange(0.5, 4.0, step=0.5),
+#        yticks=np.arange(0.5, 2.5, step=0.5))
+
+
+#################################
+xvar = 'gapRatio'
+yvar = 'RI'
+
+res = 100
+step = 0.01
+X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar)
+
+grid_repair_cost = predict_DV(X_plot,
+                                     mdl.gpc,
+                                     mdl_hit.svr,
+                                     mdl_miss.svr,
+                                     outcome=cost_var)
+
+xx = mdl.xx
+yy = mdl.yy
+zz = np.array(grid_repair_cost)/8.1e6
+Z = zz.reshape(xx.shape)
+
+ax1=fig.add_subplot(2, 2, 1, projection='3d')
+surf = ax1.plot_surface(xx, yy, Z, cmap=plt.cm.gist_gray,
+                       linewidth=0, antialiased=False, alpha=0.4)
+
+ax1.scatter(df[xvar], df[yvar], df[cost_var]/8.1e6, color='white',
+           edgecolors='k', alpha = 0.5)
+
+xlim = ax1.get_xlim()
+ylim = ax1.get_ylim()
+zlim = ax1.get_zlim()
+cset = ax1.contour(xx, yy, Z, zdir='z', offset=zlim[0], cmap=plt.cm.gist_gray)
+cset = ax1.contour(xx, yy, Z, zdir='x', offset=xlim[0], cmap=plt.cm.gist_gray)
+cset = ax1.contour(xx, yy, Z, zdir='y', offset=ylim[1], cmap=plt.cm.gist_gray)
+
+ax1.set_xlabel('Gap ratio', fontsize=axis_font)
+ax1.set_ylabel('$R_y$', fontsize=axis_font)
 #ax1.set_zlabel('Mean loss ($)', fontsize=axis_font)
-#ax1.set_title('Cost: GPC-SVR', fontsize=subt_font)
+ax1.set_title('a) Cost: GPC-SVR', fontsize=subt_font)
+
+#################################
+xvar = 'gapRatio'
+yvar = 'RI'
+
+res = 100
+step = 0.01
+X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar)
+
+grid_repair_cost = predict_DV(X_plot,
+                                     mdl.gpc,
+                                     mdl_hit.kr,
+                                     mdl_miss.kr,
+                                     outcome=cost_var)
+
+xx = mdl.xx
+yy = mdl.yy
+zz = np.array(grid_repair_cost)/8.1e6
+Z = zz.reshape(xx.shape)
+
+ax2=fig.add_subplot(2, 2, 2, projection='3d')
+surf = ax2.plot_surface(xx, yy, Z, cmap=plt.cm.gist_gray,
+                       linewidth=0, antialiased=False, alpha=0.4)
+
+ax2.scatter(df[xvar], df[yvar], df[cost_var]/8.1e6, color='white',
+           edgecolors='k', alpha = 0.5)
+
+xlim = ax2.get_xlim()
+ylim = ax2.get_ylim()
+zlim = ax2.get_zlim()
+cset = ax2.contour(xx, yy, Z, zdir='z', offset=zlim[0], cmap=plt.cm.gist_gray)
+cset = ax2.contour(xx, yy, Z, zdir='x', offset=xlim[0], cmap=plt.cm.gist_gray)
+cset = ax2.contour(xx, yy, Z, zdir='y', offset=ylim[1], cmap=plt.cm.gist_gray)
+
+ax2.set_xlabel('Gap ratio', fontsize=axis_font)
+ax2.set_ylabel('$R_y$', fontsize=axis_font)
+ax2.set_zlabel('% of replacement cost', fontsize=axis_font)
+ax2.set_title('b) Cost: GPC-KR', fontsize=subt_font)
+
+fig.tight_layout()
+
+#################################
+xvar = 'gapRatio'
+yvar = 'RI'
+
+X_plot = mdl.make_2D_plotting_space(100)
+
+grid_downtime = predict_DV(X_plot,
+                          mdl.gpc,
+                          mdl_time_hit.svr,
+                          mdl_time_miss.svr,
+                          outcome=time_var)
+
+xx = mdl.xx
+yy = mdl.yy
+zz = np.array(grid_downtime)/4764.71
+Z = zz.reshape(xx.shape)
+
+ax3=fig.add_subplot(2, 2, 3, projection='3d')
+surf = ax3.plot_surface(xx, yy, Z, cmap=plt.cm.gist_gray,
+                       linewidth=0, antialiased=False, alpha=0.4)
+
+ax3.scatter(df[xvar], df[yvar], df[time_var]/4764.71, color='white',
+           edgecolors='k', alpha = 0.5)
+
+xlim = ax3.get_xlim()
+ylim = ax3.get_ylim()
+zlim = ax3.get_zlim()
+cset = ax3.contour(xx, yy, Z, zdir='z', offset=zlim[0], cmap=plt.cm.gist_gray)
+cset = ax3.contour(xx, yy, Z, zdir='x', offset=xlim[0], cmap=plt.cm.gist_gray)
+cset = ax3.contour(xx, yy, Z, zdir='y', offset=ylim[1], cmap=plt.cm.gist_gray)
+
+ax3.set_xlabel('Gap ratio', fontsize=axis_font)
+ax3.set_ylabel('$R_y$', fontsize=axis_font)
+ax3.set_title('c) Time: GPC-SVR', fontsize=subt_font)
+
+fig.tight_layout()
+
+#################################
+xvar = 'gapRatio'
+yvar = 'RI'
+
+X_plot = mdl.make_2D_plotting_space(100)
+
+grid_downtime = predict_DV(X_plot,
+                          mdl.gpc,
+                          mdl_time_hit.kr,
+                          mdl_time_miss.kr,
+                          outcome=time_var)
+
+xx = mdl.xx
+yy = mdl.yy
+zz = np.array(grid_downtime)/4764.71
+Z = zz.reshape(xx.shape)
+
+ax4=fig.add_subplot(2, 2, 4, projection='3d')
+surf = ax4.plot_surface(xx, yy, Z, cmap=plt.cm.gist_gray,
+                       linewidth=0, antialiased=False, alpha=0.4)
+
+ax4.scatter(df[xvar], df[yvar], df[time_var]/4764.71, color='white',
+           edgecolors='k', alpha = 0.5)
+
+xlim = ax4.get_xlim()
+ylim = ax4.get_ylim()
+zlim = ax4.get_zlim()
+cset = ax4.contour(xx, yy, Z, zdir='z', offset=zlim[0], cmap=plt.cm.gist_gray)
+cset = ax4.contour(xx, yy, Z, zdir='x', offset=xlim[0], cmap=plt.cm.gist_gray)
+cset = ax4.contour(xx, yy, Z, zdir='y', offset=ylim[1], cmap=plt.cm.gist_gray)
+
+ax4.set_xlabel('Gap ratio', fontsize=axis_font)
+ax4.set_ylabel('$R_y$', fontsize=axis_font)
+ax4.set_zlabel('% of replacement time', fontsize=axis_font)
+ax4.set_title('d) Time: GPC-KR', fontsize=subt_font)
+
+fig.tight_layout()
 
 #%% Big cost prediction plot (GP-SVR)
 plt.rcParams["font.family"] = "serif"
@@ -302,7 +530,7 @@ label_size = 14
 mpl.rcParams['xtick.labelsize'] = label_size 
 mpl.rcParams['ytick.labelsize'] = label_size 
 
-plt.close('all')
+#plt.close('all')
 
 xvar = 'Tm'
 yvar = 'gapRatio'
@@ -330,6 +558,8 @@ plt.setp((ax1, ax2, ax3), yticks=np.arange(0.1, 1.1, step=0.1), ylim=[0.0, 1.0])
 yyy = yy[:,1]
 cs = ax1.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
                  levels=np.arange(0.7, 1.6, step=0.1))
+#ax1.scatter(df[xvar], df[cost_var]/8.1e6, c=df[yvar],
+#           edgecolors='k', cmap='copper')
 ax1.clabel(cs, fontsize=label_size)
 ax1.set_ylabel('% of replacement cost', fontsize=axis_font)
 ax1.set_xlabel('$T_M$', fontsize=axis_font)
@@ -407,7 +637,7 @@ label_size = 14
 mpl.rcParams['xtick.labelsize'] = label_size 
 mpl.rcParams['ytick.labelsize'] = label_size 
 
-plt.close('all')
+#plt.close('all')
 
 xvar = 'Tm'
 yvar = 'gapRatio'
@@ -512,7 +742,7 @@ label_size = 14
 mpl.rcParams['xtick.labelsize'] = label_size 
 mpl.rcParams['ytick.labelsize'] = label_size 
 
-plt.close('all')
+#plt.close('all')
 
 xvar = 'Tm'
 yvar = 'gapRatio'
@@ -652,3 +882,146 @@ print('Estimated collapse frequency: ',
       f'{baseline_collapse_risk:.2%}')
 print('Estimated replacement frequency: ',
       f'{baseline_replacement_risk:.2%}')
+
+
+#%% cost tradeoff curve
+plt.rcParams["font.family"] = "serif"
+plt.rcParams["mathtext.fontset"] = "dejavuserif"
+axis_font = 18
+subt_font = 18
+label_size = 14
+mpl.rcParams['xtick.labelsize'] = label_size 
+mpl.rcParams['ytick.labelsize'] = label_size 
+
+
+
+def make_1d_space(xvar='gapRatio', res=100):
+    x_min = min(mdl.X[xvar])
+    x_max = max(mdl.X[xvar])
+    xx = np.linspace(x_min, x_max, num=res)
+    
+    if xvar == 'gapRatio':
+        yvar = 'RI'
+        tvar = 'Tm'
+        uvar = 'zetaM'
+    elif xvar == 'RI':
+        yvar = 'gapRatio'
+        tvar = 'Tm'
+        uvar = 'zetaM'
+    elif xvar == 'Tm':
+        yvar = 'gapRatio'
+        tvar = 'RI'
+        uvar = 'zetaM'
+    else:
+        yvar = 'gapRatio'
+        tvar = 'RI'
+        uvar = 'Tm'
+    
+    X_pl = pd.DataFrame({xvar:xx,
+                         yvar:np.repeat(mdl.X[yvar].median(), res), 
+                         tvar:np.repeat(mdl.X[tvar].median(), res),
+                         uvar:np.repeat(mdl.X[uvar].median(), res)})
+    X_pl = X_pl[['gapRatio', 'RI', 'Tm', 'zetaM']]
+    return(X_pl)
+
+
+fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4, figsize=(16, 4),
+      sharey=True)
+
+xvar = 'gapRatio'
+X_pl = make_1d_space(xvar, res=100)
+
+steel_price = 2.00
+coef_dict = get_steel_coefs(df, steel_per_unit=steel_price)
+
+upfront_costs = calc_upfront_cost(X_pl, coef_dict)
+upfront_costs = upfront_costs.values
+repair_costs = predict_DV(X_pl, mdl.gpc,
+                          mdl_hit.svr,
+                          mdl_miss.svr,
+                          outcome=cost_var)
+
+ax1.plot(X_pl[xvar], upfront_costs,
+         c='black', linestyle='--', label='Upfront cost')
+ax1.plot(X_pl[xvar], repair_costs[cost_var+'_pred'],
+         c='black', linestyle='-.', label='Repair cost')
+ax1.plot(X_pl[xvar], repair_costs[cost_var+'_pred']+upfront_costs,
+         c='black', label='Total cost')
+
+ax1.set_ylabel('Cost [USD]', fontsize=axis_font)
+ax1.set_xlabel('Gap ratio', fontsize=axis_font)
+
+##########################
+xvar='RI'
+X_pl = make_1d_space(xvar, res=100)
+
+steel_price = 2.00
+coef_dict = get_steel_coefs(df, steel_per_unit=steel_price)
+
+upfront_costs = calc_upfront_cost(X_pl, coef_dict)
+upfront_costs = upfront_costs.values
+repair_costs = predict_DV(X_pl, mdl.gpc,
+                          mdl_hit.svr,
+                          mdl_miss.svr,
+                          outcome=cost_var)
+
+ax2.plot(X_pl[xvar], upfront_costs,
+         c='black', linestyle='--', label='Upfront cost')
+ax2.plot(X_pl[xvar], repair_costs[cost_var+'_pred'],
+         c='black', linestyle='-.', label='Repair cost')
+ax2.plot(X_pl[xvar], repair_costs[cost_var+'_pred']+upfront_costs,
+         c='black', label='Total cost')
+
+ax2.set_xlabel('$R_y$', fontsize=axis_font)
+
+##########################
+xvar='Tm'
+X_pl = make_1d_space(xvar, res=100)
+
+steel_price = 2.00
+coef_dict = get_steel_coefs(df, steel_per_unit=steel_price)
+
+upfront_costs = calc_upfront_cost(X_pl, coef_dict)
+upfront_costs = upfront_costs.values
+repair_costs = predict_DV(X_pl, mdl.gpc,
+                          mdl_hit.svr,
+                          mdl_miss.svr,
+                          outcome=cost_var)
+
+ax3.plot(X_pl[xvar], upfront_costs,
+         c='black', linestyle='--', label='Upfront cost')
+ax3.plot(X_pl[xvar], repair_costs[cost_var+'_pred'],
+         c='black', linestyle='-.', label='Repair cost')
+ax3.plot(X_pl[xvar], repair_costs[cost_var+'_pred']+upfront_costs,
+         c='black', label='Total cost')
+
+ax3.set_xlabel('$T_M$', fontsize=axis_font)
+
+##########################
+xvar='zetaM'
+X_pl = make_1d_space(xvar, res=100)
+
+steel_price = 2.00
+coef_dict = get_steel_coefs(df, steel_per_unit=steel_price)
+
+upfront_costs = calc_upfront_cost(X_pl, coef_dict)
+upfront_costs = upfront_costs.values
+repair_costs = predict_DV(X_pl, mdl.gpc,
+                          mdl_hit.svr,
+                          mdl_miss.svr,
+                          outcome=cost_var)
+
+ax4.plot(X_pl[xvar], upfront_costs,
+         c='black', linestyle='--', label='Upfront cost')
+ax4.plot(X_pl[xvar], repair_costs[cost_var+'_pred'],
+         c='black', linestyle='-.', label='Repair cost')
+ax4.plot(X_pl[xvar], repair_costs[cost_var+'_pred']+upfront_costs,
+         c='black', label='Total cost')
+ax4.legend(loc='upper right')
+
+ax4.set_xlabel('$\zeta_M$', fontsize=axis_font)
+
+#%%
+
+# TODO: cost trade off curve
+# TODO: potential plots for validation, incorporate stdev
