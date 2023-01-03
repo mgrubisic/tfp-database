@@ -612,10 +612,10 @@ comparison_time_miss = np.array([mdl_time_miss.y_test,
 X_plot = mdl.make_2D_plotting_space(100)
 
 grid_downtime = predict_DV(X_plot,
-                                  mdl.gpc,
-                                  mdl_time_hit.svr,
-                                  mdl_time_miss.svr,
-                                  outcome=time_var)
+                          mdl.gpc,
+                          mdl_time_hit.svr,
+                          mdl_time_miss.svr,
+                          outcome=time_var)
 
 xx = mdl.xx
 yy = mdl.yy
@@ -854,6 +854,7 @@ space_collapse_risk = pd.DataFrame(ln_dist.cdf(space_drift),
 #%% Calculate upfront cost of data
 # TODO: use PACT to get the replacement cost of these components
 # TODO: include the deckings/slabs for more realistic initial costs
+
 def get_steel_coefs(df, steel_per_unit=1.25, W=3037.5, Ws=2227.5):
     col_str = df['col']
     beam_str = df['beam']
@@ -899,7 +900,9 @@ def get_steel_coefs(df, steel_per_unit=1.25, W=3037.5, Ws=2227.5):
     
 # TODO: if full costs are accounted for, then must change land cost to include
 # bldg footprint, rather than just moat gap
-
+    
+# TODO: add economy of scale for land
+    
 # TODO: investigate upfront cost's influence by Tm
     
 def calc_upfront_cost(X_query, steel_coefs,
@@ -957,6 +960,8 @@ X_design = X_space[np.logical_and(
     
 # in the filter-design process, only one of cost/dt is likely to control
     
+# TODO: more clever selection criteria (not necessarily the cheapest)
+
 # select best viable design
 upfront_costs = calc_upfront_cost(X_design, coef_dict)
 cheapest_design_idx = upfront_costs.idxmin()
