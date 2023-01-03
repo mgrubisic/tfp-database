@@ -114,7 +114,8 @@ loss_file = './results/loss_estimate_base.csv'
 by_cmp_file = './results/loss_estimate_by_groups_base.csv'
 pd.concat(all_losses).to_csv(loss_file)
 pd.concat(loss_cmp_group).to_csv(by_cmp_file)
-    
+agg.to_csv('./results/baseline_agg.csv', index=False) 
+
 # TODO: implementation that treats each validation run as deterministic
 
 #%% Task overview
