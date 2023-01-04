@@ -925,7 +925,10 @@ print('Estimated replacement frequency: ',
 print('Upfront cost: ',
       f'${baseline_upfront_cost:,.2f}')
 
-
+# The discrepancy in mean and median cost as compared to the training dataset
+# could come from the fact that in validation runs, EDPs are specifically set
+# to be generated from the sample in lognormal distribution, whereas they are 
+# treated as deterministic samples in the training dataset.
 #%% cost tradeoff curve
 '''
 plt.rcParams["font.family"] = "serif"
@@ -1091,6 +1094,9 @@ for ax in (g.ax_joint, g.ax_marg_x):
 for ax in (g.ax_joint, g.ax_marg_y):
     ax.axhline(700, color='black', ls='--', lw=2)
     
+g.ax_joint.annotate('Cost limit', xy=(1.7e6, 2750), fontsize=label_size)
+g.ax_joint.annotate('Downtime limit', xy=(2e6, 750), fontsize=label_size)
+
 g.ax_joint.grid()
 g.ax_joint.set_xlim(-0.25e6, 3.5e6)
 g.ax_joint.set_ylim(-100, 3e3)
@@ -1123,6 +1129,8 @@ for ax in (g.ax_joint, g.ax_marg_x):
 for ax in (g.ax_joint, g.ax_marg_y):
     ax.axhline(700, color='black', ls='--', lw=2)
     
+g.ax_joint.annotate('Cost limit', xy=(1.7e6, 2750), fontsize=label_size)
+g.ax_joint.annotate('Downtime limit', xy=(2e6, 750), fontsize=label_size)
     
 g.ax_joint.grid()
 g.ax_joint.set_xlim(-0.25e6, 3.5e6)

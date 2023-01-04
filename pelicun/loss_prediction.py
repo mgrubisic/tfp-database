@@ -798,7 +798,7 @@ plt.show()
 #%% Testing the design space
 import time
 
-res_des = 25
+res_des = 20
 X_space = mdl.make_design_space(res_des)
 #K_space = mdl.get_kernel(X_space, kernel_name='rbf', gamma=gam)
 
