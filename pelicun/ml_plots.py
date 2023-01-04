@@ -91,8 +91,8 @@ def calc_upfront_cost(X_query, steel_coefs,
     
     steel_cost = np.array(steel_coefs['intercept'] +
                           steel_coefs['coef']*Vs).ravel()
-#    land_area = 2*(90.0*12.0)*moat_gap - moat_gap**2
-    land_area = (90*12 + moat_gap)**2
+    land_area = 2*(90.0*12.0)*moat_gap - moat_gap**2
+#    land_area = (90*12 + moat_gap)**2
     land_cost = land_cost_per_sqft/144.0 * land_area
     
     return(steel_cost + land_cost)
@@ -530,7 +530,7 @@ label_size = 14
 mpl.rcParams['xtick.labelsize'] = label_size 
 mpl.rcParams['ytick.labelsize'] = label_size 
 
-#plt.close('all')
+plt.close('all')
 
 xvar = 'Tm'
 yvar = 'gapRatio'
@@ -625,6 +625,12 @@ ax3.clabel(cs, fontsize=label_size)
 #ax3.set_ylabel('% of replacement', fontsize=axis_font)
 ax3.set_xlabel('$\zeta_M$', fontsize=axis_font)
 ax3.grid()
+
+lines = [ cs.collections[0]]
+labels = ['Gap ratios']
+ax3.legend(lines, labels, fontsize=label_size)
+
+
 plt.show()
 fig.tight_layout()
 
@@ -730,6 +736,11 @@ ax3.clabel(cs, fontsize=label_size)
 #ax3.set_ylabel('% of replacement', fontsize=axis_font)
 ax3.set_xlabel('$\zeta_M$', fontsize=axis_font)
 ax3.grid()
+
+lines = [ cs.collections[0]]
+labels = ['Gap ratios']
+ax3.legend(lines, labels, fontsize=label_size)
+
 plt.show()
 fig.tight_layout()
 
@@ -845,6 +856,11 @@ ax3.clabel(cs, fontsize=label_size)
 #ax3.set_ylabel('% of replacement', fontsize=axis_font)
 ax3.set_xlabel('$\zeta_M$', fontsize=axis_font)
 ax3.grid()
+
+lines = [ cs.collections[0]]
+labels = ['Gap ratios']
+ax3.legend(lines, labels, fontsize=label_size, loc='upper left')
+
 plt.show()
 fig.tight_layout()
 
@@ -853,38 +869,65 @@ fig.tight_layout()
 df_val = pd.read_csv('./results/loss_estimate_val.csv', index_col=None)
 df_base = pd.read_csv('./results/loss_estimate_base.csv', index_col=None)
 
+steel_price = 2.00
+coef_dict = get_steel_coefs(df, steel_per_unit=steel_price)
+designs = pd.DataFrame({'gapRatio': [1.383, 1.000],
+                           'Tm': [3.93, 3.50],
+                           'zetaM': [0.1999, 0.15],
+                           'RI': [2.0, 1.0]})
+    
+upfront_costs = calc_upfront_cost(designs, coef_dict)
+upfront_costs = upfront_costs.values
 design_repair_cost = df_val['cost_mean'][2]
+design_repair_cost_med = df_val['cost_50%'][2]
 design_downtime = df_val['time_u_mean'][2]
+design_downtime_med = df_val['time_u_50%'][2]
 design_collapse_risk = df_val['collapse_freq'][2]
 design_replacement_risk = df_val['replacement_freq'][2]
-
+design_upfront_cost = upfront_costs[0]
 print('====== INVERSE DESIGN ======')
 print('Estimated mean repair cost: ',
       f'${design_repair_cost:,.2f}')
-print('Estimated repair time (sequential): ',
+print('Estimated median repair cost: ',
+      f'${design_repair_cost_med:,.2f}')
+print('Estimated mean repair time (sequential): ',
       f'{design_downtime:,.2f}', 'worker-days')
+print('Estimated median repair time (sequential): ',
+      f'{design_downtime_med:,.2f}', 'worker-days')
 print('Estimated collapse frequency: ',
       f'{design_collapse_risk:.2%}')
 print('Estimated replacement frequency: ',
       f'{design_replacement_risk:.2%}')
+print('Upfront cost: ',
+      f'${design_upfront_cost:,.2f}')
 
 baseline_repair_cost = df_base['cost_mean'][2]
+baseline_repair_cost_med = df_base['cost_50%'][2]
 baseline_downtime = df_base['time_u_mean'][2]
+baseline_downtime_med = df_base['time_u_50%'][2]
 baseline_collapse_risk = df_base['collapse_freq'][2]
 baseline_replacement_risk = df_base['replacement_freq'][2]
+baseline_upfront_cost = upfront_costs[1]
 
 print('====== BASELINE DESIGN ======')
 print('Estimated mean repair cost: ',
       f'${baseline_repair_cost:,.2f}')
-print('Estimated repair time (sequential): ',
+print('Estimated median repair cost: ',
+      f'${baseline_repair_cost_med:,.2f}')
+print('Estimated mean repair time (sequential): ',
       f'{baseline_downtime:,.2f}', 'worker-days')
+print('Estimated median repair time (sequential): ',
+      f'{baseline_downtime_med:,.2f}', 'worker-days')
 print('Estimated collapse frequency: ',
       f'{baseline_collapse_risk:.2%}')
 print('Estimated replacement frequency: ',
       f'{baseline_replacement_risk:.2%}')
+print('Upfront cost: ',
+      f'${baseline_upfront_cost:,.2f}')
 
 
 #%% cost tradeoff curve
+'''
 plt.rcParams["font.family"] = "serif"
 plt.rcParams["mathtext.fontset"] = "dejavuserif"
 axis_font = 18
@@ -1020,8 +1063,75 @@ ax4.plot(X_pl[xvar], repair_costs[cost_var+'_pred']+upfront_costs,
 ax4.legend(loc='upper right')
 
 ax4.set_xlabel('$\zeta_M$', fontsize=axis_font)
+'''
 
 #%%
 
-# TODO: cost trade off curve
-# TODO: potential plots for validation, incorporate stdev
+agg = pd.read_csv('./results/val_agg.csv', header=[0,1])
+agg.columns = ['cost', 'time_l', 'time_u']
+agg_pl = agg.loc[agg['cost'] < 8e6]
+
+print('============ INVERSE DESIGN ============')
+agg_test = agg.loc[agg['cost'] < (0.2*8.1e6)]
+print('Percent of realizations below cost limit: ', len(agg_test)/10000)
+agg_test = agg.loc[agg['time_u'] < (700)]
+print('Percent of realizations below cost limit: ', len(agg_test)/10000)
+
+plt.close('all')
+import seaborn as sns
+
+g = sns.JointGrid(data=agg_pl, x='cost', y='time_u')
+g.plot_joint(sns.scatterplot, color='black', alpha = 0.1)
+
+g.plot_marginals(sns.kdeplot, color='black')
+
+for ax in (g.ax_joint, g.ax_marg_x):
+    ax.axvline(1.62e6, color='black', ls='--', lw=2)
+    
+for ax in (g.ax_joint, g.ax_marg_y):
+    ax.axhline(700, color='black', ls='--', lw=2)
+    
+g.ax_joint.grid()
+g.ax_joint.set_xlim(-0.25e6, 3.5e6)
+g.ax_joint.set_ylim(-100, 3e3)
+g.set_axis_labels(xlabel='Repair cost [USD]',
+                  ylabel='Sequential repair time [worker-days]',
+                  fontsize=16)
+
+g.ax_marg_x.set_axis_off()
+g.ax_marg_y.set_axis_off()
+g.ax_marg_x.set_title('a) Inverse design structure', fontsize=16)
+g.figure.tight_layout()
+
+agg = pd.read_csv('./results/baseline_agg.csv', header=[0,1])
+agg.columns = ['cost', 'time_l', 'time_u']
+agg_pl = agg.loc[agg['cost'] < 8e6]
+
+print('============ BASELINE DESIGN ============')
+agg_test = agg.loc[agg['cost'] < (0.2*8.1e6)]
+print('Percent of realizations below cost limit: ', len(agg_test)/10000)
+agg_test = agg.loc[agg['time_u'] < (700)]
+print('Percent of realizations below cost limit: ', len(agg_test)/10000)
+
+g = sns.JointGrid(data=agg_pl, x='cost', y='time_u')
+g.plot_joint(sns.scatterplot, color='black', alpha = 0.1)
+g.plot_marginals(sns.kdeplot, color='black')
+
+for ax in (g.ax_joint, g.ax_marg_x):
+    ax.axvline(1.62e6, color='black', ls='--', lw=2)
+    
+for ax in (g.ax_joint, g.ax_marg_y):
+    ax.axhline(700, color='black', ls='--', lw=2)
+    
+    
+g.ax_joint.grid()
+g.ax_joint.set_xlim(-0.25e6, 3.5e6)
+g.ax_joint.set_ylim(-100, 3e3)
+g.set_axis_labels(xlabel='Repair cost [USD]',
+                  ylabel='Sequential repair time [worker-days]',
+                  fontsize=16)
+
+g.ax_marg_x.set_axis_off()
+g.ax_marg_y.set_axis_off()
+g.ax_marg_x.set_title('b) Baseline structure', fontsize=16)
+g.figure.tight_layout()
