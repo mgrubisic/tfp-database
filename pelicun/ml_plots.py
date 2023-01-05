@@ -527,6 +527,7 @@ plt.rcParams["mathtext.fontset"] = "dejavuserif"
 axis_font = 18
 subt_font = 18
 label_size = 14
+import matplotlib as mpl
 mpl.rcParams['xtick.labelsize'] = label_size 
 mpl.rcParams['ytick.labelsize'] = label_size 
 
@@ -554,6 +555,9 @@ Z = zz.reshape(xx.shape)
 
 fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(13, 4), sharey=True)
 plt.setp((ax1, ax2, ax3), yticks=np.arange(0.1, 1.1, step=0.1), ylim=[0.0, 1.0])
+
+plt.setp((ax1, ax2, ax3),
+         yticks=np.arange(0.1, 1.1, step=0.1), ylim=[0.0, 1.0])
 
 yyy = yy[:,1]
 cs = ax1.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
@@ -593,6 +597,7 @@ cs = ax2.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
 
 ax2.clabel(cs, fontsize=label_size)
 #ax2.set_ylabel('% of replacement', fontsize=axis_font)
+ax2.set_title('a) Repair cost (GPC-SVR)', fontsize=subt_font)
 ax2.set_xlabel('$R_y$', fontsize=axis_font)
 ax2.grid()
 
@@ -630,6 +635,228 @@ lines = [ cs.collections[0]]
 labels = ['Gap ratios']
 ax3.legend(lines, labels, fontsize=label_size)
 
+
+plt.show()
+fig.tight_layout()
+
+#%% Big cost prediction plot (GP-SVR)
+plt.rcParams["font.family"] = "serif"
+plt.rcParams["mathtext.fontset"] = "dejavuserif"
+axis_font = 18
+subt_font = 18
+label_size = 14
+import matplotlib as mpl
+mpl.rcParams['xtick.labelsize'] = label_size 
+mpl.rcParams['ytick.labelsize'] = label_size 
+
+plt.close('all')
+
+xvar = 'Tm'
+yvar = 'gapRatio'
+
+res = 100
+step = 0.01
+y_bounds = [0.7, 0.7+res*step-step]
+X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
+                                    y_bounds=y_bounds)
+
+grid_repair_cost = predict_DV(X_plot,
+                                     mdl.gpc,
+                                     mdl_hit.svr,
+                                     mdl_miss.svr,
+                                     outcome=cost_var)
+
+xx = mdl.xx
+yy = mdl.yy
+zz = np.array(grid_repair_cost)/8.1e6
+Z = zz.reshape(xx.shape)
+
+#fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(13, 4), sharey=True)
+#plt.setp((ax1, ax2, ax3), yticks=np.arange(0.1, 1.1, step=0.1), ylim=[0.0, 1.0])
+
+fig, axes = plt.subplots(2, 3, 
+     figsize=(13, 8), sharey=True)
+ax1 = axes[0][0]
+ax2 = axes[0][1]
+ax3 = axes[0][2]
+ax4 = axes[1][0]
+ax5 = axes[1][1]
+ax6 = axes[1][2]
+plt.setp((ax1, ax2, ax3, ax4, ax5, ax6),
+         yticks=np.arange(0.1, 1.1, step=0.1), ylim=[0.0, 1.0])
+
+yyy = yy[:,1]
+cs = ax1.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
+                 levels=np.arange(0.7, 1.6, step=0.1))
+#ax1.scatter(df[xvar], df[cost_var]/8.1e6, c=df[yvar],
+#           edgecolors='k', cmap='copper')
+ax1.clabel(cs, fontsize=label_size)
+ax1.set_ylabel('% of replacement cost', fontsize=axis_font)
+ax1.set_xlabel('$T_M$', fontsize=axis_font)
+ax1.grid()
+
+####################################################################
+xvar = 'RI'
+yvar = 'gapRatio'
+
+res = 100
+step = 0.01
+y_bounds = [0.7, 0.7+res*step-step]
+
+X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
+                                    y_bounds=y_bounds)
+
+grid_repair_cost = predict_DV(X_plot,
+                                     mdl.gpc,
+                                     mdl_hit.svr,
+                                     mdl_miss.svr,
+                                     outcome=cost_var)
+
+xx = mdl.xx
+yy = mdl.yy
+zz = np.array(grid_repair_cost)/8.1e6
+Z = zz.reshape(xx.shape)
+
+yyy = yy[:,1]
+cs = ax2.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
+                 levels=np.arange(0.7, 1.6, step=0.1))
+
+ax2.clabel(cs, fontsize=label_size)
+#ax2.set_ylabel('% of replacement', fontsize=axis_font)
+ax2.set_title('a) Repair cost (GPC-SVR)', fontsize=subt_font)
+ax2.set_xlabel('$R_y$', fontsize=axis_font)
+ax2.grid()
+
+####################################################################
+xvar = 'zetaM'
+yvar = 'gapRatio'
+
+res = 100
+step = 0.01
+y_bounds = [0.7, 0.7+res*step-step]
+
+X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
+                                    y_bounds=y_bounds)
+grid_repair_cost = predict_DV(X_plot,
+                                     mdl.gpc,
+                                     mdl_hit.svr,
+                                     mdl_miss.svr,
+                                     outcome=cost_var)
+
+xx = mdl.xx
+yy = mdl.yy
+zz = np.array(grid_repair_cost)/8.1e6
+Z = zz.reshape(xx.shape)
+
+yyy = yy[:,1]
+cs = ax3.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
+                 levels=np.arange(0.7, 1.6, step=0.1))
+ax3.clabel(cs, fontsize=label_size)
+
+#ax3.set_ylabel('% of replacement', fontsize=axis_font)
+ax3.set_xlabel('$\zeta_M$', fontsize=axis_font)
+ax3.grid()
+
+lines = [ cs.collections[0]]
+labels = ['Gap ratios']
+ax3.legend(lines, labels, fontsize=label_size)
+
+
+#plt.show()
+#fig.tight_layout()
+##############################
+
+xvar = 'Tm'
+yvar = 'gapRatio'
+
+res = 100
+step = 0.01
+y_bounds = [0.7, 0.7+res*step-step]
+X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
+                                    y_bounds=y_bounds)
+
+grid_repair_time = predict_DV(X_plot,
+                                     mdl.gpc,
+                                     mdl_time_hit.kr,
+                                     mdl_time_miss.kr,
+                                     outcome=time_var)
+
+xx = mdl.xx
+yy = mdl.yy
+zz = np.array(grid_repair_time)/4764.71
+Z = zz.reshape(xx.shape)
+
+yyy = yy[:,1]
+cs = ax4.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
+                 levels=np.arange(0.7, 1.6, step=0.1))
+ax4.clabel(cs, fontsize=label_size)
+ax4.set_ylabel('% of replacement time', fontsize=axis_font)
+ax4.set_xlabel('$T_M$', fontsize=axis_font)
+ax4.grid()
+
+xvar = 'RI'
+yvar = 'gapRatio'
+
+res = 100
+step = 0.01
+y_bounds = [0.7, 0.7+res*step-step]
+
+X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
+                                    y_bounds=y_bounds)
+
+grid_repair_time = predict_DV(X_plot,
+                                     mdl.gpc,
+                                     mdl_time_hit.kr,
+                                     mdl_time_miss.kr,
+                                     outcome=time_var)
+
+xx = mdl.xx
+yy = mdl.yy
+zz = np.array(grid_repair_time)/4764.71
+Z = zz.reshape(xx.shape)
+
+yyy = yy[:,1]
+cs = ax5.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
+                 levels=np.arange(0.7, 1.6, step=0.1))
+
+ax5.clabel(cs, fontsize=label_size)
+#ax2.set_ylabel('% of replacement', fontsize=axis_font)
+ax5.set_xlabel('$R_y$', fontsize=axis_font)
+ax5.set_title('b) Downtime (GPC-KR)', fontsize=subt_font)
+ax5.grid()
+
+xvar = 'zetaM'
+yvar = 'gapRatio'
+
+res = 100
+step = 0.01
+y_bounds = [0.7, 0.7+res*step-step]
+
+X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
+                                    y_bounds=y_bounds)
+grid_repair_time = predict_DV(X_plot,
+                                     mdl.gpc,
+                                     mdl_time_hit.kr,
+                                     mdl_time_miss.kr,
+                                     outcome=time_var)
+
+xx = mdl.xx
+yy = mdl.yy
+zz = np.array(grid_repair_time)/4764.71
+Z = zz.reshape(xx.shape)
+
+yyy = yy[:,1]
+cs = ax6.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
+                 levels=np.arange(0.7, 1.6, step=0.1))
+ax6.clabel(cs, fontsize=label_size)
+
+#ax3.set_ylabel('% of replacement', fontsize=axis_font)
+ax6.set_xlabel('$\zeta_M$', fontsize=axis_font)
+ax6.grid()
+
+lines = [ cs.collections[0]]
+labels = ['Gap ratios']
+ax6.legend(lines, labels, fontsize=label_size)
 
 plt.show()
 fig.tight_layout()
