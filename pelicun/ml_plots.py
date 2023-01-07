@@ -19,6 +19,8 @@ from prediction_model import Prediction, predict_DV
 plt.close('all')
 idx = pd.IndexSlice
 pd.options.display.max_rows = 30
+import warnings
+warnings.filterwarnings('ignore')
 
 def get_steel_coefs(df, steel_per_unit=1.25, W=3037.5, Ws=2227.5):
     col_str = df['col']
@@ -119,6 +121,19 @@ mdl_miss = Prediction(df_miss)
 mdl_miss.set_outcome(cost_var)
 mdl_miss.test_train_split(0.2)
 
+hit = Prediction(df_hit)
+hit.set_outcome('impacted')
+hit.test_train_split(0.2)
+
+miss = Prediction(df_miss)
+miss.set_outcome('impacted')
+miss.test_train_split(0.2)
+
+df_miss = df[df['impacted'] == 0]
+mdl_miss = Prediction(df_miss)
+mdl_miss.set_outcome(cost_var)
+mdl_miss.test_train_split(0.2)
+
 mdl_time_hit = Prediction(df_hit)
 mdl_time_hit.set_outcome(time_var)
 mdl_time_hit.test_train_split(0.2)
@@ -159,17 +174,18 @@ print('False positives: ', fp)
 
 plt.rcParams["font.family"] = "serif"
 plt.rcParams["mathtext.fontset"] = "dejavuserif"
-axis_font = 18
+axis_font = 20
 subt_font = 18
 import matplotlib as mpl
-label_size = 12
+label_size = 16
 mpl.rcParams['xtick.labelsize'] = label_size 
 mpl.rcParams['ytick.labelsize'] = label_size 
 
-#plt.close('all')
+plt.close('all')
 # make grid and plot classification predictions
 
-fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(13, 4))
+fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(14, 4.5))
+plt.setp((ax1, ax2, ax3), xticks=np.arange(0.5, 4.0, step=0.5))
 
 xvar = 'gapRatio'
 yvar = 'RI'
@@ -189,18 +205,22 @@ Z = Z.reshape(xx.shape)
 #        cmap=plt.cm.Greys,
 #    )
 
-plt_density = 100
-cs = ax1.contour(xx, yy, Z, linewidths=1.1, cmap='copper',
+plt_density = 50
+cs = ax1.contour(xx, yy, Z, linewidths=1.1, cmap='gist_yarg', vmin=-1,
                  levels=np.linspace(0.1,1.0,num=10))
 ax1.clabel(cs, fontsize=label_size)
 
 #ax1.contour(xx, yy, Z, levels=[0.5], linewidths=2,
 #            linestyles="dashed", colors='black')
 
-ax1.scatter(mdl.X_train[xvar][:plt_density],
-            mdl.X_train[yvar][:plt_density],
-            s=30, c=mdl.y_train[:plt_density],
-            cmap=plt.cm.copper, edgecolors="k")
+ax1.scatter(hit.X_train[xvar][:plt_density],
+            hit.X_train[yvar][:plt_density],
+            s=30, c='black', marker='v', edgecolors='k', label='Impacted')
+
+ax1.scatter(miss.X_train[xvar][:plt_density],
+            miss.X_train[yvar][:plt_density],
+            s=30, c='lightgray', edgecolors='k', label='No impact')
+
 ax1.set_title(r'$T_M = 3.24$ s, $\zeta_M = 0.155$', fontsize=subt_font)
 ax1.set_xlabel(r'Gap ratio', fontsize=axis_font)
 ax1.set_ylabel(r'$R_y$', fontsize=axis_font)
@@ -224,18 +244,21 @@ Z = Z.reshape(xx.shape)
 #        cmap=plt.cm.Greys,
 #    )
 
-plt_density = 100
-cs = ax2.contour(xx, yy, Z, linewidths=1.1, cmap='copper',
+plt_density = 50
+cs = ax2.contour(xx, yy, Z, linewidths=1.1, cmap='gist_yarg', vmin=-1,
                  levels=np.linspace(0.1,1.0,num=10))
 ax2.clabel(cs, fontsize=label_size)
 
 #ax1.contour(xx, yy, Z, levels=[0.5], linewidths=2,
 #            linestyles="dashed", colors='black')
 
-ax2.scatter(mdl.X_train[xvar][:plt_density],
-            mdl.X_train[yvar][:plt_density],
-            s=30, c=mdl.y_train[:plt_density],
-            cmap=plt.cm.copper, edgecolors="k")
+ax2.scatter(hit.X_train[xvar][:plt_density],
+            hit.X_train[yvar][:plt_density],
+            s=30, c='black', marker='v', edgecolors='k', label='Impacted')
+
+ax2.scatter(miss.X_train[xvar][:plt_density],
+            miss.X_train[yvar][:plt_density],
+            s=30, c='lightgray', edgecolors='k', label='No impact')
 ax2.set_title(r'$R_y= 1.22$ s, $\zeta_M = 0.155$', fontsize=subt_font)
 ax2.set_xlabel(r'Gap ratio', fontsize=axis_font)
 ax2.set_ylabel(r'$T_M$', fontsize=axis_font)
@@ -259,24 +282,38 @@ Z = Z.reshape(xx.shape)
 #        cmap=plt.cm.Greys,
 #    )
 
-plt_density = 100
-cs = ax3.contour(xx, yy, Z, linewidths=1.1, cmap='copper',
+plt_density = 50
+cs = ax3.contour(xx, yy, Z, linewidths=1.1, cmap='gist_yarg', vmin=-1,
                  levels=np.linspace(0.1,1.0,num=10))
 ax3.clabel(cs, fontsize=label_size)
 
 #ax1.contour(xx, yy, Z, levels=[0.5], linewidths=2,
 #            linestyles="dashed", colors='black')
 
-sc = ax3.scatter(mdl.X_train[xvar][:plt_density],
-            mdl.X_train[yvar][:plt_density],
-            s=30, c=mdl.y_train[:plt_density],
-            cmap=plt.cm.copper, edgecolors="k")
+ax3.scatter(hit.X_train[xvar][:plt_density],
+            hit.X_train[yvar][:plt_density],
+            s=30, c='black', marker='v', edgecolors='k', label='Impacted')
+
+ax3.scatter(miss.X_train[xvar][:plt_density],
+            miss.X_train[yvar][:plt_density],
+            s=30, c='lightgray', edgecolors='k', label='No impact')
+
+# sc = ax3.scatter(mdl.X_train[xvar][:plt_density],
+#             mdl.X_train[yvar][:plt_density],
+#             s=30, c=mdl.y_train[:plt_density],
+#             cmap=plt.cm.copper, edgecolors='w')
+
 ax3.set_title(r'$R_y= 1.22$ s, $T_M = 3.24$ s', fontsize=subt_font)
 ax3.set_xlabel(r'Gap ratio', fontsize=axis_font)
 ax3.set_ylabel(r'$\zeta_M$', fontsize=axis_font)
-lg = ax3.legend(*sc.legend_elements(), loc="lower right", title="Impact",
-           fontsize=subt_font)
-lg.get_title().set_fontsize(axis_font) #legend 'Title' fontsize
+
+ax3.legend(loc="lower right", fontsize=subt_font)
+
+# lg = ax3.legend(*sc.legend_elements(), loc="lower right", title="Impact",
+#            fontsize=subt_font)
+
+
+# lg.get_title().set_fontsize(axis_font) #legend 'Title' fontsize
 
 fig.tight_layout()
 plt.show()
@@ -287,7 +324,7 @@ plt.rcParams["font.family"] = "serif"
 plt.rcParams["mathtext.fontset"] = "dejavuserif"
 axis_font = 18
 subt_font = 18
-label_size = 14
+label_size = 16
 mpl.rcParams['xtick.labelsize'] = label_size 
 mpl.rcParams['ytick.labelsize'] = label_size 
 
@@ -538,7 +575,7 @@ yvar = 'gapRatio'
 
 res = 100
 step = 0.01
-y_bounds = [0.7, 0.7+res*step-step]
+y_bounds = [0.9, 0.9+res*step-step]
 X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
                                     y_bounds=y_bounds)
 
@@ -561,7 +598,7 @@ plt.setp((ax1, ax2, ax3),
 
 yyy = yy[:,1]
 cs = ax1.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
-                 levels=np.arange(0.7, 1.6, step=0.1))
+                 levels=np.arange(0.9, 2.0, step=0.1))
 #ax1.scatter(df[xvar], df[cost_var]/8.1e6, c=df[yvar],
 #           edgecolors='k', cmap='copper')
 ax1.clabel(cs, fontsize=label_size)
@@ -575,7 +612,7 @@ yvar = 'gapRatio'
 
 res = 100
 step = 0.01
-y_bounds = [0.7, 0.7+res*step-step]
+y_bounds = [0.9, 0.9+res*step-step]
 
 X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
                                     y_bounds=y_bounds)
@@ -593,7 +630,7 @@ Z = zz.reshape(xx.shape)
 
 yyy = yy[:,1]
 cs = ax2.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
-                 levels=np.arange(0.7, 1.6, step=0.1))
+                 levels=np.arange(0.9, 2.0, step=0.1))
 
 ax2.clabel(cs, fontsize=label_size)
 #ax2.set_ylabel('% of replacement', fontsize=axis_font)
@@ -607,7 +644,7 @@ yvar = 'gapRatio'
 
 res = 100
 step = 0.01
-y_bounds = [0.7, 0.7+res*step-step]
+y_bounds = [0.9, 0.9+res*step-step]
 
 X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
                                     y_bounds=y_bounds)
@@ -624,7 +661,7 @@ Z = zz.reshape(xx.shape)
 
 yyy = yy[:,1]
 cs = ax3.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
-                 levels=np.arange(0.7, 1.6, step=0.1))
+                 levels=np.arange(0.9, 2.0, step=0.1))
 ax3.clabel(cs, fontsize=label_size)
 
 #ax3.set_ylabel('% of replacement', fontsize=axis_font)
@@ -656,7 +693,7 @@ yvar = 'gapRatio'
 
 res = 100
 step = 0.01
-y_bounds = [0.7, 0.7+res*step-step]
+y_bounds = [0.9, 0.9+res*step-step]
 X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
                                     y_bounds=y_bounds)
 
@@ -675,7 +712,7 @@ Z = zz.reshape(xx.shape)
 #plt.setp((ax1, ax2, ax3), yticks=np.arange(0.1, 1.1, step=0.1), ylim=[0.0, 1.0])
 
 fig, axes = plt.subplots(2, 3, 
-     figsize=(13, 8), sharey=True)
+     figsize=(13, 9), sharey=True)
 ax1 = axes[0][0]
 ax2 = axes[0][1]
 ax3 = axes[0][2]
@@ -683,11 +720,11 @@ ax4 = axes[1][0]
 ax5 = axes[1][1]
 ax6 = axes[1][2]
 plt.setp((ax1, ax2, ax3, ax4, ax5, ax6),
-         yticks=np.arange(0.1, 1.1, step=0.1), ylim=[0.0, 1.0])
+         yticks=np.arange(0.1, 1.1, step=0.1), ylim=[0.0, 0.8])
 
 yyy = yy[:,1]
-cs = ax1.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
-                 levels=np.arange(0.7, 1.6, step=0.1))
+cs = ax1.contour(xx, Z, yy, linewidths=1.1, cmap='gist_yarg',
+                 levels=np.arange(0.9, 2.0, step=0.1), vmin=0)
 #ax1.scatter(df[xvar], df[cost_var]/8.1e6, c=df[yvar],
 #           edgecolors='k', cmap='copper')
 ax1.clabel(cs, fontsize=label_size)
@@ -696,44 +733,44 @@ ax1.set_xlabel('$T_M$', fontsize=axis_font)
 ax1.grid()
 
 ####################################################################
-xvar = 'RI'
-yvar = 'gapRatio'
-
-res = 100
-step = 0.01
-y_bounds = [0.7, 0.7+res*step-step]
-
-X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
-                                    y_bounds=y_bounds)
-
-grid_repair_cost = predict_DV(X_plot,
-                                     mdl.gpc,
-                                     mdl_hit.svr,
-                                     mdl_miss.svr,
-                                     outcome=cost_var)
-
-xx = mdl.xx
-yy = mdl.yy
-zz = np.array(grid_repair_cost)/8.1e6
-Z = zz.reshape(xx.shape)
-
-yyy = yy[:,1]
-cs = ax2.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
-                 levels=np.arange(0.7, 1.6, step=0.1))
-
-ax2.clabel(cs, fontsize=label_size)
-#ax2.set_ylabel('% of replacement', fontsize=axis_font)
-ax2.set_title('a) Repair cost (GPC-SVR)', fontsize=subt_font)
-ax2.set_xlabel('$R_y$', fontsize=axis_font)
-ax2.grid()
-
-####################################################################
 xvar = 'zetaM'
 yvar = 'gapRatio'
 
 res = 100
 step = 0.01
-y_bounds = [0.7, 0.7+res*step-step]
+y_bounds = [0.9, 0.9+res*step-step]
+
+X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
+                                    y_bounds=y_bounds)
+
+grid_repair_cost = predict_DV(X_plot,
+                                     mdl.gpc,
+                                     mdl_hit.svr,
+                                     mdl_miss.svr,
+                                     outcome=cost_var)
+
+xx = mdl.xx
+yy = mdl.yy
+zz = np.array(grid_repair_cost)/8.1e6
+Z = zz.reshape(xx.shape)
+
+yyy = yy[:,1]
+cs = ax2.contour(xx, Z, yy, linewidths=1.1, cmap='gist_yarg',
+                 levels=np.arange(0.9, 2.0, step=0.1), vmin=0)
+
+ax2.clabel(cs, fontsize=label_size)
+#ax2.set_ylabel('% of replacement', fontsize=axis_font)
+ax2.set_title('a) Repair cost (GPC-SVR)', fontsize=subt_font)
+ax2.set_xlabel('$\zeta_M$', fontsize=axis_font)
+ax2.grid()
+
+####################################################################
+xvar = 'RI'
+yvar = 'gapRatio'
+
+res = 100
+step = 0.01
+y_bounds = [0.9, 0.9+res*step-step]
 
 X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
                                     y_bounds=y_bounds)
@@ -749,17 +786,21 @@ zz = np.array(grid_repair_cost)/8.1e6
 Z = zz.reshape(xx.shape)
 
 yyy = yy[:,1]
-cs = ax3.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
-                 levels=np.arange(0.7, 1.6, step=0.1))
+cs = ax3.contour(xx, Z, yy, linewidths=1.1, cmap='gist_yarg',
+                 levels=np.arange(0.9, 2.0, step=0.1), vmin=0)
 ax3.clabel(cs, fontsize=label_size)
 
 #ax3.set_ylabel('% of replacement', fontsize=axis_font)
-ax3.set_xlabel('$\zeta_M$', fontsize=axis_font)
+ax3.set_xlabel('$R_y$', fontsize=axis_font)
 ax3.grid()
 
-lines = [ cs.collections[0]]
-labels = ['Gap ratios']
-ax3.legend(lines, labels, fontsize=label_size)
+# lines = [ cs.collections[0]]
+# labels = ['Gap ratios']
+# ax3.legend(lines, labels, fontsize=label_size)
+
+# dummy legend
+ax3.plot(0.65, 0.5, color='gray', label='Gap ratio')
+ax3.legend(fontsize=label_size)
 
 
 #plt.show()
@@ -771,7 +812,7 @@ yvar = 'gapRatio'
 
 res = 100
 step = 0.01
-y_bounds = [0.7, 0.7+res*step-step]
+y_bounds = [0.9, 0.9+res*step-step]
 X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
                                     y_bounds=y_bounds)
 
@@ -787,50 +828,50 @@ zz = np.array(grid_repair_time)/4764.71
 Z = zz.reshape(xx.shape)
 
 yyy = yy[:,1]
-cs = ax4.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
-                 levels=np.arange(0.7, 1.6, step=0.1))
+cs = ax4.contour(xx, Z, yy, linewidths=1.1, cmap='gist_yarg',
+                 levels=np.arange(0.9, 2.0, step=0.1), vmin=0)
 ax4.clabel(cs, fontsize=label_size)
 ax4.set_ylabel('% of replacement time', fontsize=axis_font)
 ax4.set_xlabel('$T_M$', fontsize=axis_font)
 ax4.grid()
-
-xvar = 'RI'
-yvar = 'gapRatio'
-
-res = 100
-step = 0.01
-y_bounds = [0.7, 0.7+res*step-step]
-
-X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
-                                    y_bounds=y_bounds)
-
-grid_repair_time = predict_DV(X_plot,
-                                     mdl.gpc,
-                                     mdl_time_hit.kr,
-                                     mdl_time_miss.kr,
-                                     outcome=time_var)
-
-xx = mdl.xx
-yy = mdl.yy
-zz = np.array(grid_repair_time)/4764.71
-Z = zz.reshape(xx.shape)
-
-yyy = yy[:,1]
-cs = ax5.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
-                 levels=np.arange(0.7, 1.6, step=0.1))
-
-ax5.clabel(cs, fontsize=label_size)
-#ax2.set_ylabel('% of replacement', fontsize=axis_font)
-ax5.set_xlabel('$R_y$', fontsize=axis_font)
-ax5.set_title('b) Downtime (GPC-KR)', fontsize=subt_font)
-ax5.grid()
 
 xvar = 'zetaM'
 yvar = 'gapRatio'
 
 res = 100
 step = 0.01
-y_bounds = [0.7, 0.7+res*step-step]
+y_bounds = [0.9, 0.9+res*step-step]
+
+X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
+                                    y_bounds=y_bounds)
+
+grid_repair_time = predict_DV(X_plot,
+                                     mdl.gpc,
+                                     mdl_time_hit.kr,
+                                     mdl_time_miss.kr,
+                                     outcome=time_var)
+
+xx = mdl.xx
+yy = mdl.yy
+zz = np.array(grid_repair_time)/4764.71
+Z = zz.reshape(xx.shape)
+
+yyy = yy[:,1]
+cs = ax5.contour(xx, Z, yy, linewidths=1.1, cmap='gist_yarg',
+                 levels=np.arange(0.9, 2.0, step=0.1), vmin=0)
+
+ax5.clabel(cs, fontsize=label_size)
+#ax2.set_ylabel('% of replacement', fontsize=axis_font)
+ax5.set_xlabel('$\zeta_M$', fontsize=axis_font)
+ax5.set_title('b) Downtime (GPC-KR)', fontsize=subt_font)
+ax5.grid()
+
+xvar = 'RI'
+yvar = 'gapRatio'
+
+res = 100
+step = 0.01
+y_bounds = [0.9, 0.9+res*step-step]
 
 X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
                                     y_bounds=y_bounds)
@@ -846,17 +887,18 @@ zz = np.array(grid_repair_time)/4764.71
 Z = zz.reshape(xx.shape)
 
 yyy = yy[:,1]
-cs = ax6.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
-                 levels=np.arange(0.7, 1.6, step=0.1))
+cs = ax6.contour(xx, Z, yy, linewidths=1.1, cmap='gist_yarg',
+                 levels=np.arange(0.9, 2.0, step=0.1), vmin=0)
 ax6.clabel(cs, fontsize=label_size)
 
 #ax3.set_ylabel('% of replacement', fontsize=axis_font)
-ax6.set_xlabel('$\zeta_M$', fontsize=axis_font)
+ax6.set_xlabel('$R_y$', fontsize=axis_font)
 ax6.grid()
 
-lines = [ cs.collections[0]]
-labels = ['Gap ratios']
-ax6.legend(lines, labels, fontsize=label_size)
+# dummy legend
+ax6.plot(0.65, 0.5, color='gray', label='Gap ratio')
+ax6.legend(fontsize=label_size)
+# ax6.legend(lines, labels, fontsize=label_size)
 
 plt.show()
 fig.tight_layout()
@@ -877,7 +919,7 @@ yvar = 'gapRatio'
 
 res = 100
 step = 0.01
-y_bounds = [0.7, 0.7+res*step-step]
+y_bounds = [0.9, 0.9+res*step-step]
 X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
                                     y_bounds=y_bounds)
 
@@ -897,7 +939,7 @@ plt.setp((ax1, ax2, ax3), yticks=np.arange(0.1, 1.1, step=0.1), ylim=[0.0, 1.0])
 
 yyy = yy[:,1]
 cs = ax1.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
-                 levels=np.arange(0.7, 1.6, step=0.1))
+                 levels=np.arange(0.9, 2.0, step=0.1))
 ax1.clabel(cs, fontsize=label_size)
 ax1.set_ylabel('% of replacement time', fontsize=axis_font)
 ax1.set_xlabel('$T_M$', fontsize=axis_font)
@@ -909,7 +951,7 @@ yvar = 'gapRatio'
 
 res = 100
 step = 0.01
-y_bounds = [0.7, 0.7+res*step-step]
+y_bounds = [0.9, 0.9+res*step-step]
 
 X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
                                     y_bounds=y_bounds)
@@ -927,7 +969,7 @@ Z = zz.reshape(xx.shape)
 
 yyy = yy[:,1]
 cs = ax2.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
-                 levels=np.arange(0.7, 1.6, step=0.1))
+                 levels=np.arange(0.9, 2.0, step=0.1))
 
 ax2.clabel(cs, fontsize=label_size)
 #ax2.set_ylabel('% of replacement', fontsize=axis_font)
@@ -940,7 +982,7 @@ yvar = 'gapRatio'
 
 res = 100
 step = 0.01
-y_bounds = [0.7, 0.7+res*step-step]
+y_bounds = [0.9, 0.9+res*step-step]
 
 X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
                                     y_bounds=y_bounds)
@@ -957,7 +999,7 @@ Z = zz.reshape(xx.shape)
 
 yyy = yy[:,1]
 cs = ax3.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
-                 levels=np.arange(0.7, 1.6, step=0.1))
+                 levels=np.arange(0.9, 2.0, step=0.1))
 ax3.clabel(cs, fontsize=label_size)
 
 #ax3.set_ylabel('% of replacement', fontsize=axis_font)
@@ -987,7 +1029,7 @@ yvar = 'gapRatio'
 
 res = 100
 step = 0.01
-y_bounds = [0.7, 0.7+res*step-step]
+y_bounds = [0.9, 0.9+res*step-step]
 X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
                                     y_bounds=y_bounds)
 
@@ -1015,7 +1057,7 @@ plt.setp((ax1, ax2, ax3), yticks=np.arange(0.02, 0.22, step=0.02), ylim=[0.0, 0.
 
 yyy = yy[:,1]
 cs = ax1.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
-                 levels=np.arange(0.7, 1.6, step=0.1))
+                 levels=np.arange(0.9, 2.0, step=0.1))
 ax1.clabel(cs, fontsize=label_size)
 ax1.set_ylabel('Collapse risk', fontsize=axis_font)
 ax1.set_xlabel('$T_M$', fontsize=axis_font)
@@ -1027,7 +1069,7 @@ yvar = 'gapRatio'
 
 res = 100
 step = 0.01
-y_bounds = [0.7, 0.7+res*step-step]
+y_bounds = [0.9, 0.9+res*step-step]
 
 X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
                                     y_bounds=y_bounds)
@@ -1046,7 +1088,7 @@ Z = zz.reshape(xx.shape)
 
 yyy = yy[:,1]
 cs = ax2.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
-                 levels=np.arange(0.7, 1.6, step=0.1))
+                 levels=np.arange(0.9, 2.0, step=0.1))
 
 ax2.clabel(cs, fontsize=label_size)
 #ax2.set_ylabel('% of replacement', fontsize=axis_font)
@@ -1059,7 +1101,7 @@ yvar = 'gapRatio'
 
 res = 100
 step = 0.01
-y_bounds = [0.7, 0.7+res*step-step]
+y_bounds = [0.9, 0.9+res*step-step]
 
 X_plot = mdl.make_2D_plotting_space(res, x_var=xvar, y_var=yvar,
                                     y_bounds=y_bounds)
@@ -1077,7 +1119,7 @@ Z = zz.reshape(xx.shape)
 
 yyy = yy[:,1]
 cs = ax3.contour(xx, Z, yy, linewidths=1.1, cmap='copper',
-                 levels=np.arange(0.7, 1.6, step=0.1))
+                 levels=np.arange(0.9, 2.0, step=0.1))
 ax3.clabel(cs, fontsize=label_size)
 
 #ax3.set_ylabel('% of replacement', fontsize=axis_font)
@@ -1310,31 +1352,31 @@ print('Percent of realizations below cost limit: ', len(agg_test)/10000)
 plt.close('all')
 import seaborn as sns
 
-g = sns.JointGrid(data=agg_pl, x='cost', y='time_u')
-g.plot_joint(sns.scatterplot, color='black', alpha = 0.1)
+g1 = sns.JointGrid(data=agg_pl, x='cost', y='time_u')
+g1.plot_joint(sns.scatterplot, color='black', alpha = 0.1)
 
-g.plot_marginals(sns.kdeplot, color='black')
+g1.plot_marginals(sns.kdeplot, color='black')
 
-for ax in (g.ax_joint, g.ax_marg_x):
+for ax in (g1.ax_joint, g1.ax_marg_x):
     ax.axvline(1.62e6, color='black', ls='--', lw=2)
     
-for ax in (g.ax_joint, g.ax_marg_y):
+for ax in (g1.ax_joint, g1.ax_marg_y):
     ax.axhline(700, color='black', ls='--', lw=2)
     
-g.ax_joint.annotate('Cost limit', xy=(1.7e6, 2750), fontsize=label_size)
-g.ax_joint.annotate('Downtime limit', xy=(2e6, 750), fontsize=label_size)
+g1.ax_joint.annotate('Cost limit', xy=(1.7e6, 2750), fontsize=label_size)
+g1.ax_joint.annotate('Downtime limit', xy=(2e6, 750), fontsize=label_size)
 
-g.ax_joint.grid()
-g.ax_joint.set_xlim(-0.25e6, 3.5e6)
-g.ax_joint.set_ylim(-100, 3e3)
-g.set_axis_labels(xlabel='Repair cost [USD]',
+g1.ax_joint.grid()
+g1.ax_joint.set_xlim(-0.25e6, 3.5e6)
+g1.ax_joint.set_ylim(-100, 3e3)
+g1.set_axis_labels(xlabel='Repair cost [USD]',
                   ylabel='Sequential repair time [worker-days]',
                   fontsize=16)
 
-g.ax_marg_x.set_axis_off()
-g.ax_marg_y.set_axis_off()
-g.ax_marg_x.set_title('a) Inverse design structure', fontsize=16)
-g.figure.tight_layout()
+g1.ax_marg_x.set_axis_off()
+g1.ax_marg_y.set_axis_off()
+g1.ax_marg_x.set_title('a) Inverse design structure', fontsize=16)
+g1.figure.tight_layout()
 
 agg = pd.read_csv('./results/baseline_agg.csv', header=[0,1])
 agg.columns = ['cost', 'time_l', 'time_u']
@@ -1346,27 +1388,65 @@ print('Percent of realizations below cost limit: ', len(agg_test)/10000)
 agg_test = agg.loc[agg['time_u'] < (700)]
 print('Percent of realizations below cost limit: ', len(agg_test)/10000)
 
-g = sns.JointGrid(data=agg_pl, x='cost', y='time_u')
-g.plot_joint(sns.scatterplot, color='black', alpha = 0.1)
-g.plot_marginals(sns.kdeplot, color='black')
+g2 = sns.JointGrid(data=agg_pl, x='cost', y='time_u')
+g2.plot_joint(sns.scatterplot, color='black', alpha = 0.1)
+g2.plot_marginals(sns.kdeplot, color='black')
 
-for ax in (g.ax_joint, g.ax_marg_x):
+for ax in (g2.ax_joint, g2.ax_marg_x):
     ax.axvline(1.62e6, color='black', ls='--', lw=2)
     
-for ax in (g.ax_joint, g.ax_marg_y):
+for ax in (g2.ax_joint, g2.ax_marg_y):
     ax.axhline(700, color='black', ls='--', lw=2)
     
-g.ax_joint.annotate('Cost limit', xy=(1.7e6, 2750), fontsize=label_size)
-g.ax_joint.annotate('Downtime limit', xy=(2e6, 750), fontsize=label_size)
+g2.ax_joint.annotate('Cost limit', xy=(1.7e6, 2750), fontsize=label_size)
+g2.ax_joint.annotate('Downtime limit', xy=(2e6, 750), fontsize=label_size)
     
-g.ax_joint.grid()
-g.ax_joint.set_xlim(-0.25e6, 3.5e6)
-g.ax_joint.set_ylim(-100, 3e3)
-g.set_axis_labels(xlabel='Repair cost [USD]',
+g2.ax_joint.grid()
+g2.ax_joint.set_xlim(-0.25e6, 3.5e6)
+g2.ax_joint.set_ylim(-100, 3e3)
+g2.set_axis_labels(xlabel='Repair cost [USD]',
                   ylabel='Sequential repair time [worker-days]',
                   fontsize=16)
 
-g.ax_marg_x.set_axis_off()
-g.ax_marg_y.set_axis_off()
-g.ax_marg_x.set_title('b) Baseline structure', fontsize=16)
-g.figure.tight_layout()
+g2.ax_marg_x.set_axis_off()
+g2.ax_marg_y.set_axis_off()
+g2.ax_marg_x.set_title('b) Baseline structure', fontsize=16)
+g2.figure.tight_layout()
+
+
+g1.savefig('g1.png', format='png', dpi=1200)
+plt.close(g1.fig)
+
+g2.savefig('g2.png', format='png', dpi=1200)
+plt.close(g2.fig)
+
+############### 3. CREATE YOUR SUBPLOTS FROM TEMPORAL IMAGES
+import matplotlib.image as mpimg
+f, axarr = plt.subplots(1, 2, figsize=(14, 9))
+
+axarr[0].imshow(mpimg.imread('g1.png'))
+axarr[1].imshow(mpimg.imread('g2.png'))
+
+# turn off x and y axis
+[ax.set_axis_off() for ax in axarr.ravel()]
+
+plt.tight_layout()
+plt.show()
+
+#%%
+agg = pd.read_csv('./results/val_agg.csv', header=[0,1])
+agg.columns = ['cost', 'time_l', 'time_u']
+agg_pl = agg.loc[agg['cost'] < 8e6]
+
+print('============ INVERSE DESIGN ============')
+agg_test = agg.loc[agg['cost'] < (0.2*8.1e6)]
+print('Percent of realizations below cost limit: ', len(agg_test)/10000)
+agg_test = agg.loc[agg['time_u'] < (700)]
+print('Percent of realizations below cost limit: ', len(agg_test)/10000)
+
+plt.close('all')
+import seaborn as sns
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 4), sharey=True)
+
+sns.jointplot(data=agg_pl, x="cost", y="time_u")
