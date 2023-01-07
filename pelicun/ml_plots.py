@@ -1336,8 +1336,13 @@ ax4.legend(loc='upper right')
 
 ax4.set_xlabel('$\zeta_M$', fontsize=axis_font)
 '''
+ 
 
 #%%
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+import seaborn as sns; sns.set()
+import SeabornFig2Grid as sfg
 
 agg = pd.read_csv('./results/val_agg.csv', header=[0,1])
 agg.columns = ['cost', 'time_l', 'time_u']
@@ -1350,7 +1355,6 @@ agg_test = agg.loc[agg['time_u'] < (700)]
 print('Percent of realizations below cost limit: ', len(agg_test)/10000)
 
 plt.close('all')
-import seaborn as sns
 
 g1 = sns.JointGrid(data=agg_pl, x='cost', y='time_u')
 g1.plot_joint(sns.scatterplot, color='black', alpha = 0.1)
@@ -1405,7 +1409,7 @@ g2.ax_joint.grid()
 g2.ax_joint.set_xlim(-0.25e6, 3.5e6)
 g2.ax_joint.set_ylim(-100, 3e3)
 g2.set_axis_labels(xlabel='Repair cost [USD]',
-                  ylabel='Sequential repair time [worker-days]',
+                  # ylabel='Sequential repair time [worker-days]',
                   fontsize=16)
 
 g2.ax_marg_x.set_axis_off()
@@ -1413,25 +1417,36 @@ g2.ax_marg_y.set_axis_off()
 g2.ax_marg_x.set_title('b) Baseline structure', fontsize=16)
 g2.figure.tight_layout()
 
+fig = plt.figure(figsize=(13,6))
+gs = gridspec.GridSpec(1, 2)
 
-g1.savefig('g1.png', format='png', dpi=1200)
-plt.close(g1.fig)
+mg0 = sfg.SeabornFig2Grid(g1, fig, gs[0])
+mg1 = sfg.SeabornFig2Grid(g2, fig, gs[1])
 
-g2.savefig('g2.png', format='png', dpi=1200)
-plt.close(g2.fig)
+gs.tight_layout(fig)
+gs.update(top=0.65, right=0.7)
 
-############### 3. CREATE YOUR SUBPLOTS FROM TEMPORAL IMAGES
-import matplotlib.image as mpimg
-f, axarr = plt.subplots(1, 2, figsize=(14, 9))
-
-axarr[0].imshow(mpimg.imread('g1.png'))
-axarr[1].imshow(mpimg.imread('g2.png'))
-
-# turn off x and y axis
-[ax.set_axis_off() for ax in axarr.ravel()]
-
-plt.tight_layout()
 plt.show()
+plt.savefig('./val_joined.eps')
+
+# g1.savefig('g1.png', format='png', dpi=1200)
+# plt.close(g1.fig)
+
+# g2.savefig('g2.png', format='png', dpi=1200)
+# plt.close(g2.fig)
+
+# ############### 3. CREATE YOUR SUBPLOTS FROM TEMPORAL IMAGES
+# import matplotlib.image as mpimg
+# f, axarr = plt.subplots(1, 2, figsize=(14, 9))
+
+# axarr[0].imshow(mpimg.imread('g1.png'))
+# axarr[1].imshow(mpimg.imread('g2.png'))
+
+# # turn off x and y axis
+# [ax.set_axis_off() for ax in axarr.ravel()]
+
+# plt.tight_layout()
+# plt.show()
 
 #%%
 agg = pd.read_csv('./results/val_agg.csv', header=[0,1])
