@@ -23,6 +23,9 @@ plt.close('all')
 idx = pd.IndexSlice
 pd.options.display.max_rows = 30
 
+import warnings
+warnings.filterwarnings('ignore')
+
 ## temporary spyder debugger error hack
 #import collections
 #collections.Callable = collections.abc.Callable
@@ -742,7 +745,7 @@ mdl_drift_hit.fit_ols_ridge()
 mdl_drift_miss.fit_kernel_ridge()
 mdl_drift_miss.fit_ols_ridge()
 
-#%% Drift model (GP-KR)
+#%% Drift model (GP-OR)
 X_plot = mdl.make_2D_plotting_space(100)
 
 grid_drift = predict_DV(X_plot,
@@ -795,6 +798,68 @@ ax.set_zlim([0, 1.0])
 ax.set_title('Collapse risk prediction, LN transformed from drift (GPC-OR)')
 plt.show()
 
+#%% drift model (GPC-GPR)
+# kernel_type='matern_ard'
+kernel_type = 'rq'
+
+# fit impacted set
+mdl_drift_hit.fit_gpr(kernel_name=kernel_type)
+        
+# fit no impact set
+mdl_drift_miss.fit_gpr(kernel_name=kernel_type)
+
+X_plot = mdl.make_2D_plotting_space(100)
+
+grid_drift = predict_DV(X_plot,
+                        mdl.gpc,
+                        mdl_drift_hit.gpr,
+                        mdl_drift_miss.gpr,
+                                  outcome='max_drift')
+
+xx = mdl.xx
+yy = mdl.yy
+Z = np.array(grid_drift)
+Z = Z.reshape(xx.shape)
+
+plt.close('all')
+fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+# Plot the surface.
+surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
+                       linewidth=0, antialiased=False)
+
+ax.scatter(df['gapRatio'], df['RI'], df['max_drift'],
+           edgecolors='k')
+
+ax.set_xlabel('Gap ratio')
+ax.set_ylabel('Ry')
+ax.set_zlabel('PID (%)')
+ax.set_title('Peak interstory drift prediction (GPC-impact, GPR-drift)')
+plt.show()
+
+# drift -> collapse risk
+from scipy.stats import lognorm
+from math import log, exp
+beta_drift = 0.25
+mean_log_drift = exp(log(0.1) - beta_drift*0.9945)
+ln_dist = lognorm(s=beta_drift, scale=mean_log_drift)
+
+Z = ln_dist.cdf(np.array(grid_drift))
+Z = Z.reshape(xx.shape)
+
+fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+# Plot the surface.
+surf = ax.plot_surface(xx, yy, Z, cmap=plt.cm.coolwarm,
+                       linewidth=0, antialiased=False)
+
+ax.scatter(df['gapRatio'], df['RI'], df['collapse_freq'],
+           edgecolors='k')
+
+ax.set_xlabel('Gap ratio')
+ax.set_ylabel('Ry')
+ax.set_zlabel('Collapse risk')
+ax.set_zlim([0, 1.0])
+ax.set_title('Collapse risk prediction, LN transformed from drift (GPC-GPR)')
+plt.show()
 #%% Testing the design space
 import time
 

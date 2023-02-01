@@ -439,6 +439,8 @@ class Prediction:
                     length_scale=[1.0, 1.0, 1.0, 1.0], 
                     nu=1.5)
             
+        kernel = kernel + krn.WhiteKernel(noise_level=1, noise_level_bounds=(1e-5, 1e1))
+            
         # pipeline to scale -> GPR
         gp_pipe = Pipeline([
                 ('scaler', StandardScaler()),

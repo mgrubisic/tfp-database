@@ -259,7 +259,7 @@ ax2.scatter(hit.X_train[xvar][:plt_density],
 ax2.scatter(miss.X_train[xvar][:plt_density],
             miss.X_train[yvar][:plt_density],
             s=30, c='lightgray', edgecolors='k', label='No impact')
-ax2.set_title(r'$R_y= 1.22$ s, $\zeta_M = 0.155$', fontsize=subt_font)
+ax2.set_title(r'$R_y= 1.22$ , $\zeta_M = 0.155$', fontsize=subt_font)
 ax2.set_xlabel(r'Gap ratio', fontsize=axis_font)
 ax2.set_ylabel(r'$T_M$', fontsize=axis_font)
 
@@ -303,7 +303,7 @@ ax3.scatter(miss.X_train[xvar][:plt_density],
 #             s=30, c=mdl.y_train[:plt_density],
 #             cmap=plt.cm.copper, edgecolors='w')
 
-ax3.set_title(r'$R_y= 1.22$ s, $T_M = 3.24$ s', fontsize=subt_font)
+ax3.set_title(r'$R_y= 1.22$ , $T_M = 3.24$ s', fontsize=subt_font)
 ax3.set_xlabel(r'Gap ratio', fontsize=axis_font)
 ax3.set_ylabel(r'$\zeta_M$', fontsize=axis_font)
 
@@ -1014,11 +1014,13 @@ plt.show()
 fig.tight_layout()
 
 #%% Big collapse risk prediction plot (GP-OR)
+
 plt.rcParams["font.family"] = "serif"
 plt.rcParams["mathtext.fontset"] = "dejavuserif"
-axis_font = 18
+axis_font = 20
 subt_font = 18
-label_size = 14
+import matplotlib as mpl
+label_size = 16
 mpl.rcParams['xtick.labelsize'] = label_size 
 mpl.rcParams['ytick.labelsize'] = label_size 
 
