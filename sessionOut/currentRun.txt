@@ -6,3 +6,5 @@ Dec 6: collecting PFA/PID/PFV, lowered impact stiffness to be wall-dependent
 
 Dec 24: changed Rayleigh damping so that there is a mass-part and committed-stiffness-part
 	pegged damping as 5% on mode 1 and 2% on mode 3 of structure
+
+Apr 6, 2023: duplicated loading on isolation layer in order to increase stiffness of TFP layer equivalent to half-building

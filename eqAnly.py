@@ -67,8 +67,17 @@ def runGM(gmFilename, gmDefScale, dtTransient):
     ops.load(25, 0, 0, -pLc1, 0, 0, 0)
     ops.load(35, 0, 0, -pLc2, 0, 0, 0)
     ops.load(45, 0, 0, -pLc3, 0, 0, 0)
+    
+    # load right above isolation layer to increase stiffness to half-building for TFP
+    ft = 12.0
+    pOuter = (w0 + w1 + w2 + w3)*15*ft*3
+    pInner = (w0 + w1 + w2 + w3)*30*ft*3
 
-
+    ops.load(15, 0, 0, -pOuter, 0, 0, 0)
+    ops.load(25, 0, 0, -pInner, 0, 0, 0)
+    ops.load(35, 0, 0, -pInner, 0, 0, 0)
+    ops.load(45, 0, 0, -pOuter, 0, 0, 0)
+    
     # ------------------------------
     # Start of analysis generation: gravity
     # ------------------------------
