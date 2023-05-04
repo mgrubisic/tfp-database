@@ -73,10 +73,10 @@ def runGM(gmFilename, gmDefScale, dtTransient):
     pOuter = (w0 + w1 + w2 + w3)*15*ft*3
     pInner = (w0 + w1 + w2 + w3)*30*ft*3
 
-    ops.load(15, 0, 0, -pOuter, 0, 0, 0)
-    ops.load(25, 0, 0, -pInner, 0, 0, 0)
-    ops.load(35, 0, 0, -pInner, 0, 0, 0)
-    ops.load(45, 0, 0, -pOuter, 0, 0, 0)
+    ops.load(11, 0, 0, -pOuter, 0, 0, 0)
+    ops.load(12, 0, 0, -pInner, 0, 0, 0)
+    ops.load(13, 0, 0, -pInner, 0, 0, 0)
+    ops.load(14, 0, 0, -pOuter, 0, 0, 0)
     
     # ------------------------------
     # Start of analysis generation: gravity
