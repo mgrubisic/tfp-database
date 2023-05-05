@@ -351,7 +351,7 @@ def failurePostprocess(filename, scaleFactor, spectrumAverage, runStatus, Tfb):
     # impact check
     afterRun['impacted']    = 0
 
-    if(afterRun['impactedLeft'] == 1 or afterRun['impactedLeft'] == 1):
+    if (afterRun['impactedLeft'] == 1) or (afterRun['impactedRight'] == 1):
         afterRun['impacted'] = 1
 
     # if(any(displacement >= moatGap for displacement in isolMaxDisp)):
