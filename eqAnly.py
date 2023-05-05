@@ -69,9 +69,10 @@ def runGM(gmFilename, gmDefScale, dtTransient):
     ops.load(45, 0, 0, -pLc3, 0, 0, 0)
     
     # load right above isolation layer to increase stiffness to half-building for TFP
+    # line load accounts for 15ft of tributary, we add an additional 30ft with the 2x
     ft = 12.0
-    pOuter = (w0 + w1 + w2 + w3)*15*ft*3
-    pInner = (w0 + w1 + w2 + w3)*30*ft*3
+    pOuter = (w0 + w1 + w2 + w3)*15*ft*2
+    pInner = (w0 + w1 + w2 + w3)*30*ft*2
 
     ops.load(11, 0, 0, -pOuter, 0, 0, 0)
     ops.load(12, 0, 0, -pInner, 0, 0, 0)
