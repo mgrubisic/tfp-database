@@ -194,6 +194,7 @@ def build():
     w2 = 2.72*kip/(1*ft)
     w3 = 1.94*kip/(1*ft)
 
+    # multiply to account for half-building tfp loading
     pOuter = (w0 + w1 + w2 + w3)*15*ft*3
     pInner = (w0 + w1 + w2 + w3)*30*ft*3
 

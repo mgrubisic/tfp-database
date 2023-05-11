@@ -161,6 +161,10 @@ gmDatabase.to_csv(gmPath+databaseFile, index=False)
 resultsDf.to_csv('./sessionOut/sessionSummary.csv', index=False)
 
 #%% 
+
+resultsDf.to_csv('./sessionOut/addl_TFP_loading.csv', index=False)
+a = resultsDf[:230]
+a.to_csv('./sessionOut/addl_TFP_loading_jse_size.csv', index=False)
 # import tmp_cleaner
 # from get_demand_data import get_EDP
 # databasePath = './sessionOut/'
